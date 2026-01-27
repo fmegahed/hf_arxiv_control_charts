@@ -1,9 +1,10 @@
 ---
+sdk: docker
+app_port: 7860
 title: ArXiv Control Chart Monitor
-emoji: 📊
+emoji: ⚙️
 colorFrom: red
 colorTo: yellow
-sdk: docker
 pinned: false
 license: mit
 short_description: Monitor latest control chart research from ArXiv
