@@ -9,6 +9,13 @@ library(plotly)
 library(DT)
 library(ellmer)
 
+# Ensuring that the API key is being read from the app's secrets; ellmer requires a zero input function
+openai_credentials <- function() {
+  key <- Sys.getenv("OPENAI_API_KEY", unset = "")
+  if (!nzchar(key)) stop("OPENAI_API_KEY is not set (HF Space Settings -> Secrets).")
+  key
+}
+
 # Color palette for charts
 CHART_COLORS <- c(
   "#C41230", # Miami Red
@@ -1376,7 +1383,8 @@ server <- function(input, output, session) {
       system_prompt <- create_paper_system_prompt(paper)
       chat <- ellmer::chat_openai(
         model = "gpt-5-mini-2025-08-07",
-        system_prompt = system_prompt
+        system_prompt = system_prompt,
+        credentials = openai_credentials
       )
       chat_session(chat)
     }, error = function(e) {
