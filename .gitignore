@@ -1,0 +1,6 @@
+# local caches / binary artifacts
+*.rds
+
+# image assets uploaded manually
+*.png
+*.svg

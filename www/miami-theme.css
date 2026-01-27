@@ -1,0 +1,973 @@
+/* Miami University Theme CSS */
+/* Color Palette:
+   Primary Red: #C41230
+   Light Tan: #EDECE2
+   Medium Tan: #CCC9B8
+   Corn Yellow (tertiary): #EFDB72
+   White: #FFFFFF
+   Black: #000000
+*/
+
+:root {
+  --miami-red: #C41230;
+  --miami-light-tan: #EDECE2;
+  --miami-medium-tan: #CCC9B8;
+  --miami-yellow: #EFDB72;
+  --miami-white: #FFFFFF;
+  --miami-black: #000000;
+  --miami-dark-red: #9E0F28;
+}
+
+/* Body and base styling */
+body {
+  background-color: var(--miami-light-tan);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: var(--miami-black);
+}
+
+/* Header styling */
+.app-header {
+  background: linear-gradient(135deg, var(--miami-red) 0%, var(--miami-dark-red) 100%);
+  color: var(--miami-white);
+  padding: 20px 30px;
+  margin: -15px -15px 20px -15px;
+  border-radius: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.app-header h1 {
+  margin: 0 0 5px 0;
+  font-size: 1.8em;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.app-header .subtitle {
+  font-size: 0.9em;
+  opacity: 0.9;
+  margin: 0;
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.header-left {
+  flex: 1;
+  min-width: 300px;
+}
+
+.header-right {
+  text-align: right;
+}
+
+.header-right p {
+  margin: 3px 0;
+  font-size: 0.85em;
+}
+
+/* Logo container styling */
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background-color: var(--miami-white);
+  padding: 15px 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.logo-container img {
+  height: 50px;
+  width: auto;
+  object-fit: contain;
+}
+
+.logo-divider {
+  width: 1px;
+  height: 40px;
+  background-color: var(--miami-medium-tan);
+}
+
+/* Title Panel Override */
+.shiny-title-panel {
+  display: none;
+}
+
+/* Well panels */
+.well {
+  background-color: var(--miami-white);
+  border: 1px solid var(--miami-medium-tan);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  padding: 20px;
+}
+
+/* Sidebar styling */
+.sidebar-panel {
+  background-color: var(--miami-white);
+  border: 1px solid var(--miami-medium-tan);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* Main panel styling */
+.main-panel {
+  background-color: transparent;
+}
+
+/* Main content wrapper */
+.main-content {
+  padding: 0 15px;
+}
+
+/* Tab content wrapper */
+.tab-content-wrapper {
+  padding: 20px 0;
+}
+
+/* ============================================================================
+   Tab Navigation Styling
+   ============================================================================ */
+
+.nav-tabs {
+  border-bottom: 2px solid var(--miami-medium-tan);
+  margin-bottom: 20px;
+}
+
+.nav-tabs > li > a {
+  color: var(--miami-black);
+  border: none;
+  border-radius: 6px 6px 0 0;
+  padding: 12px 20px;
+  font-weight: 500;
+  transition: all 0.2s;
+  margin-right: 4px;
+}
+
+.nav-tabs > li > a:hover {
+  background-color: var(--miami-light-tan);
+  border: none;
+  color: var(--miami-red);
+}
+
+.nav-tabs > li.active > a,
+.nav-tabs > li.active > a:hover,
+.nav-tabs > li.active > a:focus {
+  background-color: var(--miami-red);
+  color: var(--miami-white);
+  border: none;
+  font-weight: 600;
+}
+
+.nav-tabs > li > a > i {
+  margin-right: 6px;
+}
+
+/* ============================================================================
+   Stat Card Styling (Dashboard)
+   ============================================================================ */
+
+.stat-card {
+  background-color: var(--miami-white);
+  border: 1px solid var(--miami-medium-tan);
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s, box-shadow 0.2s;
+  margin-bottom: 20px;
+}
+
+.stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+}
+
+.stat-icon {
+  font-size: 2em;
+  color: var(--miami-red);
+  margin-bottom: 10px;
+}
+
+.stat-value {
+  font-size: 2em;
+  font-weight: 700;
+  color: var(--miami-red);
+  line-height: 1.2;
+}
+
+.stat-label {
+  font-size: 0.9em;
+  color: #666;
+  margin-top: 5px;
+  font-weight: 500;
+}
+
+/* ============================================================================
+   Card-like sections
+   ============================================================================ */
+
+.info-card {
+  background-color: var(--miami-white);
+  border: 1px solid var(--miami-medium-tan);
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.info-card h4 {
+  color: var(--miami-red);
+  margin-top: 0;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--miami-light-tan);
+  font-weight: 600;
+}
+
+/* ============================================================================
+   Paper Detail Card
+   ============================================================================ */
+
+.paper-detail-card {
+  background-color: var(--miami-white);
+  border: 2px solid var(--miami-red);
+  border-radius: 8px;
+  padding: 25px;
+  margin-top: 20px;
+  box-shadow: 0 4px 15px rgba(196, 18, 48, 0.15);
+}
+
+.paper-detail-card h4 {
+  color: var(--miami-red);
+  margin-top: 0;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.paper-detail-card h5 {
+  color: var(--miami-dark-red);
+  margin-top: 15px;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+/* ============================================================================
+   Word Cloud Container
+   ============================================================================ */
+
+.wordcloud-container {
+  background-color: var(--miami-white);
+  border-radius: 8px;
+  padding: 20px;
+  min-height: 520px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ============================================================================
+   Form controls
+   ============================================================================ */
+
+.form-control {
+  border: 1px solid var(--miami-medium-tan);
+  border-radius: 6px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-control:focus {
+  border-color: var(--miami-red);
+  box-shadow: 0 0 0 3px rgba(196, 18, 48, 0.15);
+  outline: none;
+}
+
+/* Text area styling */
+textarea.form-control {
+  resize: vertical;
+  min-height: 150px;
+}
+
+/* Labels */
+.control-label {
+  font-weight: 600;
+  color: var(--miami-black);
+  margin-bottom: 5px;
+}
+
+/* ============================================================================
+   Buttons
+   ============================================================================ */
+
+.btn {
+  border-radius: 6px;
+  font-weight: 500;
+  padding: 10px 20px;
+  transition: all 0.2s;
+  border: none;
+  margin-right: 10px;
+  margin-top: 10px;
+}
+
+.btn-primary {
+  background-color: var(--miami-red);
+  color: var(--miami-white);
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+  background-color: var(--miami-dark-red);
+  color: var(--miami-white);
+  box-shadow: 0 4px 12px rgba(196, 18, 48, 0.3);
+}
+
+.btn-info {
+  background-color: var(--miami-medium-tan);
+  color: var(--miami-black);
+}
+
+.btn-info:hover,
+.btn-info:focus {
+  background-color: var(--miami-yellow);
+  color: var(--miami-black);
+}
+
+/* ============================================================================
+   Table styling
+   ============================================================================ */
+
+.table {
+  background-color: var(--miami-white);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.table > thead > tr > th {
+  background-color: var(--miami-red);
+  color: var(--miami-white);
+  font-weight: 600;
+  border: none;
+  padding: 12px 15px;
+}
+
+.table > tbody > tr > td {
+  padding: 12px 15px;
+  border-color: var(--miami-light-tan);
+  vertical-align: middle;
+}
+
+.table > tbody > tr:nth-child(odd) {
+  background-color: var(--miami-light-tan);
+}
+
+.table > tbody > tr:nth-child(even) {
+  background-color: var(--miami-white);
+}
+
+.table > tbody > tr:hover {
+  background-color: rgba(239, 219, 114, 0.3);
+}
+
+/* DataTables specific styling */
+.dataTables_wrapper .dataTables_filter input {
+  border: 1px solid var(--miami-medium-tan);
+  border-radius: 6px;
+  padding: 6px 12px;
+}
+
+.dataTables_wrapper .dataTables_filter input:focus {
+  border-color: var(--miami-red);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(196, 18, 48, 0.15);
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button.current {
+  background: var(--miami-red) !important;
+  color: var(--miami-white) !important;
+  border-radius: 4px;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+  background: var(--miami-yellow) !important;
+  color: var(--miami-black) !important;
+  border-radius: 4px;
+}
+
+/* ============================================================================
+   Horizontal rules
+   ============================================================================ */
+
+hr {
+  border-color: var(--miami-medium-tan);
+  margin: 15px 0;
+}
+
+/* ============================================================================
+   Help text
+   ============================================================================ */
+
+.help-block {
+  color: #666;
+  font-size: 0.85em;
+  font-style: italic;
+}
+
+/* ============================================================================
+   Tips section
+   ============================================================================ */
+
+.tips-section {
+  background-color: rgba(239, 219, 114, 0.2);
+  border: 1px solid var(--miami-yellow);
+  border-radius: 8px;
+  padding: 20px;
+  margin-top: 20px;
+}
+
+.tips-section h4 {
+  color: var(--miami-black);
+  margin-top: 0;
+  font-weight: 600;
+}
+
+.tips-section ul {
+  padding-left: 20px;
+  margin-bottom: 0;
+}
+
+.tips-section li {
+  margin-bottom: 6px;
+  line-height: 1.5;
+}
+
+/* ============================================================================
+   Note section
+   ============================================================================ */
+
+.note-section {
+  background-color: var(--miami-white);
+  border: 1px solid var(--miami-medium-tan);
+  border-radius: 8px;
+  padding: 15px 20px;
+  margin-top: 20px;
+}
+
+.note-section h4 {
+  color: var(--miami-red);
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+/* ============================================================================
+   Section headings in main panel
+   ============================================================================ */
+
+.section-heading {
+  color: var(--miami-red);
+  font-weight: 600;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--miami-light-tan);
+  margin-bottom: 15px;
+}
+
+/* ============================================================================
+   Results placeholder
+   ============================================================================ */
+
+.results-placeholder {
+  color: #888;
+  font-style: italic;
+  padding: 20px;
+  text-align: center;
+  background-color: var(--miami-light-tan);
+  border-radius: 6px;
+}
+
+/* ============================================================================
+   Last Updated styling
+   ============================================================================ */
+
+.last-updated {
+  padding: 10px 15px;
+  background-color: var(--miami-light-tan);
+  border-radius: 6px;
+  font-size: 0.9em;
+  color: #666;
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+/* ============================================================================
+   Field separator styling
+   ============================================================================ */
+
+.field-separator {
+  border-color: var(--miami-light-tan);
+  margin: 20px 0;
+}
+
+/* ============================================================================
+   Notification styling overrides
+   ============================================================================ */
+
+.shiny-notification {
+  border-radius: 8px;
+  border: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.shiny-notification-message {
+  background-color: var(--miami-red);
+  color: var(--miami-white);
+}
+
+.shiny-notification-error {
+  background-color: #d32f2f;
+  color: var(--miami-white);
+}
+
+/* ============================================================================
+   Footer styling
+   ============================================================================ */
+
+.app-footer {
+  text-align: center;
+  padding: 15px;
+  margin-top: 30px;
+  color: #666;
+  font-size: 0.85em;
+  border-top: 1px solid var(--miami-medium-tan);
+}
+
+/* ============================================================================
+   Plotly chart container
+   ============================================================================ */
+
+.plotly {
+  border-radius: 8px;
+}
+
+/* ============================================================================
+   Responsive adjustments
+   ============================================================================ */
+
+@media (max-width: 768px) {
+  .header-content {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .header-right {
+    text-align: center;
+  }
+
+  .logo-container {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .logo-divider {
+    display: none;
+  }
+
+  .stat-card {
+    margin-bottom: 15px;
+  }
+
+  .nav-tabs > li > a {
+    padding: 10px 12px;
+    font-size: 0.9em;
+  }
+
+  .nav-tabs > li > a > i {
+    display: none;
+  }
+}
+
+@media (max-width: 576px) {
+  .app-header h1 {
+    font-size: 1.4em;
+  }
+
+  .stat-value {
+    font-size: 1.5em;
+  }
+
+  .info-card {
+    padding: 15px;
+  }
+}
+
+/* ============================================================================
+   Interactive Chart Enhancements
+   ============================================================================ */
+
+.info-card .plotly {
+  cursor: pointer;
+}
+
+.info-card .plotly:hover {
+  opacity: 0.95;
+}
+
+/* Active filter highlight */
+.filter-active {
+  animation: pulse-border 2s infinite;
+}
+
+@keyframes pulse-border {
+  0% {
+    border-color: var(--miami-red);
+    box-shadow: 0 0 0 0 rgba(196, 18, 48, 0.4);
+  }
+  70% {
+    border-color: var(--miami-red);
+    box-shadow: 0 0 0 6px rgba(196, 18, 48, 0);
+  }
+  100% {
+    border-color: var(--miami-red);
+    box-shadow: 0 0 0 0 rgba(196, 18, 48, 0);
+  }
+}
+
+/* Stat card enhancements for smaller values */
+.stat-card .stat-value {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+/* Research summary styling */
+.research-summary p {
+  margin-bottom: 8px;
+}
+
+/* Chart description text */
+.info-card .help-block {
+  margin-top: -5px;
+  margin-bottom: 15px;
+  font-size: 0.85em;
+}
+
+/* Topic filter panel */
+.topic-filter-panel {
+  background: linear-gradient(135deg, rgba(196, 18, 48, 0.05) 0%, rgba(196, 18, 48, 0.1) 100%);
+  border: 2px solid var(--miami-red);
+  border-radius: 8px;
+  padding: 15px 20px;
+  margin-bottom: 20px;
+}
+
+/* Enhanced table links */
+.dataTables_wrapper a {
+  color: var(--miami-red);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.dataTables_wrapper a:hover {
+  color: var(--miami-dark-red);
+  text-decoration: underline;
+}
+
+/* Metric cards row spacing */
+.stat-card {
+  min-height: 140px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* Scrollable paper details */
+.paper-detail-card {
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+/* Chart hover effects */
+.js-plotly-plot .plotly .modebar {
+  display: none !important;
+}
+
+/* Legend styling for pie charts */
+.js-plotly-plot .legend {
+  font-size: 11px !important;
+}
+
+/* Improve chart titles visibility */
+.info-card h4.section-heading {
+  font-size: 1.1em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.info-card h4.section-heading i {
+  color: var(--miami-red);
+}
+
+/* ============================================================================
+   Chat Interface Styling
+   ============================================================================ */
+
+#chat_container {
+  background: linear-gradient(to bottom, #FAFAFA, #F5F5F5);
+}
+
+#chat_input {
+  resize: none;
+  border: 2px solid var(--miami-medium-tan);
+  transition: border-color 0.2s;
+}
+
+#chat_input:focus {
+  border-color: var(--miami-red);
+  box-shadow: 0 0 0 3px rgba(196, 18, 48, 0.1);
+}
+
+.chat-message-user {
+  background-color: var(--miami-red);
+  color: white;
+}
+
+.chat-message-assistant {
+  background-color: var(--miami-light-tan);
+}
+
+/* Suggested question buttons */
+.btn-sm {
+  transition: all 0.2s;
+}
+
+.btn-sm:hover {
+  background-color: var(--miami-yellow) !important;
+  border-color: var(--miami-yellow) !important;
+}
+
+/* ============================================================================
+   Research Insights Styling
+   ============================================================================ */
+
+.insight-card {
+  border-left: 4px solid var(--miami-red);
+  padding-left: 15px;
+  margin-bottom: 15px;
+}
+
+.limitation-item {
+  background-color: #FFF5F5;
+  border-left: 3px solid var(--miami-red);
+}
+
+.future-item {
+  background-color: #F5FFF5;
+  border-left: 3px solid #2E8B57;
+}
+
+/* ============================================================================
+   Bibliometrics Styling
+   ============================================================================ */
+
+.author-card {
+  background-color: var(--miami-light-tan);
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 15px;
+}
+
+.network-container {
+  background-color: white;
+  border-radius: 8px;
+  padding: 10px;
+}
+
+/* ============================================================================
+   Deep Dive Sections
+   ============================================================================ */
+
+.deep-dive-section {
+  margin-bottom: 20px;
+  padding: 15px;
+  border-radius: 6px;
+}
+
+.deep-dive-section h5 {
+  margin-top: 0;
+  color: var(--miami-red);
+}
+
+/* ============================================================================
+   Selectize Improvements
+   ============================================================================ */
+
+.selectize-input {
+  border: 1px solid var(--miami-medium-tan) !important;
+  border-radius: 6px !important;
+}
+
+.selectize-input.focus {
+  border-color: var(--miami-red) !important;
+  box-shadow: 0 0 0 3px rgba(196, 18, 48, 0.15) !important;
+}
+
+.selectize-dropdown {
+  border: 1px solid var(--miami-medium-tan) !important;
+  border-radius: 0 0 6px 6px !important;
+}
+
+.selectize-dropdown .active {
+  background-color: var(--miami-light-tan) !important;
+}
+
+/* ============================================================================
+   Slider Styling
+   ============================================================================ */
+
+.irs--shiny .irs-bar {
+  background: var(--miami-red) !important;
+  border-color: var(--miami-red) !important;
+}
+
+.irs--shiny .irs-handle {
+  border-color: var(--miami-red) !important;
+}
+
+.irs--shiny .irs-single {
+  background: var(--miami-red) !important;
+}
+
+/* ============================================================================
+   Chat Status Indicators
+   ============================================================================ */
+
+.chat-status {
+  padding: 8px 15px;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  font-size: 0.9em;
+}
+
+.chat-status-ready {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.chat-status-loading {
+  background-color: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeeba;
+}
+
+/* ============================================================================
+   Math Content Styling (MathJax)
+   ============================================================================ */
+
+.math-content {
+  font-size: 0.95em;
+  line-height: 1.8;
+  overflow-x: auto;
+}
+
+.math-content .MathJax {
+  font-size: 1.1em !important;
+}
+
+.math-content mjx-container {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+
+/* ============================================================================
+   Action Buttons in DataTables
+   ============================================================================ */
+
+.pdf-btn,
+.summary-btn {
+  padding: 3px 8px;
+  margin: 0 2px;
+  border-radius: 4px;
+  text-decoration: none;
+  display: inline-block;
+  cursor: pointer;
+  font-size: 0.85em;
+}
+
+.pdf-btn {
+  background-color: var(--miami-red);
+  color: white !important;
+  border: none;
+}
+
+.pdf-btn:hover {
+  background-color: var(--miami-dark-red);
+  color: white !important;
+  text-decoration: none;
+}
+
+.summary-btn {
+  background-color: var(--miami-yellow);
+  color: var(--miami-black);
+  border: none;
+}
+
+.summary-btn:hover {
+  background-color: #d4c060;
+  color: var(--miami-black);
+}
+
+/* ============================================================================
+   Quick Question Buttons
+   ============================================================================ */
+
+.quick-question-btn {
+  margin: 3px;
+  font-size: 0.8em;
+  background-color: var(--miami-light-tan);
+  border: 1px solid var(--miami-medium-tan);
+  transition: all 0.2s;
+}
+
+.quick-question-btn:hover {
+  background-color: var(--miami-yellow);
+  border-color: var(--miami-yellow);
+}
+
+/* ============================================================================
+   Modal Enhancements
+   ============================================================================ */
+
+.modal-header {
+  background-color: var(--miami-light-tan);
+  border-bottom: 2px solid var(--miami-medium-tan);
+}
+
+.modal-title {
+  color: var(--miami-red) !important;
+  font-weight: 600;
+}
+
+.modal-footer {
+  background-color: var(--miami-light-tan);
+  border-top: 1px solid var(--miami-medium-tan);
+}
+
+.modal-content {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+
+/* MathJax v3: force normal font weight inside math boxes */
+.math-content {
+  font-weight: 400;
+}
