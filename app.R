@@ -11,9 +11,9 @@ library(ellmer)
 
 # Ensuring that the API key is being read from the app's secrets; ellmer requires a zero input function
 openai_credentials <- function() {
-  key <- Sys.getenv("OPENAI_API_KEY", unset = "")
+  key <- Sys.getenv("OPENAI_API_KEY")
   if (!nzchar(key)) stop("OPENAI_API_KEY is not set (HF Space Settings -> Secrets).")
-  key
+  return(key)
 }
 
 # Color palette for charts
