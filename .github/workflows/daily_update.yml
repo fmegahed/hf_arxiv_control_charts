@@ -82,4 +82,4 @@ jobs:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           git remote add space https://fmegahed:${HF_TOKEN}@huggingface.co/spaces/fmegahed/arxiv_control_charts
-          git push space HEAD:main
+          git push --force-with-lease space HEAD:main
