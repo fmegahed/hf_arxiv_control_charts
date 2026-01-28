@@ -48,10 +48,10 @@ jobs:
           R -e "remotes::install_version('tibble', version='3.2.1', repos='https://cloud.r-project.org')"
 
           # Other packages your workflow referenced
-          R -e "remotes::install_version('aRxiv', version='0.6.1', repos='https://cloud.r-project.org')"
-          R -e "remotes::install_version('fs', version='1.6.4', repos='https://cloud.r-project.org')"
+          R -e "remotes::install_version('aRxiv', version='0.18', repos='https://cloud.r-project.org')"
+          R -e "remotes::install_version('fs', version='1.6.6', repos='https://cloud.r-project.org')"
           R -e "remotes::install_version('httr', version='1.4.7', repos='https://cloud.r-project.org')"
-          R -e "remotes::install_version('progressr', version='0.14.0', repos='https://cloud.r-project.org')"
+          R -e "remotes::install_version('progressr', version='0.18.0', repos='https://cloud.r-project.org')"
 
           # ellmer (pinned)
           R -e "remotes::install_version('ellmer', version='0.4.0', repos='https://cloud.r-project.org')"
