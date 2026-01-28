@@ -1,5 +1,6 @@
 # local caches / binary artifacts
 *.rds
+data/spc_factsheet_cache.rds
 
 # image assets uploaded manually
 *.png

@@ -21,7 +21,8 @@
 #   - Downloads respect arXiv rate limits with configurable delays
 #   - Uses httr::RETRY() for resilient network requests
 #   - PDF extraction requires LLM provider with PDF attachment support
-#   - Results are cached to avoid redundant API calls
+#   - Results are cached in CSV to avoid redundant API calls
+#   - List columns are stored as "|"-delimited strings in CSV
 # =============================================================================
 
 
@@ -52,7 +53,6 @@ config <- list(
   
   # Output file paths
   metadata_csv = "data/arxiv_metadata.csv",
-  factsheet_cache_rds = "data/spc_factsheet_cache.rds",
   factsheet_csv = "data/spc_factsheet.csv"
 )
 
@@ -102,26 +102,17 @@ download_pdf <- function(pdf_url, output_path, user_agent) {
 #' Create LLM Chat Object
 #'
 #' Factory function for creating ellmer chat objects based on provider.
-#'
+#' We currently support only OpenAI.
+#' 
 #' @param provider Character. One of "ollama", "anthropic", or "openai".
 #' @param model Character. Model identifier for the chosen provider.
 #'
 #' @return An ellmer chat object.
 create_chat <- function(provider, model) {
-  provider <- tolower(provider)
-  
-  chat_fn <- switch(
-    provider,
-    ollama = ellmer::chat_ollama,
-    anthropic = ellmer::chat_anthropic,
-    openai = ellmer::chat_openai,
-    stop(sprintf("Unknown provider: '%s'. Use 'ollama', 'anthropic', or 'openai'.", provider))
+  ellmer::chat_openai(
+    model = model,
+    credentials = get_openai_api_key
   )
-  
-  chat_fn(
-    model = model, 
-    credentials = list(api_key = if (provider == "openai") get_openai_api_key() else NULL)
-    )
 }
 
 
@@ -137,7 +128,7 @@ as_list_chr <- function(x) {
   if (is.null(x)) {
     return(list(NA_character_))
   }
-
+  
   if (is.list(x)) {
     return(
       lapply(x, function(el) {
@@ -145,11 +136,11 @@ as_list_chr <- function(x) {
       })
     )
   }
-
+  
   if (length(x) == 0L) {
     return(list(NA_character_))
   }
-
+  
   list(as.character(x))
 }
 
@@ -166,6 +157,25 @@ collapse_list_col <- function(x, sep = "|") {
   vapply(x, function(el) {
     if (all(is.na(el))) NA_character_ else paste(el, collapse = sep)
   }, character(1L))
+}
+
+
+#' Expand Delimited String to List Column
+#'
+#' Converts a character column with delimiter-separated values to a list column.
+#'
+#' @param x A character vector.
+#' @param sep Character. Delimiter to split on (default "|").
+#'
+#' @return A list column.
+expand_list_col <- function(x, sep = "|") {
+  lapply(x, function(el) {
+    if (is.na(el) || el == "") {
+      NA_character_
+    } else {
+      strsplit(el, split = sep, fixed = TRUE)[[1L]]
+    }
+  })
 }
 
 
@@ -807,7 +817,7 @@ metadata <- aRxiv::arxiv_search(query = config$query, limit = config$limit) |>
     pdf_url = paste0("https://arxiv.org/pdf/", id, ".pdf"),
     output_path = fs::path(config$pdf_dir, paste0(id, ".pdf")),
     submitted = lubridate::ymd_hms(submitted)
-    ) |> 
+  ) |> 
   dplyr::arrange(dplyr::desc(submitted))
 
 readr::write_csv(metadata, config$metadata_csv)
@@ -854,9 +864,20 @@ if (!config$extraction_enabled) {
   if (nrow(available_pdfs) == 0L) {
     message(sprintf("No PDFs found in: %s", config$pdf_dir))
   } else {
-    # Load existing cache
-    factsheet_cache <- if (fs::file_exists(config$factsheet_cache_rds)) {
-      readRDS(config$factsheet_cache_rds)
+    # Load existing cache from CSV (expand list columns from "|"-delimited strings)
+    factsheet_cache <- if (fs::file_exists(config$factsheet_csv)) {
+      readr::read_csv(config$factsheet_csv, show_col_types = FALSE) |>
+        dplyr::mutate(
+          chart_family = expand_list_col(chart_family),
+          chart_statistic = expand_list_col(chart_statistic),
+          phase = expand_list_col(phase),
+          application_domain = expand_list_col(application_domain),
+          evaluation_type = expand_list_col(evaluation_type),
+          performance_metrics = expand_list_col(performance_metrics),
+          software_platform = expand_list_col(software_platform),
+          code_availability_source = expand_list_col(code_availability_source),
+          software_urls = expand_list_col(software_urls)
+        )
     } else {
       tibble::tibble()
     }
@@ -937,18 +958,18 @@ if (!config$extraction_enabled) {
         pdfs_to_extract,
         repeat_id = seq_len(config$n_extraction_repeats)
       )
-
+      
       # Process each PDF and save incrementally
       for (i in seq_len(nrow(extraction_grid))) {
         row <- extraction_grid[i, ]
         pdf_path <- row$pdf_path
         id <- row$id
         repeat_id <- row$repeat_id
-
+        
         message(sprintf("[%d/%d] %s | repeat %d", i, nrow(extraction_grid), id, repeat_id))
-
+        
         chat_clean <- create_chat(config$llm_provider, config$llm_model)
-
+        
         result <- safe_extract(pdf_path, chat_clean, schema_spc_factsheet) |>
           dplyr::mutate(
             id = id,
@@ -958,11 +979,25 @@ if (!config$extraction_enabled) {
             repeat_id = repeat_id,
             extracted_at = Sys.time()
           )
-
+        
         # Update cache incrementally
         factsheet_cache <- dplyr::bind_rows(factsheet_cache, result)
-        saveRDS(factsheet_cache, config$factsheet_cache_rds)
-
+        
+        # Save to CSV with list columns collapsed to "|"-delimited strings
+        factsheet_cache |>
+          dplyr::mutate(
+            chart_family = collapse_list_col(chart_family),
+            chart_statistic = collapse_list_col(chart_statistic),
+            phase = collapse_list_col(phase),
+            application_domain = collapse_list_col(application_domain),
+            evaluation_type = collapse_list_col(evaluation_type),
+            performance_metrics = collapse_list_col(performance_metrics),
+            software_platform = collapse_list_col(software_platform),
+            code_availability_source = collapse_list_col(code_availability_source),
+            software_urls = collapse_list_col(software_urls)
+          ) |>
+          readr::write_csv(config$factsheet_csv)
+        
         # Export CSV with list columns collapsed to delimited strings
         factsheet_csv <- factsheet_cache |>
           dplyr::mutate(
@@ -977,12 +1012,11 @@ if (!config$extraction_enabled) {
             software_urls = collapse_list_col(software_urls)
           )
         readr::write_csv(factsheet_csv, config$factsheet_csv)
-
+        
         Sys.sleep(config$extraction_delay_sec)
       }
-
-      message(sprintf("Extraction complete. Cache: %s", config$factsheet_cache_rds))
-      message(sprintf("CSV: %s", config$factsheet_csv))
+      
+      message(sprintf("Extraction complete. Output: %s", config$factsheet_csv))
     }
   }
 }
