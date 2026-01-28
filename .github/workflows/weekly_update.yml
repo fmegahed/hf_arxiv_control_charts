@@ -51,7 +51,7 @@ jobs:
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
-          Rscript 01_extract_arxiv_papers.R
+          Rscript 01_extract_arxiv_papers.r
 
       - name: Commit updated CSVs to GitHub
         run: |
