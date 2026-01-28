@@ -4,3 +4,16 @@
 # image assets uploaded manually
 *.png
 *.svg
+
+# local_papers
+local_papers/
+
+# History files
+.Rhistory
+.Rapp.history
+
+# R stuff to ignore
+.Renviron
+.Rhistory
+.Rprofile
+*.Rproj
