@@ -251,12 +251,7 @@ ui <- shiny::fluidPage(
           shiny::div(
             class = "note-section",
             shiny::tags$h4(shiny::icon("info-circle"), " About"),
-            shiny::p(
-              "This dashboard monitors control chart research from ArXiv using the query: ",
-              shiny::tags$code('ti:"control chart" OR abs:"control chart"'),
-              ". Each paper is analyzed using LLM extraction to identify methodology and findings. ",
-              "Data current as of January 26, 2026. Latest arXiv paper included is from January 18, 2026."
-            )
+            shiny::uiOutput("about_text")
           ),
 
           shiny::hr(),
@@ -653,7 +648,38 @@ server <- function(input, output, session) {
   # ===========================================================================
   # Overview Tab
   # ===========================================================================
-
+  
+  # About text with dynamic dates
+  output$about_text <- shiny::renderUI({
+    data <- papers_data()
+    
+    # Compute "data current as of" based on UTC time
+    # If UTC hour >= 11, use today; otherwise use yesterday
+    utc_now <- lubridate::with_tz(Sys.time(), "UTC")
+    utc_hour <- lubridate::hour(utc_now)
+    data_current_date <- if (utc_hour >= 11) {
+      as.Date(utc_now)
+    } else {
+      as.Date(utc_now) - 1
+    }
+    data_current_str <- format(data_current_date, "%B %d, %Y")
+    
+    # Get latest arxiv paper submission date
+    latest_paper_str <- "N/A"
+    if (!is.null(data) && nrow(data) > 0) {
+      latest_date <- max(data$submitted_date, na.rm = TRUE)
+      latest_paper_str <- format(latest_date, "%B %d, %Y")
+    }
+    
+    shiny::p(
+      "This dashboard monitors control chart research from ArXiv using the query: ",
+      shiny::tags$code('ti:"control chart" OR abs:"control chart"'),
+      ". Each paper is analyzed using LLM extraction to identify methodology and findings. ",
+      "Data current as of ", shiny::tags$strong(data_current_str), ". ",
+      "Latest arXiv paper included is from ", shiny::tags$strong(latest_paper_str), "."
+    )
+  })
+  
   output$total_papers <- shiny::renderText({
     data <- papers_data()
     if (is.null(data)) return("0")
