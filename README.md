@@ -92,13 +92,16 @@ At a high level, the workflow:
 
 ### Recommended approach (manual pushes)
 
-Keep GitHub as your default remote and push to Hugging Face only when you want to update the Space:
+Keep GitHub as your default remote (your `main` should track `origin/main`). Use this workflow for day-to-day updates:
 
 ```bash
-# push to GitHub (primary)
-git push origin main
+git status
+git pull
+git add .
+git commit -m "Your message"
+git push
 
-# push the same commit to the Space
+# optional: also update the Hugging Face Space
 git push space main:main
 ```
 
