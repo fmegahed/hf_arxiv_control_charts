@@ -1,26 +1,24 @@
 # =============================================================================
-# arXiv Paper Downloader and SPC Factsheet Extractor
+# arXiv Paper Search and SPC Factsheet Extractor
 # =============================================================================
 #
 # Purpose:
-#   Search arXiv for control chart papers, download PDFs, and extract
-#   structured Statistical Process Control (SPC) metadata using LLMs.
+#   Search arXiv for control chart papers and extract structured Statistical
+#   Process Control (SPC) metadata using LLMs.
 #
 # Workflow:
 #   1. Query arXiv API for papers matching search criteria
 #   2. Save metadata to CSV for reproducibility
-#   3. Download PDFs with polite rate limiting
-#   4. Extract structured factsheets from PDFs using ellmer
+#   3. Extract structured factsheets from PDFs using ellmer (via URL)
 #
 # Requirements:
-#   - R packages: aRxiv, dplyr, tidyr, lubridate, purrr, readr, fs, httr,
+#   - R packages: aRxiv, dplyr, tidyr, lubridate, purrr, readr, fs,
 #                 tibble, progressr, ellmer
 #   - API credentials for chosen LLM provider (if using cloud providers)
 #
 # Notes:
-#   - Downloads respect arXiv rate limits with configurable delays
-#   - Uses httr::RETRY() for resilient network requests
-#   - PDF extraction requires LLM provider with PDF attachment support
+#   - PDF extraction uses ellmer::content_pdf_url() for URL-based extraction
+#   - No local PDF downloads required (works in GitHub Actions)
 #   - Results are cached in CSV to avoid redundant API calls
 #   - List columns are stored as "|"-delimited strings in CSV
 # =============================================================================
@@ -35,22 +33,18 @@ config <- list(
   # arXiv search parameters
   query = '(ti:"control chart" OR abs:"control chart")',
   limit = 10000L,
-  
+
+
   # Directory paths
-  pdf_dir = "local_papers/arxiv",
   output_dir = "data",
-  
-  # Download settings
-  download_delay_sec = 3L,
-  user_agent = "arXiv control-chart downloader (polite; academic use)",
-  
+
   # LLM extraction settings
   extraction_enabled = TRUE,
   extraction_delay_sec = 0L,
   llm_provider = "openai",
   llm_model = "gpt-5.2-2025-12-11",
   n_extraction_repeats = 1L,
-  
+
   # Output file paths
   metadata_csv = "data/arxiv_metadata.csv",
   factsheet_csv = "data/spc_factsheet.csv"
@@ -58,46 +52,6 @@ config <- list(
 
 
 # Helper Functions ------------------------------------------------------------
-
-#' Download a Single PDF from arXiv
-#'
-#' Downloads a PDF file with retry logic and polite error handling.
-#' Skips download if the file already exists.
-#'
-#' @param pdf_url Character. URL of the PDF to download.
-#' @param output_path Character. Local file path for saving the PDF.
-#' @param user_agent Character. User agent string for the request.
-#'
-#' @return Logical (invisible). TRUE if successful or file exists, FALSE on failure.
-download_pdf <- function(pdf_url, output_path, user_agent) {
-  if (fs::file_exists(output_path)) {
-    return(invisible(TRUE))
-  }
-  
-  fs::dir_create(fs::path_dir(output_path))
-  
-  response <- httr::RETRY(
-    verb = "GET",
-    url = pdf_url,
-    times = 5L,
-    pause_min = 1,
-    pause_cap = 10,
-    terminate_on = c(400L, 401L, 403L, 404L),
-    httr::user_agent(user_agent)
-  )
-  
-  if (httr::http_error(response)) {
-    warning(
-      sprintf("Download failed [%d]: %s", httr::status_code(response), pdf_url),
-      call. = FALSE
-    )
-    return(invisible(FALSE))
-  }
-  
-  writeBin(httr::content(response, as = "raw"), output_path)
-  invisible(TRUE)
-}
-
 
 #' Create LLM Chat Object
 #'
@@ -288,17 +242,19 @@ normalize_factsheet <- function(raw_output) {
 }
 
 
-#' Extract SPC Factsheet from PDF
+#' Extract SPC Factsheet from PDF URL
 #'
-#' Uses an LLM to extract structured metadata from a PDF document.
+#' Uses an LLM to extract structured metadata from a PDF document via URL.
+#' The PDF is downloaded internally by ellmer to a temp file, processed,
+#' and cleaned up automatically.
 #'
-#' @param pdf_path Character. Path to the PDF file.
+#' @param pdf_url Character. URL of the PDF to process.
 #' @param chat_object An ellmer chat object.
 #' @param type_object An ellmer type specification.
 #'
 #' @return A normalized single-row tibble.
-extract_factsheet_from_pdf <- function(pdf_path, chat_object, type_object) {
-  pdf_content <- ellmer::content_pdf_file(pdf_path)
+extract_factsheet_from_pdf <- function(pdf_url, chat_object, type_object) {
+  pdf_content <- ellmer::content_pdf_url(pdf_url)
   
   prompt <- paste(
     "Extract the SPC factsheet fields from the attached PDF.",
@@ -799,7 +755,6 @@ schema_spc_factsheet <- ellmer::type_object(
 # Main Pipeline ---------------------------------------------------------------
 
 # Initialize directories
-fs::dir_create(config$pdf_dir)
 fs::dir_create(config$output_dir)
 
 # Set up progress reporting
@@ -815,54 +770,26 @@ metadata <- aRxiv::arxiv_search(query = config$query, limit = config$limit) |>
   tibble::as_tibble() |>
   dplyr::mutate(
     pdf_url = paste0("https://arxiv.org/pdf/", id, ".pdf"),
-    output_path = fs::path(config$pdf_dir, paste0(id, ".pdf")),
     submitted = lubridate::ymd_hms(submitted)
-  ) |> 
+  ) |>
   dplyr::arrange(dplyr::desc(submitted))
 
 readr::write_csv(metadata, config$metadata_csv)
 message(sprintf("Found %d papers. Metadata saved to: %s", nrow(metadata), config$metadata_csv))
 
 
-# Step 2: Download PDFs -------------------------------------------------------
-
-papers_to_download <- metadata |>
-  dplyr::filter(!fs::file_exists(output_path))
-
-message(sprintf("Papers to download: %d of %d", nrow(papers_to_download), nrow(metadata)))
-
-if (nrow(papers_to_download) > 0L) {
-  progressr::with_progress({
-    p <- progressr::progressor(steps = nrow(papers_to_download))
-    
-    purrr::pwalk(
-      papers_to_download,
-      function(pdf_url, output_path, ...) {
-        p(message = fs::path_file(output_path))
-        download_pdf(pdf_url, output_path, config$user_agent)
-        Sys.sleep(config$download_delay_sec)
-      }
-    )
-  })
-  
-  message("PDF downloads complete.")
-} else {
-  message("All PDFs already downloaded.")
-}
-
-
-# Step 3: Extract Factsheets --------------------------------------------------
+# Step 2: Extract Factsheets --------------------------------------------------
 
 if (!config$extraction_enabled) {
   message("Structured extraction disabled.")
 } else {
-  available_pdfs <- tibble::tibble(
-    pdf_path = fs::dir_ls(config$pdf_dir, glob = "*.pdf"),
-    id = fs::path_ext_remove(fs::path_file(pdf_path))
-  )
-  
-  if (nrow(available_pdfs) == 0L) {
-    message(sprintf("No PDFs found in: %s", config$pdf_dir))
+  # Get papers available for extraction from metadata (URL-based, no local files needed)
+  papers_for_extraction <- metadata |>
+    dplyr::select(id, pdf_url) |>
+    dplyr::distinct()
+
+  if (nrow(papers_for_extraction) == 0L) {
+    message("No papers found in metadata for extraction.")
   } else {
     # Load existing cache from CSV (expand list columns from "|"-delimited strings)
     factsheet_cache <- if (fs::file_exists(config$factsheet_csv)) {
@@ -881,70 +808,70 @@ if (!config$extraction_enabled) {
     } else {
       tibble::tibble()
     }
-    
+
     extracted_ids <- if (nrow(factsheet_cache) > 0L && "id" %in% names(factsheet_cache)) {
       unique(dplyr::pull(factsheet_cache, id))
     } else {
       character(0L)
     }
-    
-    pdfs_to_extract <- available_pdfs |>
+
+    papers_to_extract <- papers_for_extraction |>
       dplyr::filter(!id %in% extracted_ids)
-    
+
     message(sprintf(
-      "Extraction status: %d available, %d cached, %d remaining",
-      nrow(available_pdfs),
+      "Extraction status: %d in metadata, %d cached, %d remaining",
+      nrow(papers_for_extraction),
       length(extracted_ids),
-      nrow(pdfs_to_extract)
+      nrow(papers_to_extract)
     ))
     
-    if (nrow(pdfs_to_extract) == 0L) {
+    if (nrow(papers_to_extract) == 0L) {
       message("All factsheets already extracted.")
     } else {
       # Safe extraction wrapper with error logging
-      safe_extract <- function(pdf_path, chat_object, type_object) {
+      safe_extract <- function(pdf_url, chat_object, type_object) {
         tryCatch(
-          extract_factsheet_from_pdf(pdf_path, chat_object, type_object),
+          extract_factsheet_from_pdf(pdf_url, chat_object, type_object),
           error = function(e) {
             warning(
-              sprintf("Extraction failed for %s: %s", basename(pdf_path), conditionMessage(e)),
+              sprintf("Extraction failed for %s: %s", pdf_url, conditionMessage(e)),
               call. = FALSE
             )
             normalize_factsheet(tibble::tibble(
               # Relevance
               is_spc_paper = NA,
-              
+
               # Classification
               chart_family = list(NA_character_),
               chart_statistic = list(NA_character_),
               phase = list(NA_character_),
               application_domain = list(NA_character_),
-              
+
               # Data assumptions
               assumes_normality = NA,
               handles_autocorrelation = NA,
               handles_missing_data = NA,
-              
+
               # Evaluation
               evaluation_type = list(NA_character_),
               performance_metrics = list(NA_character_),
               sample_size_requirements = NA_character_,
-              
+
               # Software
               code_used = NA,
               software_platform = list(NA_character_),
               code_availability_source = list(NA_character_),
               software_urls = list(NA_character_),
-              
+
               # Content
               summary = NA_character_,
               key_equations = NA_character_,
               key_results = NA_character_,
-              
+
               # Limitations
               limitations_stated = NA_character_,
               limitations_unstated = NA_character_,
-              
+
               # Future work
               future_work_stated = NA_character_,
               future_work_unstated = NA_character_
@@ -952,37 +879,38 @@ if (!config$extraction_enabled) {
           }
         )
       }
-      
+
       # Build extraction grid (supports multiple repeats)
       extraction_grid <- tidyr::crossing(
-        pdfs_to_extract,
+        papers_to_extract,
         repeat_id = seq_len(config$n_extraction_repeats)
       )
-      
-      # Process each PDF and save incrementally
+
+      # Process each paper and save incrementally
       for (i in seq_len(nrow(extraction_grid))) {
         row <- extraction_grid[i, ]
-        pdf_path <- row$pdf_path
+        pdf_url <- row$pdf_url
         id <- row$id
         repeat_id <- row$repeat_id
-        
+
         message(sprintf("[%d/%d] %s | repeat %d", i, nrow(extraction_grid), id, repeat_id))
-        
+
         chat_clean <- create_chat(config$llm_provider, config$llm_model)
-        
-        result <- safe_extract(pdf_path, chat_clean, schema_spc_factsheet) |>
+
+        result <- safe_extract(pdf_url, chat_clean, schema_spc_factsheet) |>
           dplyr::mutate(
             id = id,
-            pdf_path = as.character(pdf_path),
+            pdf_url = pdf_url,
+            pdf_path = NA_character_,
             llm_provider = config$llm_provider,
             llm_model = config$llm_model,
             repeat_id = repeat_id,
             extracted_at = Sys.time()
           )
-        
+
         # Update cache incrementally
         factsheet_cache <- dplyr::bind_rows(factsheet_cache, result)
-        
+
         # Save to CSV with list columns collapsed to "|"-delimited strings
         factsheet_cache |>
           dplyr::mutate(
@@ -997,25 +925,10 @@ if (!config$extraction_enabled) {
             software_urls = collapse_list_col(software_urls)
           ) |>
           readr::write_csv(config$factsheet_csv)
-        
-        # Export CSV with list columns collapsed to delimited strings
-        factsheet_csv <- factsheet_cache |>
-          dplyr::mutate(
-            chart_family = collapse_list_col(chart_family),
-            chart_statistic = collapse_list_col(chart_statistic),
-            phase = collapse_list_col(phase),
-            application_domain = collapse_list_col(application_domain),
-            evaluation_type = collapse_list_col(evaluation_type),
-            performance_metrics = collapse_list_col(performance_metrics),
-            software_platform = collapse_list_col(software_platform),
-            code_availability_source = collapse_list_col(code_availability_source),
-            software_urls = collapse_list_col(software_urls)
-          )
-        readr::write_csv(factsheet_csv, config$factsheet_csv)
-        
+
         Sys.sleep(config$extraction_delay_sec)
       }
-      
+
       message(sprintf("Extraction complete. Output: %s", config$factsheet_csv))
     }
   }
