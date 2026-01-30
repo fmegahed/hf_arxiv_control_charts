@@ -4,7 +4,7 @@
     "label": "Control Charts",
     "short_label": "SPC",
     "query": "(ti:\"control chart\" OR abs:\"control chart\")",
-    "icon": "chart-bar",
+    "icon": "chart-line",
     "color": "#1b9e77",
     "description": "Statistical process monitoring and control charting research",
     "metadata_csv": "data/spc_arxiv_metadata.csv",

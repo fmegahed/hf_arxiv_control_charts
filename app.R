@@ -256,7 +256,7 @@ ui <- shiny::fluidPage(
               onclick = "Shiny.setInputValue('select_track', 'spc', {priority: 'event'})",
               onmouseover = "this.style.boxShadow='0 12px 40px rgba(27, 158, 119, 0.3)'; this.style.transform='translateY(-8px)';",
               onmouseout = "this.style.boxShadow=''; this.style.transform='';",
-              shiny::div(class = "track-card-icon", style = "color: #1b9e77;", shiny::icon("chart-bar")),
+              shiny::div(class = "track-card-icon", style = "color: #1b9e77;", shiny::icon("chart-line")),
               shiny::tags$h3(style = "color: #1b9e77;", "Control Charts"),
               shiny::tags$p("Statistical process monitoring and control charting research"),
               shiny::div(class = "track-card-count", style = "background: rgba(27, 158, 119, 0.15); border: 1px solid #1b9e77;",
@@ -1555,7 +1555,7 @@ server <- function(input, output, session) {
       text = ~paste0(count, " papers"), hoverinfo = "text") |>
       plotly::layout(
         xaxis = list(title = "Papers"),
-        yaxis = list(title = ""),
+        yaxis = list(title = "", ticksuffix = "  "),
         margin = list(l = 150)
       ) |>
       plotly::config(displayModeBar = FALSE)
@@ -1792,7 +1792,7 @@ server <- function(input, output, session) {
 
     plotly::plot_ly(top, x = ~n, y = ~reorder(author, n), type = "bar",
       orientation = "h", marker = list(color = track_color)) |>
-      plotly::layout(xaxis = list(title = "Papers"), yaxis = list(title = ""),
+      plotly::layout(xaxis = list(title = "Papers"), yaxis = list(title = "", ticksuffix = "  "),
         margin = list(l = 180)) |>
       plotly::config(displayModeBar = FALSE)
   })
