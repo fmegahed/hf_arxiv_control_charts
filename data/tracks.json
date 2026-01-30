@@ -1,0 +1,38 @@
+{
+  "spc": {
+    "id": "spc",
+    "label": "Control Charts (SPC)",
+    "short_label": "SPC",
+    "query": "(ti:\"control chart\" OR abs:\"control chart\")",
+    "icon": "chart-bar",
+    "color": "#C41230",
+    "description": "Statistical Process Control and control chart research",
+    "metadata_csv": "data/spc_arxiv_metadata.csv",
+    "factsheet_csv": "data/spc_factsheet.csv",
+    "relevance_field": "is_spc_paper"
+  },
+  "exp_design": {
+    "id": "exp_design",
+    "label": "Experimental Design (DOE)",
+    "short_label": "DOE",
+    "query": "(ti:\"experimental design\" OR ti:\"designed experiment\" OR ti:\"design of experiment\" OR ti:\"response surface\" OR ti:\"supersaturated design\")",
+    "icon": "flask",
+    "color": "#1B9E77",
+    "description": "Design of experiments and response surface methodology research",
+    "metadata_csv": "data/exp_design_arxiv_metadata.csv",
+    "factsheet_csv": "data/exp_design_factsheet.csv",
+    "relevance_field": "is_exp_design_paper"
+  },
+  "reliability": {
+    "id": "reliability",
+    "label": "Reliability Engineering",
+    "short_label": "Reliability",
+    "query": "((ti:reliability OR ti:degradation OR ti:maintenance OR ti:\"remaining useful life\" OR ti:\"failure analysis\") AND (cat:stat.ME OR cat:stat.AP OR cat:stat.ML))",
+    "icon": "cogs",
+    "color": "#D95F02",
+    "description": "Reliability engineering, degradation modeling, and maintenance optimization research",
+    "metadata_csv": "data/reliability_arxiv_metadata.csv",
+    "factsheet_csv": "data/reliability_factsheet.csv",
+    "relevance_field": "is_reliability_paper"
+  }
+}

@@ -1,19 +1,25 @@
 # =============================================================================
-# arXiv Paper Search and SPC Factsheet Extractor
+# arXiv Multi-Track Paper Search and Factsheet Extractor
 # =============================================================================
 #
 # Purpose:
-#   Search arXiv for control chart papers and extract structured Statistical
-#   Process Control (SPC) metadata using LLMs.
+#   Search arXiv for research papers across multiple tracks (SPC, DOE, Reliability)
+#   and extract structured metadata using LLMs.
+#
+# Tracks:
+#   - SPC: Statistical Process Control and control chart research
+#   - DOE: Experimental Design and response surface methodology
+#   - Reliability: Reliability engineering, degradation modeling, maintenance
 #
 # Workflow:
-#   1. Query arXiv API for papers matching search criteria
-#   2. Save metadata to CSV for reproducibility
+#   1. For each track, query arXiv API for papers matching track-specific criteria
+#   2. Save metadata to track-specific CSV for reproducibility
 #   3. Extract structured factsheets from PDFs using ellmer (via URL)
+#   4. Write track configuration to JSON for app consumption
 #
 # Requirements:
 #   - R packages: aRxiv, dplyr, tidyr, lubridate, purrr, readr, fs,
-#                 tibble, progressr, ellmer
+#                 tibble, progressr, ellmer, jsonlite
 #   - API credentials for chosen LLM provider (if using cloud providers)
 #
 # Notes:
@@ -30,10 +36,8 @@ OPENAI_API_KEY = Sys.getenv("OPENAI_API_KEY")
 get_openai_api_key = function(){return(OPENAI_API_KEY)}
 
 config <- list(
-  # arXiv search parameters
-  query = '(ti:"control chart" OR abs:"control chart")',
+  # arXiv search parameters (legacy - now per-track)
   limit = 10000L,
-
 
   # Directory paths
   output_dir = "data",
@@ -43,11 +47,70 @@ config <- list(
   extraction_delay_sec = 0L,
   llm_provider = "openai",
   llm_model = "gpt-5.2-2025-12-11",
-  n_extraction_repeats = 1L,
+  n_extraction_repeats = 1L
+)
 
-  # Output file paths
-  metadata_csv = "data/arxiv_metadata.csv",
-  factsheet_csv = "data/spc_factsheet.csv"
+# Track Configuration --------------------------------------------------------
+
+tracks <- list(
+  spc = list(
+    id = "spc",
+    label = "Control Charts (SPC)",
+    short_label = "SPC",
+    query = '(ti:"control chart" OR abs:"control chart")',
+    metadata_csv = "data/spc_arxiv_metadata.csv",
+    factsheet_csv = "data/spc_factsheet.csv",
+    schema = "schema_spc_factsheet",
+    relevance_field = "is_spc_paper",
+    icon = "chart-bar",
+    color = "#C41230",
+    description = "Statistical Process Control and control chart research"
+  ),
+  exp_design = list(
+    id = "exp_design",
+    label = "Experimental Design (DOE)",
+    short_label = "DOE",
+    query = '(ti:"experimental design" OR ti:"designed experiment" OR ti:"design of experiment" OR ti:"response surface" OR ti:"supersaturated design")',
+    metadata_csv = "data/exp_design_arxiv_metadata.csv",
+    factsheet_csv = "data/exp_design_factsheet.csv",
+    schema = "schema_exp_design_factsheet",
+    relevance_field = "is_exp_design_paper",
+    icon = "flask",
+    color = "#1B9E77",
+    description = "Design of experiments and response surface methodology research"
+  ),
+  reliability = list(
+    id = "reliability",
+    label = "Reliability Engineering",
+    short_label = "Reliability",
+    query = '((ti:reliability OR ti:degradation OR ti:maintenance OR ti:"remaining useful life" OR ti:"failure analysis") AND (cat:stat.ME OR cat:stat.AP OR cat:stat.ML))',
+    metadata_csv = "data/reliability_arxiv_metadata.csv",
+    factsheet_csv = "data/reliability_factsheet.csv",
+    schema = "schema_reliability_factsheet",
+    relevance_field = "is_reliability_paper",
+    icon = "cogs",
+    color = "#D95F02",
+    description = "Reliability engineering, degradation modeling, and maintenance optimization research"
+  )
+)
+
+# Track-specific list column fields for normalization
+track_list_col_fields <- list(
+  spc = c(
+    "chart_family", "chart_statistic", "phase", "application_domain",
+    "evaluation_type", "performance_metrics", "software_platform",
+    "code_availability_source", "software_urls"
+  ),
+  exp_design = c(
+    "design_type", "design_objective", "optimality_criterion",
+    "application_domain", "evaluation_type", "software_platform",
+    "code_availability_source", "software_urls"
+  ),
+  reliability = c(
+    "reliability_topic", "modeling_approach", "data_type", "maintenance_policy",
+    "application_domain", "evaluation_type", "software_platform",
+    "code_availability_source", "software_urls"
+  )
 )
 
 
@@ -133,39 +196,50 @@ expand_list_col <- function(x, sep = "|") {
 }
 
 
-#' Normalize SPC Factsheet Output
+#' Normalize Factsheet Output
 #'
 #' Ensures consistent structure and types for extracted factsheet data.
+#' Supports track-specific fields based on track_id parameter.
 #'
 #' @param raw_output Raw output from LLM extraction (list or tibble).
+#' @param track_id Character. One of "spc", "exp_design", or "reliability".
 #'
 #' @return A single-row tibble with standardized columns.
-normalize_factsheet <- function(raw_output) {
-  # Fields that should become list-columns (multi-select)
-  list_col_fields <- c(
-    "chart_family",
-    "chart_statistic",
-    "phase",
+normalize_factsheet <- function(raw_output, track_id = "spc") {
+  # Common list column fields across all tracks
+  common_list_cols <- c(
     "application_domain",
     "evaluation_type",
-    "performance_metrics",
     "software_platform",
     "code_availability_source",
     "software_urls"
   )
-  
-  # Boolean fields
-  boolean_fields <- c(
-    "is_spc_paper",
-    "assumes_normality",
-    "handles_autocorrelation",
-    "handles_missing_data",
-    "code_used"
+
+  # Track-specific list column fields
+  track_specific_list_cols <- switch(track_id,
+    spc = c("chart_family", "chart_statistic", "phase", "performance_metrics"),
+    exp_design = c("design_type", "design_objective", "optimality_criterion"),
+    reliability = c("reliability_topic", "modeling_approach", "data_type", "maintenance_policy"),
+    c()  # default empty
   )
-  
-  # Text fields
-  text_fields <- c(
-    "sample_size_requirements",
+
+  list_col_fields <- c(common_list_cols, track_specific_list_cols)
+
+  # Common boolean fields
+  common_boolean_fields <- c("code_used")
+
+  # Track-specific boolean fields
+  track_specific_boolean_fields <- switch(track_id,
+    spc = c("is_spc_paper", "assumes_normality", "handles_autocorrelation", "handles_missing_data"),
+    exp_design = c("is_exp_design_paper"),
+    reliability = c("is_reliability_paper"),
+    c()
+  )
+
+  boolean_fields <- c(common_boolean_fields, track_specific_boolean_fields)
+
+  # Common text fields
+  common_text_fields <- c(
     "summary",
     "key_equations",
     "key_results",
@@ -174,7 +248,17 @@ normalize_factsheet <- function(raw_output) {
     "future_work_stated",
     "future_work_unstated"
   )
-  
+
+  # Track-specific text fields
+  track_specific_text_fields <- switch(track_id,
+    spc = c("sample_size_requirements"),
+    exp_design = c("number_of_factors"),
+    reliability = c(),
+    c()
+  )
+
+  text_fields <- c(common_text_fields, track_specific_text_fields)
+
   # If raw_output is a list (not already a data.frame), wrap array fields
   if (is.list(raw_output) && !inherits(raw_output, "data.frame")) {
     for (field in list_col_fields) {
@@ -189,12 +273,12 @@ normalize_factsheet <- function(raw_output) {
       }
     }
   }
-  
+
   result <- tibble::as_tibble(raw_output)
-  
+
   # Ensure all required columns exist
   all_fields <- c(list_col_fields, boolean_fields, text_fields)
-  
+
   for (col in all_fields) {
     if (!col %in% names(result)) {
       if (col %in% list_col_fields) {
@@ -204,45 +288,34 @@ normalize_factsheet <- function(raw_output) {
       }
     }
   }
-  
-  # Normalize types
-  result <- result |>
-    dplyr::mutate(
-      # List columns
-      chart_family = as_list_chr(chart_family),
-      chart_statistic = as_list_chr(chart_statistic),
-      phase = as_list_chr(phase),
-      application_domain = as_list_chr(application_domain),
-      evaluation_type = as_list_chr(evaluation_type),
-      performance_metrics = as_list_chr(performance_metrics),
-      software_platform = as_list_chr(software_platform),
-      code_availability_source = as_list_chr(code_availability_source),
-      software_urls = as_list_chr(software_urls),
-      
-      # Boolean columns
-      is_spc_paper = as.logical(is_spc_paper),
-      assumes_normality = as.logical(assumes_normality),
-      handles_autocorrelation = as.logical(handles_autocorrelation),
-      handles_missing_data = as.logical(handles_missing_data),
-      code_used = as.logical(code_used),
-      
-      # Text columns
-      sample_size_requirements = if (is.na(sample_size_requirements)) NA_character_ else as.character(sample_size_requirements),
-      summary = if (is.na(summary)) NA_character_ else as.character(summary),
-      key_equations = if (is.na(key_equations)) NA_character_ else as.character(key_equations),
-      key_results = if (is.na(key_results)) NA_character_ else as.character(key_results),
-      limitations_stated = if (is.na(limitations_stated)) NA_character_ else as.character(limitations_stated),
-      limitations_unstated = if (is.na(limitations_unstated)) NA_character_ else as.character(limitations_unstated),
-      future_work_stated = if (is.na(future_work_stated)) NA_character_ else as.character(future_work_stated),
-      future_work_unstated = if (is.na(future_work_unstated)) NA_character_ else as.character(future_work_unstated)
-    ) |>
-    dplyr::slice(1L)
-  
-  result
+
+  # Normalize list columns to consistent format
+  for (col in list_col_fields) {
+    if (col %in% names(result)) {
+      result[[col]] <- as_list_chr(result[[col]])
+    }
+  }
+
+  # Normalize boolean columns
+  for (col in boolean_fields) {
+    if (col %in% names(result)) {
+      result[[col]] <- as.logical(result[[col]])
+    }
+  }
+
+  # Normalize text columns
+  for (col in text_fields) {
+    if (col %in% names(result)) {
+      val <- result[[col]]
+      result[[col]] <- if (is.na(val)) NA_character_ else as.character(val)
+    }
+  }
+
+  result |> dplyr::slice(1L)
 }
 
 
-#' Extract SPC Factsheet from PDF URL
+#' Extract Factsheet from PDF URL
 #'
 #' Uses an LLM to extract structured metadata from a PDF document via URL.
 #' The PDF is downloaded internally by ellmer to a temp file, processed,
@@ -251,22 +324,46 @@ normalize_factsheet <- function(raw_output) {
 #' @param pdf_url Character. URL of the PDF to process.
 #' @param chat_object An ellmer chat object.
 #' @param type_object An ellmer type specification.
+#' @param track_id Character. One of "spc", "exp_design", or "reliability".
 #'
 #' @return A normalized single-row tibble.
-extract_factsheet_from_pdf <- function(pdf_url, chat_object, type_object) {
+extract_factsheet_from_pdf <- function(pdf_url, chat_object, type_object, track_id = "spc") {
   pdf_content <- ellmer::content_pdf_url(pdf_url)
-  
-  prompt <- paste(
-    "Extract the SPC factsheet fields from the attached PDF.",
-    "Select ALL applicable categories for multi-label fields.",
-    "If a URL exists, return only the URL string.",
-    "If code is implied but not shared, choose 'Not provided'.",
-    sep = "\n"
+
+  # Track-specific prompts
+  prompt <- switch(track_id,
+    spc = paste(
+      "Extract the SPC factsheet fields from the attached PDF.",
+      "Select ALL applicable categories for multi-label fields.",
+      "If a URL exists, return only the URL string.",
+      "If code is implied but not shared, choose 'Not provided'.",
+      sep = "\n"
+    ),
+    exp_design = paste(
+      "Extract the experimental design (DOE) factsheet fields from the attached PDF.",
+      "Select ALL applicable categories for multi-label fields.",
+      "If a URL exists, return only the URL string.",
+      "If code is implied but not shared, choose 'Not provided'.",
+      sep = "\n"
+    ),
+    reliability = paste(
+      "Extract the reliability engineering factsheet fields from the attached PDF.",
+      "Select ALL applicable categories for multi-label fields.",
+      "If a URL exists, return only the URL string.",
+      "If code is implied but not shared, choose 'Not provided'.",
+      sep = "\n"
+    ),
+    # default
+    paste(
+      "Extract the factsheet fields from the attached PDF.",
+      "Select ALL applicable categories for multi-label fields.",
+      sep = "\n"
+    )
   )
-  
+
   raw_output <- chat_object$chat_structured(prompt, pdf_content, type = type_object)
-  
-  normalize_factsheet(raw_output)
+
+  normalize_factsheet(raw_output, track_id)
 }
 
 
@@ -712,40 +809,422 @@ schema_future_work_unstated <- ellmer::type_string(
 
 schema_spc_factsheet <- ellmer::type_object(
   # Relevance
-  
+
   is_spc_paper = schema_is_spc_paper,
-  
+
   # Classification
   chart_family = schema_chart_family,
   chart_statistic = schema_chart_statistic,
   phase = schema_phase,
   application_domain = schema_application_domain,
-  
+
   # Data assumptions
   assumes_normality = schema_assumes_normality,
   handles_autocorrelation = schema_handles_autocorrelation,
   handles_missing_data = schema_handles_missing_data,
-  
+
   # Evaluation
   evaluation_type = schema_evaluation_type,
   performance_metrics = schema_performance_metrics,
   sample_size_requirements = schema_sample_size_requirements,
-  
+
   # Software
   code_used = schema_code_used,
   software_platform = schema_software_platform,
   code_availability_source = schema_code_availability,
   software_urls = schema_software_urls,
-  
+
   # Content
   summary = schema_summary,
   key_equations = schema_key_equations,
   key_results = schema_key_results,
-  
+
   # Limitations
   limitations_stated = schema_limitations_stated,
   limitations_unstated = schema_limitations_unstated,
-  
+
+  # Future work
+  future_work_stated = schema_future_work_stated,
+  future_work_unstated = schema_future_work_unstated
+)
+
+
+# =============================================================================
+# Experimental Design (DOE) Schema Definitions
+# =============================================================================
+
+# --- Relevance Filter ---
+
+schema_is_exp_design_paper <- ellmer::type_boolean(
+  description = paste(
+    "TRUE if this paper is substantively about experimental design (DOE) or designed experiments.",
+    "",
+    "Return TRUE if the paper:",
+    "- Proposes, develops, or evaluates an experimental design methodology",
+    "- Focuses on factorial designs, response surface methodology, or optimal designs",
+    "- Addresses screening experiments, mixture designs, or split-plot designs",
+    "- Discusses optimality criteria (D-optimal, A-optimal, etc.) for design construction",
+    "",
+    "Return FALSE if:",
+    "- 'Experimental design' is only mentioned in passing or as a minor tool",
+    "- The paper is primarily about data analysis without design contributions",
+    "- DOE methods are used but not the focus of the paper",
+    sep = "\n"
+  ),
+  required = TRUE
+)
+
+# --- DOE Classification Fields ---
+
+schema_design_type <- ellmer::type_array(
+  ellmer::type_enum(
+    values = c(
+      "Factorial (full)",
+      "Factorial (fractional)",
+      "Response surface",
+      "Mixture",
+      "Split-plot",
+      "Optimal design",
+      "Screening",
+      "Definitive screening",
+      "Supersaturated",
+      "Robust parameter design",
+      "Sequential/adaptive",
+      "Computer experiment",
+      "Bayesian design",
+      "Other"
+    ),
+    description = paste(
+      "The type of experimental design proposed or evaluated.",
+      "Select ALL applicable categories.",
+      "",
+      "Definitions:",
+      "- Factorial (full): Complete factorial experiments at all level combinations.",
+      "- Factorial (fractional): Subset of factorial runs using aliasing structure.",
+      "- Response surface: Second-order designs for optimization (CCD, Box-Behnken, etc.).",
+      "- Mixture: Designs where factors are proportions summing to 1.",
+      "- Split-plot: Designs with hard-to-change and easy-to-change factors.",
+      "- Optimal design: Designs constructed by optimizing a criterion (D, A, I, etc.).",
+      "- Screening: Designs for identifying important factors among many.",
+      "- Definitive screening: Designs that screen and estimate some two-factor interactions.",
+      "- Supersaturated: Designs with more factors than runs.",
+      "- Robust parameter design: Taguchi-style designs separating control and noise factors.",
+      "- Sequential/adaptive: Designs that adapt based on observed responses.",
+      "- Computer experiment: Space-filling designs for deterministic simulations.",
+      "- Bayesian design: Designs optimized using Bayesian criteria.",
+      "- Other: Specialized designs not listed above.",
+      sep = "\n"
+    ),
+    required = TRUE
+  )
+)
+
+schema_design_objective <- ellmer::type_array(
+  ellmer::type_enum(
+    values = c(
+      "Parameter estimation",
+      "Screening",
+      "Optimization",
+      "Model discrimination",
+      "Prediction",
+      "Robustness",
+      "Cost reduction",
+      "Other"
+    ),
+    description = paste(
+      "The primary objective of the experimental design.",
+      "Select ALL applicable objectives.",
+      "",
+      "- Parameter estimation: Precise estimation of model coefficients.",
+      "- Screening: Identifying important factors from many candidates.",
+      "- Optimization: Finding factor settings that optimize response.",
+      "- Model discrimination: Distinguishing between competing models.",
+      "- Prediction: Accurate prediction at untested factor combinations.",
+      "- Robustness: Minimizing sensitivity to noise factors.",
+      "- Cost reduction: Minimizing experimental resources.",
+      sep = "\n"
+    ),
+    required = FALSE
+  )
+)
+
+schema_optimality_criterion <- ellmer::type_array(
+  ellmer::type_enum(
+    values = c(
+      "D-optimal",
+      "A-optimal",
+      "I-optimal (IV-optimal)",
+      "G-optimal",
+      "E-optimal",
+      "V-optimal",
+      "Bayesian D-optimal",
+      "Bayesian A-optimal",
+      "Compound criterion",
+      "Space-filling",
+      "Minimax/Maximin",
+      "Not applicable",
+      "Other"
+    ),
+    description = paste(
+      "The optimality criterion used for design construction.",
+      "Select ALL applicable criteria.",
+      "",
+      "- D-optimal: Maximizes determinant of information matrix.",
+      "- A-optimal: Minimizes average variance of parameter estimates.",
+      "- I-optimal: Minimizes average prediction variance over design region.",
+      "- G-optimal: Minimizes maximum prediction variance.",
+      "- E-optimal: Maximizes minimum eigenvalue of information matrix.",
+      "- V-optimal: Minimizes average prediction variance at specified points.",
+      "- Space-filling: Spreads points uniformly (e.g., Latin hypercube).",
+      "- Minimax/Maximin: Optimizes worst-case distances between points.",
+      "- Not applicable: Paper does not involve optimal design construction.",
+      sep = "\n"
+    ),
+    required = FALSE
+  )
+)
+
+schema_number_of_factors <- ellmer::type_string(
+  description = paste(
+    "The number of factors considered in the experimental design (brief description).",
+    "",
+    "Examples: '3 factors', '5-10 factors', 'Up to 100 factors for screening'.",
+    "Return 'Variable/General' if the paper considers general settings.",
+    "Return 'Not specified' if unclear.",
+    sep = "\n"
+  ),
+  required = FALSE
+)
+
+# --- DOE Combined Schema Object ---
+
+schema_exp_design_factsheet <- ellmer::type_object(
+  # Relevance
+  is_exp_design_paper = schema_is_exp_design_paper,
+
+  # Classification
+  design_type = schema_design_type,
+  design_objective = schema_design_objective,
+  optimality_criterion = schema_optimality_criterion,
+  number_of_factors = schema_number_of_factors,
+  application_domain = schema_application_domain,
+
+  # Evaluation
+  evaluation_type = schema_evaluation_type,
+
+  # Software
+  code_used = schema_code_used,
+  software_platform = schema_software_platform,
+  code_availability_source = schema_code_availability,
+  software_urls = schema_software_urls,
+
+  # Content
+  summary = schema_summary,
+  key_equations = schema_key_equations,
+  key_results = schema_key_results,
+
+  # Limitations
+  limitations_stated = schema_limitations_stated,
+  limitations_unstated = schema_limitations_unstated,
+
+  # Future work
+  future_work_stated = schema_future_work_stated,
+  future_work_unstated = schema_future_work_unstated
+)
+
+
+# =============================================================================
+# Reliability Engineering Schema Definitions
+# =============================================================================
+
+# --- Relevance Filter ---
+
+schema_is_reliability_paper <- ellmer::type_boolean(
+  description = paste(
+    "TRUE if this paper is substantively about reliability engineering or related topics.",
+    "",
+    "Return TRUE if the paper:",
+    "- Proposes, develops, or evaluates reliability models or methods",
+    "- Focuses on degradation modeling, remaining useful life prediction, or failure analysis",
+    "- Addresses maintenance optimization or condition-based maintenance",
+    "- Discusses life distributions, survival analysis in engineering contexts",
+    "",
+    "Return FALSE if:",
+    "- 'Reliability' is only mentioned in passing or as background",
+    "- The paper is primarily about a different topic (e.g., pure statistics)",
+    "- Reliability methods are used as a minor tool rather than being the focus",
+    sep = "\n"
+  ),
+  required = TRUE
+)
+
+# --- Reliability Classification Fields ---
+
+schema_reliability_topic <- ellmer::type_array(
+  ellmer::type_enum(
+    values = c(
+      "Life distribution modeling",
+      "Degradation modeling",
+      "RUL prediction",
+      "Failure mode analysis",
+      "Accelerated testing",
+      "Maintenance optimization",
+      "System reliability",
+      "Warranty analysis",
+      "Reliability growth",
+      "Software reliability",
+      "Network/infrastructure reliability",
+      "Other"
+    ),
+    description = paste(
+      "The primary reliability topic addressed in the paper.",
+      "Select ALL applicable topics.",
+      "",
+      "Definitions:",
+      "- Life distribution modeling: Parametric or nonparametric lifetime modeling.",
+      "- Degradation modeling: Models for gradual deterioration over time.",
+      "- RUL prediction: Remaining useful life estimation for equipment.",
+      "- Failure mode analysis: FMEA, fault trees, root cause analysis.",
+      "- Accelerated testing: ALT, HALT, step-stress testing.",
+      "- Maintenance optimization: Optimal maintenance scheduling and policies.",
+      "- System reliability: Reliability of systems with multiple components.",
+      "- Warranty analysis: Warranty cost modeling and prediction.",
+      "- Reliability growth: Tracking reliability improvement during development.",
+      "- Software reliability: Reliability models for software systems.",
+      "- Network/infrastructure reliability: Reliability of networks or critical infrastructure.",
+      "- Other: Specialized reliability topics not listed above.",
+      sep = "\n"
+    ),
+    required = TRUE
+  )
+)
+
+schema_modeling_approach <- ellmer::type_array(
+  ellmer::type_enum(
+    values = c(
+      "Parametric (Weibull, etc.)",
+      "Nonparametric/Semi-parametric",
+      "Stochastic process",
+      "Physics-based",
+      "ML-based",
+      "Bayesian",
+      "Hybrid/Ensemble",
+      "Simulation-based",
+      "Other"
+    ),
+    description = paste(
+      "The modeling approach used for reliability analysis.",
+      "Select ALL applicable approaches.",
+      "",
+      "- Parametric: Classical distributions (Weibull, lognormal, exponential, etc.).",
+      "- Nonparametric/Semi-parametric: Cox model, Kaplan-Meier, kernel methods.",
+      "- Stochastic process: Wiener, Gamma, inverse Gaussian processes.",
+      "- Physics-based: Models derived from failure physics/mechanisms.",
+      "- ML-based: Neural networks, random forests, SVMs for prediction.",
+      "- Bayesian: Bayesian inference for reliability parameters.",
+      "- Hybrid/Ensemble: Combining multiple approaches.",
+      "- Simulation-based: Monte Carlo or discrete event simulation.",
+      sep = "\n"
+    ),
+    required = FALSE
+  )
+)
+
+schema_data_type <- ellmer::type_array(
+  ellmer::type_enum(
+    values = c(
+      "Complete lifetime data",
+      "Right-censored",
+      "Interval-censored",
+      "Left-censored",
+      "Degradation measurements",
+      "Event/count data",
+      "Sensor/condition monitoring",
+      "Mixture of types",
+      "Simulated only",
+      "Other"
+    ),
+    description = paste(
+      "The type of reliability data used or modeled in the paper.",
+      "Select ALL applicable types.",
+      "",
+      "- Complete lifetime data: Exact failure times observed for all units.",
+      "- Right-censored: Some units have not yet failed at observation end.",
+      "- Interval-censored: Failures known to occur within time intervals.",
+      "- Left-censored: Failures occurred before observation began.",
+      "- Degradation measurements: Repeated measurements of a degrading characteristic.",
+      "- Event/count data: Recurrent events or failure counts.",
+      "- Sensor/condition monitoring: Real-time monitoring signals.",
+      "- Mixture of types: Combination of different data types.",
+      "- Simulated only: Only simulated data used in the paper.",
+      sep = "\n"
+    ),
+    required = FALSE
+  )
+)
+
+schema_maintenance_policy <- ellmer::type_array(
+  ellmer::type_enum(
+    values = c(
+      "Age-based",
+      "Block replacement",
+      "Condition-based",
+      "Predictive",
+      "Opportunistic",
+      "Group replacement",
+      "Imperfect maintenance",
+      "Not applicable",
+      "Other"
+    ),
+    description = paste(
+      "The type of maintenance policy considered in the paper.",
+      "Select ALL applicable policies.",
+      "",
+      "- Age-based: Replacement based on unit age/usage.",
+      "- Block replacement: Replacement at fixed time intervals.",
+      "- Condition-based: Maintenance triggered by condition thresholds.",
+      "- Predictive: Maintenance based on predicted future state.",
+      "- Opportunistic: Maintenance during natural downtime or dependencies.",
+      "- Group replacement: Replacing multiple components together.",
+      "- Imperfect maintenance: Maintenance that partially restores reliability.",
+      "- Not applicable: Paper does not address maintenance policies.",
+      sep = "\n"
+    ),
+    required = FALSE
+  )
+)
+
+# --- Reliability Combined Schema Object ---
+
+schema_reliability_factsheet <- ellmer::type_object(
+  # Relevance
+  is_reliability_paper = schema_is_reliability_paper,
+
+  # Classification
+  reliability_topic = schema_reliability_topic,
+  modeling_approach = schema_modeling_approach,
+  data_type = schema_data_type,
+  maintenance_policy = schema_maintenance_policy,
+  application_domain = schema_application_domain,
+
+  # Evaluation
+  evaluation_type = schema_evaluation_type,
+
+  # Software
+  code_used = schema_code_used,
+  software_platform = schema_software_platform,
+  code_availability_source = schema_code_availability,
+  software_urls = schema_software_urls,
+
+  # Content
+  summary = schema_summary,
+  key_equations = schema_key_equations,
+  key_results = schema_key_results,
+
+  # Limitations
+  limitations_stated = schema_limitations_stated,
+  limitations_unstated = schema_limitations_unstated,
+
   # Future work
   future_work_stated = schema_future_work_stated,
   future_work_unstated = schema_future_work_unstated
@@ -762,176 +1241,260 @@ progressr::handlers(global = TRUE)
 progressr::handlers("txtprogressbar")
 
 
-# Step 1: Search arXiv --------------------------------------------------------
+#' Expand list columns from CSV for a specific track
+#'
+#' @param df Data frame read from CSV
+#' @param track_id Character. One of "spc", "exp_design", or "reliability".
+#' @return Data frame with list columns expanded
+expand_track_list_cols <- function(df, track_id) {
+  list_cols <- track_list_col_fields[[track_id]]
+  for (col in list_cols) {
+    if (col %in% names(df)) {
+      df[[col]] <- expand_list_col(df[[col]])
+    }
+  }
+  df
+}
 
-message("Searching arXiv...")
 
-metadata <- aRxiv::arxiv_search(query = config$query, limit = config$limit) |>
-  tibble::as_tibble() |>
-  dplyr::mutate(
-    pdf_url = paste0("https://arxiv.org/pdf/", id, ".pdf"),
-    submitted = lubridate::ymd_hms(submitted)
-  ) |>
-  dplyr::arrange(dplyr::desc(submitted))
+#' Collapse list columns to CSV format for a specific track
+#'
+#' @param df Data frame to save
+#' @param track_id Character. One of "spc", "exp_design", or "reliability".
+#' @return Data frame with list columns collapsed
+collapse_track_list_cols <- function(df, track_id) {
+  list_cols <- track_list_col_fields[[track_id]]
+  for (col in list_cols) {
+    if (col %in% names(df)) {
+      df[[col]] <- collapse_list_col(df[[col]])
+    }
+  }
+  df
+}
 
-readr::write_csv(metadata, config$metadata_csv)
-message(sprintf("Found %d papers. Metadata saved to: %s", nrow(metadata), config$metadata_csv))
+
+#' Create empty error factsheet for a track
+#'
+#' @param track_id Character. One of "spc", "exp_design", or "reliability".
+#' @return An empty tibble with NA values for all track fields
+create_empty_factsheet <- function(track_id) {
+  # Common fields
+  common <- tibble::tibble(
+    application_domain = list(NA_character_),
+    evaluation_type = list(NA_character_),
+    code_used = NA,
+    software_platform = list(NA_character_),
+    code_availability_source = list(NA_character_),
+    software_urls = list(NA_character_),
+    summary = NA_character_,
+    key_equations = NA_character_,
+    key_results = NA_character_,
+    limitations_stated = NA_character_,
+    limitations_unstated = NA_character_,
+    future_work_stated = NA_character_,
+    future_work_unstated = NA_character_
+  )
+
+  # Track-specific fields
+  track_specific <- switch(track_id,
+    spc = tibble::tibble(
+      is_spc_paper = NA,
+      chart_family = list(NA_character_),
+      chart_statistic = list(NA_character_),
+      phase = list(NA_character_),
+      assumes_normality = NA,
+      handles_autocorrelation = NA,
+      handles_missing_data = NA,
+      performance_metrics = list(NA_character_),
+      sample_size_requirements = NA_character_
+    ),
+    exp_design = tibble::tibble(
+      is_exp_design_paper = NA,
+      design_type = list(NA_character_),
+      design_objective = list(NA_character_),
+      optimality_criterion = list(NA_character_),
+      number_of_factors = NA_character_
+    ),
+    reliability = tibble::tibble(
+      is_reliability_paper = NA,
+      reliability_topic = list(NA_character_),
+      modeling_approach = list(NA_character_),
+      data_type = list(NA_character_),
+      maintenance_policy = list(NA_character_)
+    ),
+    tibble::tibble()
+  )
+
+  dplyr::bind_cols(track_specific, common)
+}
 
 
-# Step 2: Extract Factsheets --------------------------------------------------
+# =============================================================================
+# Process Each Track
+# =============================================================================
 
-if (!config$extraction_enabled) {
-  message("Structured extraction disabled.")
-} else {
-  # Get papers available for extraction from metadata (URL-based, no local files needed)
+message("Starting multi-track arXiv extraction pipeline...")
+message(sprintf("Tracks to process: %s", paste(names(tracks), collapse = ", ")))
+
+for (track_id in names(tracks)) {
+  track <- tracks[[track_id]]
+
+  message("")
+  message(strrep("=", 70))
+  message(sprintf("Processing Track: %s (%s)", track$label, track_id))
+  message(strrep("=", 70))
+  
+
+  # -------------------------------------------------------------------------
+  # Step 1: Search arXiv for this track
+  # -------------------------------------------------------------------------
+
+  message(sprintf("[%s] Searching arXiv with query: %s", track_id, track$query))
+
+  metadata <- tryCatch({
+    aRxiv::arxiv_search(query = track$query, limit = config$limit) |>
+      tibble::as_tibble() |>
+      dplyr::mutate(
+        pdf_url = paste0("https://arxiv.org/pdf/", id, ".pdf"),
+        submitted = lubridate::ymd_hms(submitted)
+      ) |>
+      dplyr::arrange(dplyr::desc(submitted))
+  }, error = function(e) {
+    warning(sprintf("[%s] arXiv search failed: %s", track_id, conditionMessage(e)))
+    tibble::tibble()
+  })
+
+  if (nrow(metadata) == 0L) {
+    message(sprintf("[%s] No papers found. Skipping track.", track_id))
+    next
+  }
+
+  readr::write_csv(metadata, track$metadata_csv)
+  message(sprintf("[%s] Found %d papers. Saved to: %s", track_id, nrow(metadata), track$metadata_csv))
+
+  # -------------------------------------------------------------------------
+  # Step 2: Extract Factsheets for this track
+  # -------------------------------------------------------------------------
+
+  if (!config$extraction_enabled) {
+    message(sprintf("[%s] Structured extraction disabled.", track_id))
+    next
+  }
+
+  # Get papers available for extraction
   papers_for_extraction <- metadata |>
     dplyr::select(id, pdf_url) |>
     dplyr::distinct()
 
-  if (nrow(papers_for_extraction) == 0L) {
-    message("No papers found in metadata for extraction.")
+  # Load existing cache
+  factsheet_cache <- if (fs::file_exists(track$factsheet_csv)) {
+    readr::read_csv(track$factsheet_csv, show_col_types = FALSE) |>
+      expand_track_list_cols(track_id)
   } else {
-    # Load existing cache from CSV (expand list columns from "|"-delimited strings)
-    factsheet_cache <- if (fs::file_exists(config$factsheet_csv)) {
-      readr::read_csv(config$factsheet_csv, show_col_types = FALSE) |>
-        dplyr::mutate(
-          chart_family = expand_list_col(chart_family),
-          chart_statistic = expand_list_col(chart_statistic),
-          phase = expand_list_col(phase),
-          application_domain = expand_list_col(application_domain),
-          evaluation_type = expand_list_col(evaluation_type),
-          performance_metrics = expand_list_col(performance_metrics),
-          software_platform = expand_list_col(software_platform),
-          code_availability_source = expand_list_col(code_availability_source),
-          software_urls = expand_list_col(software_urls)
+    tibble::tibble()
+  }
+
+  extracted_ids <- if (nrow(factsheet_cache) > 0L && "id" %in% names(factsheet_cache)) {
+    unique(dplyr::pull(factsheet_cache, id))
+  } else {
+    character(0L)
+  }
+
+  papers_to_extract <- papers_for_extraction |>
+    dplyr::filter(!id %in% extracted_ids)
+
+  message(sprintf(
+    "[%s] Extraction status: %d in metadata, %d cached, %d remaining",
+    track_id,
+    nrow(papers_for_extraction),
+    length(extracted_ids),
+    nrow(papers_to_extract)
+  ))
+
+  if (nrow(papers_to_extract) == 0L) {
+    message(sprintf("[%s] All factsheets already extracted.", track_id))
+    next
+  }
+
+  # Get the schema object for this track
+  schema_object <- get(track$schema)
+
+  # Safe extraction wrapper with error logging
+  safe_extract <- function(pdf_url, chat_object, type_object, track_id) {
+    tryCatch(
+      extract_factsheet_from_pdf(pdf_url, chat_object, type_object, track_id),
+      error = function(e) {
+        warning(
+          sprintf("[%s] Extraction failed for %s: %s", track_id, pdf_url, conditionMessage(e)),
+          call. = FALSE
         )
-    } else {
-      tibble::tibble()
-    }
-
-    extracted_ids <- if (nrow(factsheet_cache) > 0L && "id" %in% names(factsheet_cache)) {
-      unique(dplyr::pull(factsheet_cache, id))
-    } else {
-      character(0L)
-    }
-
-    papers_to_extract <- papers_for_extraction |>
-      dplyr::filter(!id %in% extracted_ids)
-
-    message(sprintf(
-      "Extraction status: %d in metadata, %d cached, %d remaining",
-      nrow(papers_for_extraction),
-      length(extracted_ids),
-      nrow(papers_to_extract)
-    ))
-    
-    if (nrow(papers_to_extract) == 0L) {
-      message("All factsheets already extracted.")
-    } else {
-      # Safe extraction wrapper with error logging
-      safe_extract <- function(pdf_url, chat_object, type_object) {
-        tryCatch(
-          extract_factsheet_from_pdf(pdf_url, chat_object, type_object),
-          error = function(e) {
-            warning(
-              sprintf("Extraction failed for %s: %s", pdf_url, conditionMessage(e)),
-              call. = FALSE
-            )
-            normalize_factsheet(tibble::tibble(
-              # Relevance
-              is_spc_paper = NA,
-
-              # Classification
-              chart_family = list(NA_character_),
-              chart_statistic = list(NA_character_),
-              phase = list(NA_character_),
-              application_domain = list(NA_character_),
-
-              # Data assumptions
-              assumes_normality = NA,
-              handles_autocorrelation = NA,
-              handles_missing_data = NA,
-
-              # Evaluation
-              evaluation_type = list(NA_character_),
-              performance_metrics = list(NA_character_),
-              sample_size_requirements = NA_character_,
-
-              # Software
-              code_used = NA,
-              software_platform = list(NA_character_),
-              code_availability_source = list(NA_character_),
-              software_urls = list(NA_character_),
-
-              # Content
-              summary = NA_character_,
-              key_equations = NA_character_,
-              key_results = NA_character_,
-
-              # Limitations
-              limitations_stated = NA_character_,
-              limitations_unstated = NA_character_,
-
-              # Future work
-              future_work_stated = NA_character_,
-              future_work_unstated = NA_character_
-            ))
-          }
-        )
+        normalize_factsheet(create_empty_factsheet(track_id), track_id)
       }
+    )
+  }
 
-      # Build extraction grid (supports multiple repeats)
-      extraction_grid <- tidyr::crossing(
-        papers_to_extract,
-        repeat_id = seq_len(config$n_extraction_repeats)
+  # Build extraction grid (supports multiple repeats)
+  extraction_grid <- tidyr::crossing(
+    papers_to_extract,
+    repeat_id = seq_len(config$n_extraction_repeats)
+  )
+
+  # Process each paper and save incrementally
+  for (i in seq_len(nrow(extraction_grid))) {
+    row <- extraction_grid[i, ]
+    pdf_url <- row$pdf_url
+    paper_id <- row$id
+    repeat_id <- row$repeat_id
+
+    message(sprintf("[%s] [%d/%d] %s | repeat %d", track_id, i, nrow(extraction_grid), paper_id, repeat_id))
+
+    chat_clean <- create_chat(config$llm_provider, config$llm_model)
+
+    result <- safe_extract(pdf_url, chat_clean, schema_object, track_id) |>
+      dplyr::mutate(
+        id = paper_id,
+        pdf_url = pdf_url,
+        pdf_path = NA_character_,
+        llm_provider = config$llm_provider,
+        llm_model = config$llm_model,
+        repeat_id = repeat_id,
+        extracted_at = Sys.time()
       )
 
-      # Process each paper and save incrementally
-      for (i in seq_len(nrow(extraction_grid))) {
-        row <- extraction_grid[i, ]
-        pdf_url <- row$pdf_url
-        id <- row$id
-        repeat_id <- row$repeat_id
+    # Update cache incrementally
+    factsheet_cache <- dplyr::bind_rows(factsheet_cache, result)
 
-        message(sprintf("[%d/%d] %s | repeat %d", i, nrow(extraction_grid), id, repeat_id))
+    # Save to CSV with list columns collapsed
+    factsheet_cache |>
+      collapse_track_list_cols(track_id) |>
+      readr::write_csv(track$factsheet_csv)
 
-        chat_clean <- create_chat(config$llm_provider, config$llm_model)
-
-        result <- safe_extract(pdf_url, chat_clean, schema_spc_factsheet) |>
-          dplyr::mutate(
-            id = id,
-            pdf_url = pdf_url,
-            pdf_path = NA_character_,
-            llm_provider = config$llm_provider,
-            llm_model = config$llm_model,
-            repeat_id = repeat_id,
-            extracted_at = Sys.time()
-          )
-
-        # Update cache incrementally
-        factsheet_cache <- dplyr::bind_rows(factsheet_cache, result)
-
-        # Save to CSV with list columns collapsed to "|"-delimited strings
-        factsheet_cache |>
-          dplyr::mutate(
-            chart_family = collapse_list_col(chart_family),
-            chart_statistic = collapse_list_col(chart_statistic),
-            phase = collapse_list_col(phase),
-            application_domain = collapse_list_col(application_domain),
-            evaluation_type = collapse_list_col(evaluation_type),
-            performance_metrics = collapse_list_col(performance_metrics),
-            software_platform = collapse_list_col(software_platform),
-            code_availability_source = collapse_list_col(code_availability_source),
-            software_urls = collapse_list_col(software_urls)
-          ) |>
-          readr::write_csv(config$factsheet_csv)
-
-        Sys.sleep(config$extraction_delay_sec)
-      }
-
-      message(sprintf("Extraction complete. Output: %s", config$factsheet_csv))
-    }
+    Sys.sleep(config$extraction_delay_sec)
   }
+
+  message(sprintf("[%s] Extraction complete. Output: %s", track_id, track$factsheet_csv))
 }
 
+
+# =============================================================================
+# Write Track Configuration JSON
+# =============================================================================
+
+message("")
+message("Writing track configuration to data/tracks.json...")
+
+tracks_for_json <- lapply(tracks, function(t) {
+  t[c("id", "label", "short_label", "query", "icon", "color", "description",
+      "metadata_csv", "factsheet_csv", "relevance_field")]
+})
+
+jsonlite::write_json(
+  tracks_for_json,
+  "data/tracks.json",
+  pretty = TRUE,
+  auto_unbox = TRUE
+)
+
+message("Track configuration saved.")
+message("")
 message("Pipeline complete.")

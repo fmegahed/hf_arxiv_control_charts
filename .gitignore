@@ -6,6 +6,9 @@ data/spc_factsheet_cache.rds
 *.png
 *.svg
 
+# claude files
+.claude/
+
 # local_papers
 local_papers/
 

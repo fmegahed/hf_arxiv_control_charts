@@ -714,6 +714,26 @@ hr {
   color: var(--miami-red);
 }
 
+/* Chart multi-value note */
+.chart-info-icon {
+  font-size: 0.7em;
+  color: #999;
+  margin-left: 6px;
+  cursor: help;
+}
+
+.chart-info-icon:hover {
+  color: var(--miami-red);
+}
+
+.chart-note {
+  font-size: 0.75em;
+  color: #888;
+  font-style: italic;
+  margin: -8px 0 8px 0;
+  padding: 0;
+}
+
 /* ============================================================================
    Chat Interface Styling
    ============================================================================ */
@@ -970,4 +990,222 @@ hr {
 /* MathJax v3: force normal font weight inside math boxes */
 .math-content {
   font-weight: 400;
+}
+
+
+/* ============================================================================
+   Landing Page Styles
+   ============================================================================ */
+
+.landing-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 20px;
+  background: linear-gradient(135deg, #EDECE2 0%, #FFFFFF 50%, #EDECE2 100%);
+}
+
+.landing-hero {
+  text-align: center;
+  margin-bottom: 50px;
+  padding-top: 30px;
+}
+
+.landing-hero h1 {
+  font-size: 3em;
+  color: var(--miami-red);
+  margin-bottom: 15px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.landing-subtitle {
+  font-size: 1.3em;
+  color: #666;
+  margin: 0;
+  font-weight: 400;
+}
+
+.track-selector-container {
+  max-width: 1200px;
+  width: 100%;
+  padding: 0 20px;
+}
+
+.track-selector-container h2 {
+  text-align: center;
+  color: var(--miami-black);
+  margin-bottom: 40px;
+  font-size: 1.5em;
+  font-weight: 500;
+}
+
+.track-card {
+  background: white;
+  border: 2px solid var(--miami-medium-tan);
+  border-radius: 16px;
+  padding: 40px 30px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+  min-height: 280px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.track-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+  border-color: var(--miami-red);
+}
+
+.track-card-icon {
+  font-size: 3em;
+  color: var(--miami-red);
+  margin-bottom: 20px;
+}
+
+.track-card h3 {
+  color: var(--miami-red);
+  font-size: 1.3em;
+  margin: 0 0 15px 0;
+  font-weight: 600;
+}
+
+.track-card p {
+  color: #666;
+  font-size: 0.95em;
+  line-height: 1.5;
+  margin: 0 0 20px 0;
+}
+
+.track-card-count {
+  background: var(--miami-light-tan);
+  color: var(--miami-black);
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.9em;
+  font-weight: 600;
+}
+
+/* DOE card accent */
+.track-card-doe:hover {
+  border-color: #1B9E77;
+}
+
+.track-card-doe .track-card-icon {
+  color: #1B9E77;
+}
+
+.track-card-doe h3 {
+  color: #1B9E77;
+}
+
+/* Reliability card accent */
+.track-card-reliability:hover {
+  border-color: #D95F02;
+}
+
+.track-card-reliability .track-card-icon {
+  color: #D95F02;
+}
+
+.track-card-reliability h3 {
+  color: #D95F02;
+}
+
+.landing-footer {
+  margin-top: auto;
+  padding-top: 50px;
+  text-align: center;
+  color: #666;
+  font-size: 0.9em;
+}
+
+.landing-logo-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 30px;
+  margin-top: 20px;
+  opacity: 0.8;
+}
+
+.landing-logo-container img {
+  height: 40px;
+  width: auto;
+}
+
+/* ============================================================================
+   Header Button (Switch Track)
+   ============================================================================ */
+
+.btn-header {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  padding: 8px 16px;
+  font-size: 0.9em;
+  transition: all 0.2s;
+}
+
+.btn-header:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+  color: white;
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
+/* ============================================================================
+   Responsive Landing Page
+   ============================================================================ */
+
+@media (max-width: 992px) {
+  .landing-hero h1 {
+    font-size: 2.2em;
+  }
+
+  .track-card {
+    margin-bottom: 20px;
+    min-height: 220px;
+    padding: 30px 25px;
+  }
+
+  .track-card-icon {
+    font-size: 2.5em;
+  }
+}
+
+@media (max-width: 576px) {
+  .landing-hero h1 {
+    font-size: 1.8em;
+  }
+
+  .landing-subtitle {
+    font-size: 1em;
+  }
+
+  .track-selector-container h2 {
+    font-size: 1.2em;
+  }
+
+  .track-card {
+    min-height: 180px;
+    padding: 25px 20px;
+  }
+
+  .track-card h3 {
+    font-size: 1.1em;
+  }
+
+  .landing-logo-container {
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+
+  .landing-logo-container img {
+    height: 30px;
+  }
 }

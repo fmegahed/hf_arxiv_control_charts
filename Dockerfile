@@ -12,7 +12,7 @@ COPY . /app
 # Install packages (and fail build if anything goes wrong)
 RUN R -e "install.packages('remotes', repos='https://cloud.r-project.org')" && \
     R -e "remotes::install_github('rstudio/httpuv')" && \
-    R -e "install.packages(c('shiny','shinyjs','dplyr','tidyr','purrr','readr','lubridate','plotly','DT','httr','ellmer'), repos='https://cloud.r-project.org')" && \
+    R -e "install.packages(c('shiny','shinyjs','dplyr','tidyr','purrr','readr','lubridate','plotly','DT','httr','ellmer','jsonlite'), repos='https://cloud.r-project.org')" && \
     R -e "stopifnot(requireNamespace('shiny', quietly = TRUE))"
 
 EXPOSE 7860

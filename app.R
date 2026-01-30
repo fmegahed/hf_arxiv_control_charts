@@ -8,6 +8,7 @@ library(lubridate)
 library(plotly)
 library(DT)
 library(ellmer)
+library(jsonlite)
 
 # Ensuring that the API key is being read from the app's secrets; ellmer requires a zero input function
 OPENAI_API_KEY = Sys.getenv("OPENAI_API_KEY")
@@ -30,23 +31,80 @@ CHART_COLORS <- c(
 )
 
 # ============================================================================
+# Track Configuration
+# ============================================================================
+
+#' Load track configuration from JSON
+load_tracks_config <- function() {
+  if (file.exists("data/tracks.json")) {
+    jsonlite::fromJSON("data/tracks.json", simplifyVector = FALSE)
+  } else {
+    # Fallback for backward compatibility
+    list(
+      spc = list(
+        id = "spc",
+        label = "Control Charts (SPC)",
+        short_label = "SPC",
+        query = '(ti:"control chart" OR abs:"control chart")',
+        metadata_csv = "data/spc_arxiv_metadata.csv",
+        factsheet_csv = "data/spc_factsheet.csv",
+        relevance_field = "is_spc_paper",
+        icon = "chart-bar",
+        color = "#C41230",
+        description = "Statistical Process Control and control chart research"
+      )
+    )
+  }
+}
+
+# Load tracks config at startup
+TRACKS_CONFIG <- load_tracks_config()
+
+#' Get filter column mapping for a track
+get_track_filter_columns <- function(track_id) {
+  switch(track_id,
+    spc = list(
+      primary = "chart_family", primary_label = "Chart Family",
+      secondary = "chart_statistic", secondary_label = "Statistical Method",
+      tertiary = "phase", tertiary_label = "Phase"
+    ),
+    exp_design = list(
+      primary = "design_type", primary_label = "Design Type",
+      secondary = "design_objective", secondary_label = "Design Objective",
+      tertiary = "optimality_criterion", tertiary_label = "Optimality Criterion"
+    ),
+    reliability = list(
+      primary = "reliability_topic", primary_label = "Reliability Topic",
+      secondary = "modeling_approach", secondary_label = "Modeling Approach",
+      tertiary = "data_type", tertiary_label = "Data Type"
+    ),
+    # default fallback
+    list(
+      primary = "chart_family", primary_label = "Primary Category",
+      secondary = "chart_statistic", secondary_label = "Secondary Category",
+      tertiary = "phase", tertiary_label = "Tertiary Category"
+    )
+  )
+}
+
+# ============================================================================
 # Helper Functions
 # ============================================================================
 
 parse_arxiv_date <- function(date_str) {
-
   as.Date(lubridate::ymd_hms(date_str))
 }
 
-load_initial_data <- function() {
- metadata_path <- "data/arxiv_metadata.csv"
-  factsheet_path <- "data/spc_factsheet.csv"
+#' Load data for a specific track
+load_track_data <- function(track_id) {
+  track <- TRACKS_CONFIG[[track_id]]
+  if (is.null(track)) return(list(metadata = NULL, factsheet = NULL, track = NULL))
 
   metadata <- NULL
   factsheet <- NULL
 
-  if (file.exists(metadata_path)) {
-    metadata <- readr::read_csv(metadata_path, show_col_types = FALSE) |>
+  if (file.exists(track$metadata_csv)) {
+    metadata <- readr::read_csv(track$metadata_csv, show_col_types = FALSE) |>
       dplyr::mutate(
         submitted_date = parse_arxiv_date(submitted),
         year = lubridate::year(submitted_date),
@@ -55,16 +113,27 @@ load_initial_data <- function() {
       )
   }
 
-  if (file.exists(factsheet_path)) {
-    factsheet <- readr::read_csv(factsheet_path, show_col_types = FALSE)
+  if (file.exists(track$factsheet_csv)) {
+    factsheet <- readr::read_csv(track$factsheet_csv, show_col_types = FALSE)
   }
 
-  list(metadata = metadata, factsheet = factsheet)
+  list(metadata = metadata, factsheet = factsheet, track = track)
+}
+
+#' Get paper count for a track (for landing page)
+get_track_paper_count <- function(track_id) {
+  track <- TRACKS_CONFIG[[track_id]]
+  if (is.null(track)) return(0)
+  if (!file.exists(track$metadata_csv)) return(0)
+
+  tryCatch({
+    nrow(readr::read_csv(track$metadata_csv, show_col_types = FALSE))
+  }, error = function(e) 0)
 }
 
 # Count pipe-delimited values, excluding "Other"
 count_pipe_delimited <- function(data, column_name, top_n = 10, exclude_other = FALSE) {
-  if (is.null(data) || !column_name %in% names(data)) return(NULL)
+  if (is.null(data) || is.null(column_name) || !column_name %in% names(data)) return(NULL)
 
   all_values <- unlist(strsplit(data[[column_name]], "\\|"))
   all_values <- trimws(all_values)
@@ -109,57 +178,6 @@ create_paper_system_prompt <- function(paper) {
   )
 }
 
-# Generate chat response
-generate_paper_response <- function(paper, question) {
-  q <- tolower(question)
-
-  format_section <- function(content, max_len = 800) {
-    if (is.na(content) || content == "") return(NULL)
-    if (nchar(content) > max_len) paste0(substr(content, 1, max_len), "...") else content
-  }
-
-  if (grepl("contribution|main|about|summary|overview|what is", q)) {
-    summary_text <- format_section(paper$summary)
-    if (!is.null(summary_text)) {
-      return(paste0("<strong>Main Contribution:</strong><br><br>", summary_text))
-    }
-  }
-
-  if (grepl("method|approach|statistical|technique|algorithm", q)) {
-    return(paste0(
-      "<strong>Methodology:</strong><br><br>",
-      "<em>Chart Family:</em> ", ifelse(is.na(paper$chart_family), "Not specified", paper$chart_family), "<br>",
-      "<em>Statistical Method:</em> ", ifelse(is.na(paper$chart_statistic), "Not specified", paper$chart_statistic), "<br>",
-      "<em>Phase:</em> ", ifelse(is.na(paper$phase), "Not specified", paper$phase)
-    ))
-  }
-
-  if (grepl("limit|weakness|drawback", q)) {
-    stated <- format_section(paper$limitations_stated, 500)
-    unstated <- format_section(paper$limitations_unstated, 500)
-    stated_text <- if (!is.null(stated)) paste0("<em>Stated:</em> ", stated, "<br><br>") else ""
-    unstated_text <- if (!is.null(unstated)) paste0("<em>Unstated:</em> ", unstated) else ""
-    return(paste0("<strong>Limitations:</strong><br><br>", stated_text, unstated_text))
-  }
-
-  if (grepl("future|next|extend", q)) {
-    stated <- format_section(paper$future_work_stated, 500)
-    unstated <- format_section(paper$future_work_unstated, 500)
-    stated_text <- if (!is.null(stated)) paste0("<em>Stated:</em> ", stated, "<br><br>") else ""
-    unstated_text <- if (!is.null(unstated)) paste0("<em>Suggested:</em> ", unstated) else ""
-    return(paste0("<strong>Future Directions:</strong><br><br>", stated_text, unstated_text))
-  }
-
-  # Default
-  summary_text <- format_section(paper$summary, 600)
-  default_text <- if (!is.null(summary_text)) summary_text else substr(paper$abstract, 1, 500)
-  paste0(
-    "Based on the paper:<br><br>",
-    default_text,
-    "<br><br><em>Try asking about: methodology, limitations, or future work.</em>"
-  )
-}
-
 # ============================================================================
 # UI Definition
 # ============================================================================
@@ -170,8 +188,8 @@ ui <- shiny::fluidPage(
   shiny::tags$head(
     shiny::tags$link(rel = "icon", type = "image/svg+xml", href = "favicon.svg"),
     shiny::tags$link(rel = "stylesheet", type = "text/css", href = "miami-theme.css"),
-    shiny::tags$title("ArXiv Control Chart Literature Monitor"),
-    
+    shiny::tags$title("ArXiv Literature Monitor"),
+
     # MathJax config MUST come before the MathJax loader
     shiny::tags$script(shiny::HTML("
     window.MathJax = {
@@ -184,7 +202,7 @@ ui <- shiny::fluidPage(
       }
     };
   ")),
-    
+
     shiny::tags$script(
       src = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js",
       async = NA
@@ -200,43 +218,115 @@ ui <- shiny::fluidPage(
   "))
   ),
 
-  # Header
-  shiny::div(
-    class = "app-header",
+  # ==========================================================================
+  # Landing Page (shown when no track selected)
+  # ==========================================================================
+  shiny::conditionalPanel(
+    condition = "output.show_landing",
     shiny::div(
-      class = "header-content",
+      class = "landing-page",
       shiny::div(
-        class = "header-left",
-        shiny::tags$h1("ArXiv Control Chart Literature Monitor"),
-        shiny::p(class = "subtitle", "Real-time Tracking of Statistical Process Control Research")
+        class = "landing-hero",
+        shiny::tags$h1("ArXiv Literature Monitor"),
+        shiny::tags$p(class = "landing-subtitle", "AI-Powered Tracking of Quality Engineering Research")
       ),
       shiny::div(
-        class = "header-right",
-        shiny::p("Version 1.0.0 | January 2026"),
-        shiny::p(
+        class = "track-selector-container",
+        shiny::tags$h2("Select a Research Track"),
+        shiny::fluidRow(
+          shiny::column(4,
+            shiny::div(
+              class = "track-card",
+              id = "track_card_spc",
+              onclick = "Shiny.setInputValue('select_track', 'spc', {priority: 'event'})",
+              shiny::div(class = "track-card-icon", shiny::icon("chart-bar")),
+              shiny::tags$h3("Control Charts (SPC)"),
+              shiny::tags$p("Statistical Process Control and control chart research"),
+              shiny::div(class = "track-card-count", shiny::textOutput("spc_paper_count", inline = TRUE), " papers")
+            )
+          ),
+          shiny::column(4,
+            shiny::div(
+              class = "track-card track-card-doe",
+              id = "track_card_exp_design",
+              onclick = "Shiny.setInputValue('select_track', 'exp_design', {priority: 'event'})",
+              shiny::div(class = "track-card-icon", shiny::icon("flask")),
+              shiny::tags$h3("Experimental Design (DOE)"),
+              shiny::tags$p("Design of experiments and response surface methodology research"),
+              shiny::div(class = "track-card-count", shiny::textOutput("exp_design_paper_count", inline = TRUE), " papers")
+            )
+          ),
+          shiny::column(4,
+            shiny::div(
+              class = "track-card track-card-reliability",
+              id = "track_card_reliability",
+              onclick = "Shiny.setInputValue('select_track', 'reliability', {priority: 'event'})",
+              shiny::div(class = "track-card-icon", shiny::icon("cogs")),
+              shiny::tags$h3("Reliability Engineering"),
+              shiny::tags$p("Reliability engineering, degradation modeling, and maintenance optimization"),
+              shiny::div(class = "track-card-count", shiny::textOutput("reliability_paper_count", inline = TRUE), " papers")
+            )
+          )
+        )
+      ),
+      # Footer on landing page
+      shiny::div(
+        class = "landing-footer",
+        shiny::tags$p(
           shiny::tags$strong("Authors: "),
           "Fadel M. Megahed, Ying-Ju (Tessa) Chen, Allison Jones-Farmer, Ibrahim Yousif, and Inez M. Zwetsloot"
+        ),
+        shiny::div(
+          class = "landing-logo-container",
+          shiny::tags$img(src = "miami-logo.png", alt = "Miami University", style = "height: 45px;"),
+          shiny::tags$img(src = "university-of-dayton-vector-logo.png", alt = "University of Dayton", style = "height: 40px;"),
+          shiny::tags$img(src = "uva-compacte-logo.png", alt = "University of Amsterdam", style = "height: 40px;")
         )
       )
     )
   ),
 
-  # Logo container
-  shiny::div(
-    class = "logo-container",
-    shiny::tags$img(src = "miami-logo.png", alt = "Miami University", style = "height: 55px;"),
-    shiny::div(class = "logo-divider"),
-    shiny::tags$img(src = "university-of-dayton-vector-logo.png", alt = "University of Dayton", style = "height: 50px;"),
-    shiny::div(class = "logo-divider"),
-    shiny::tags$img(src = "uva-compacte-logo.png", alt = "University of Amsterdam", style = "height: 50px;")
-  ),
+  # ==========================================================================
+  # Main App (shown after track selection)
+  # ==========================================================================
+  shiny::conditionalPanel(
+    condition = "!output.show_landing",
 
-  # Main content
-  shiny::div(
-    class = "main-content",
-    shiny::tabsetPanel(
-      id = "main_tabs",
-      type = "tabs",
+    # Header with dynamic title
+    shiny::div(
+      class = "app-header",
+      shiny::div(
+        class = "header-content",
+        shiny::div(
+          class = "header-left",
+          shiny::uiOutput("dynamic_header_title"),
+          shiny::uiOutput("dynamic_header_subtitle")
+        ),
+        shiny::div(
+          class = "header-right",
+          shiny::actionButton("change_track", shiny::tagList(shiny::icon("exchange-alt"), " Switch Track"),
+            class = "btn-header"),
+          shiny::tags$p(style = "margin-top: 8px;", "Version 2.0.0 | January 2026")
+        )
+      )
+    ),
+
+    # Logo container
+    shiny::div(
+      class = "logo-container",
+      shiny::tags$img(src = "miami-logo.png", alt = "Miami University", style = "height: 55px;"),
+      shiny::div(class = "logo-divider"),
+      shiny::tags$img(src = "university-of-dayton-vector-logo.png", alt = "University of Dayton", style = "height: 50px;"),
+      shiny::div(class = "logo-divider"),
+      shiny::tags$img(src = "uva-compacte-logo.png", alt = "University of Amsterdam", style = "height: 50px;")
+    ),
+
+    # Main content
+    shiny::div(
+      class = "main-content",
+      shiny::tabsetPanel(
+        id = "main_tabs",
+        type = "tabs",
 
       # =======================================================================
       # Tab 1: Overview
@@ -270,8 +360,8 @@ ui <- shiny::fluidPage(
             )),
             shiny::column(3, shiny::div(class = "stat-card",
               shiny::div(class = "stat-icon", shiny::icon("chart-bar")),
-              shiny::div(class = "stat-value", shiny::textOutput("top_chart_type")),
-              shiny::div(class = "stat-label", "Most Common Chart Type")
+              shiny::div(class = "stat-value", shiny::textOutput("top_primary_category")),
+              shiny::uiOutput("top_primary_label")
             )),
             shiny::column(3, shiny::div(class = "stat-card",
               shiny::div(class = "stat-icon", shiny::icon("industry")),
@@ -358,9 +448,7 @@ ui <- shiny::fluidPage(
             shiny::tags$h3(class = "section-heading", shiny::icon("chart-line"), " Topic Trends Over Time"),
             shiny::fluidRow(
               shiny::column(4,
-                shiny::selectInput("trend_category", "Category:",
-                  choices = c("Chart Family" = "chart_family", "Statistical Method" = "chart_statistic",
-                              "Application Domain" = "application_domain"))
+                shiny::uiOutput("trend_category_ui")
               ),
               shiny::column(8,
                 shiny::uiOutput("trend_selector_ui")
@@ -394,24 +482,24 @@ ui <- shiny::fluidPage(
             ),
             shiny::fluidRow(
               shiny::column(3,
-                shiny::selectInput("filter_chart_family", "Chart Family:",
-                  choices = c("All" = ""), selected = "")
+                shiny::uiOutput("filter_primary_ui")
               ),
               shiny::column(3,
-                shiny::selectInput("filter_statistic", "Statistical Method:",
-                  choices = c("All" = ""), selected = "")
+                shiny::uiOutput("filter_secondary_ui")
               ),
               shiny::column(3,
                 shiny::selectInput("filter_domain", "Application Domain:",
                   choices = c("All" = ""), selected = "")
               ),
               shiny::column(3,
-                shiny::selectInput("filter_phase", "Phase:",
-                  choices = c("All" = ""), selected = "")
+                shiny::uiOutput("filter_tertiary_ui")
               )
             ),
             shiny::fluidRow(
-              shiny::column(9,
+              shiny::column(6,
+                shiny::uiOutput("year_range_ui")
+              ),
+              shiny::column(3,
                 shiny::textOutput("filter_summary")
               ),
               shiny::column(3,
@@ -425,13 +513,13 @@ ui <- shiny::fluidPage(
           shiny::fluidRow(
             shiny::column(6,
               shiny::div(class = "info-card",
-                shiny::tags$h4(class = "section-heading", "Chart Family Distribution"),
+                shiny::uiOutput("primary_chart_heading"),
                 plotly::plotlyOutput("chart_family_plot", height = "320px")
               )
             ),
             shiny::column(6,
               shiny::div(class = "info-card",
-                shiny::tags$h4(class = "section-heading", "Statistical Method Distribution"),
+                shiny::uiOutput("secondary_chart_heading"),
                 plotly::plotlyOutput("statistic_plot", height = "320px")
               )
             )
@@ -441,13 +529,13 @@ ui <- shiny::fluidPage(
           shiny::fluidRow(
             shiny::column(6,
               shiny::div(class = "info-card",
-                shiny::tags$h4(class = "section-heading", "Application Domain Distribution"),
+                shiny::uiOutput("domain_chart_heading"),
                 plotly::plotlyOutput("domain_plot", height = "320px")
               )
             ),
             shiny::column(6,
               shiny::div(class = "info-card",
-                shiny::tags$h4(class = "section-heading", "Phase Distribution"),
+                shiny::uiOutput("tertiary_chart_heading"),
                 plotly::plotlyOutput("phase_plot", height = "320px")
               )
             )
@@ -571,17 +659,18 @@ ui <- shiny::fluidPage(
         )
       )
 
-    )
-  ),
+      )
+    ),
 
-  # Footer
-  shiny::div(
-    class = "app-footer",
-    shiny::p(
-      "Built with ", shiny::tags$a(href = "https://shiny.posit.co/", "Shiny"),
-      " | Data source: ", shiny::tags$a(href = "https://arxiv.org/", "ArXiv")
+    # Footer (inside conditional panel for main app)
+    shiny::div(
+      class = "app-footer",
+      shiny::p(
+        "Built with ", shiny::tags$a(href = "https://shiny.posit.co/", "Shiny"),
+        " | Data source: ", shiny::tags$a(href = "https://arxiv.org/", "ArXiv")
+      )
     )
-  )
+  )  # End conditionalPanel for main app
 )
 
 # ============================================================================
@@ -590,16 +679,90 @@ ui <- shiny::fluidPage(
 
 server <- function(input, output, session) {
 
-  # Reactive data
+  # ==========================================================================
+  # Reactive State
+  # ==========================================================================
+
+  selected_track <- shiny::reactiveVal(NULL)
   papers_data <- shiny::reactiveVal(NULL)
   factsheet_data <- shiny::reactiveVal(NULL)
+  track_config <- shiny::reactiveVal(NULL)
   chat_messages <- shiny::reactiveVal(list())
 
-  # Load data
-  shiny::observe({
-    data <- load_initial_data()
+  # Filter columns for current track
+  filter_cols <- shiny::reactive({
+    tid <- selected_track()
+    if (is.null(tid)) return(NULL)
+    get_track_filter_columns(tid)
+  })
+
+  # ==========================================================================
+  # Landing Page Logic
+  # ==========================================================================
+
+  # Show landing page when no track selected
+  output$show_landing <- shiny::reactive({
+    is.null(selected_track())
+  })
+  shiny::outputOptions(output, "show_landing", suspendWhenHidden = FALSE)
+
+  # Paper counts for landing page cards
+  output$spc_paper_count <- shiny::renderText({
+    format(get_track_paper_count("spc"), big.mark = ",")
+  })
+
+  output$exp_design_paper_count <- shiny::renderText({
+    format(get_track_paper_count("exp_design"), big.mark = ",")
+  })
+
+  output$reliability_paper_count <- shiny::renderText({
+    format(get_track_paper_count("reliability"), big.mark = ",")
+  })
+
+  # Track selection handler
+  shiny::observeEvent(input$select_track, {
+    track_id <- input$select_track
+    if (is.null(track_id) || track_id == "") return()
+
+    # Load data for selected track
+    data <- load_track_data(track_id)
+
+    selected_track(track_id)
     papers_data(data$metadata)
     factsheet_data(data$factsheet)
+    track_config(data$track)
+
+    # Reset chat messages
+    chat_messages(list())
+  })
+
+  # Switch track button handler
+  shiny::observeEvent(input$change_track, {
+    selected_track(NULL)
+    papers_data(NULL)
+    factsheet_data(NULL)
+    track_config(NULL)
+    chat_messages(list())
+  })
+
+  # Dynamic header title
+  output$dynamic_header_title <- shiny::renderUI({
+    track <- track_config()
+    if (is.null(track)) {
+      shiny::tags$h1("ArXiv Literature Monitor")
+    } else {
+      shiny::tags$h1(paste0("ArXiv ", track$label, " Monitor"))
+    }
+  })
+
+  # Dynamic header subtitle
+  output$dynamic_header_subtitle <- shiny::renderUI({
+    track <- track_config()
+    if (is.null(track)) {
+      shiny::tags$p(class = "subtitle", "AI-Powered Tracking of Quality Engineering Research")
+    } else {
+      shiny::tags$p(class = "subtitle", track$description)
+    }
   })
 
   # Combined data
@@ -617,31 +780,61 @@ server <- function(input, output, session) {
 
     # Global free text search
     search_term <- input$global_search
+    # Use dynamic column names based on track
+    cols <- filter_cols()
+    primary_col_name <- if (!is.null(cols)) cols$primary else "chart_family"
+
     if (!is.null(search_term) && trimws(search_term) != "") {
       search_term <- tolower(trimws(search_term))
+      # Search common fields plus track-specific primary category
       data <- data |> dplyr::filter(
         grepl(search_term, tolower(title), fixed = TRUE) |
         grepl(search_term, tolower(authors), fixed = TRUE) |
         grepl(search_term, tolower(ifelse(is.na(abstract), "", abstract)), fixed = TRUE) |
         grepl(search_term, tolower(ifelse(is.na(summary), "", summary)), fixed = TRUE) |
         grepl(search_term, tolower(ifelse(is.na(key_results), "", key_results)), fixed = TRUE) |
-        grepl(search_term, tolower(ifelse(is.na(chart_family), "", chart_family)), fixed = TRUE) |
+        grepl(search_term, tolower(ifelse(is.na(.data[[primary_col_name]]), "", .data[[primary_col_name]])), fixed = TRUE) |
         grepl(search_term, tolower(ifelse(is.na(application_domain), "", application_domain)), fixed = TRUE)
       )
     }
+    if (!is.null(cols)) {
+      # Primary filter (chart_family for SPC, design_type for DOE, etc.)
+      if (!is.null(input$filter_chart_family) && input$filter_chart_family != "") {
+        primary_col <- cols$primary
+        if (primary_col %in% names(data)) {
+          data <- data |> dplyr::filter(grepl(input$filter_chart_family, .data[[primary_col]], fixed = TRUE))
+        }
+      }
 
-    if (!is.null(input$filter_chart_family) && input$filter_chart_family != "") {
-      data <- data |> dplyr::filter(grepl(input$filter_chart_family, chart_family, fixed = TRUE))
+      # Secondary filter (chart_statistic for SPC, design_objective for DOE, etc.)
+      if (!is.null(input$filter_statistic) && input$filter_statistic != "") {
+        secondary_col <- cols$secondary
+        if (secondary_col %in% names(data)) {
+          data <- data |> dplyr::filter(grepl(input$filter_statistic, .data[[secondary_col]], fixed = TRUE))
+        }
+      }
+
+      # Tertiary filter (phase for SPC, optimality_criterion for DOE, etc.)
+      if (!is.null(input$filter_phase) && input$filter_phase != "") {
+        tertiary_col <- cols$tertiary
+        if (tertiary_col %in% names(data)) {
+          data <- data |> dplyr::filter(grepl(input$filter_phase, .data[[tertiary_col]], fixed = TRUE))
+        }
+      }
     }
-    if (!is.null(input$filter_statistic) && input$filter_statistic != "") {
-      data <- data |> dplyr::filter(grepl(input$filter_statistic, chart_statistic, fixed = TRUE))
-    }
+
+    # Domain filter (same for all tracks)
     if (!is.null(input$filter_domain) && input$filter_domain != "") {
       data <- data |> dplyr::filter(grepl(input$filter_domain, application_domain, fixed = TRUE))
     }
-    if (!is.null(input$filter_phase) && input$filter_phase != "") {
-      data <- data |> dplyr::filter(phase == input$filter_phase)
+
+    # Year range filter
+    if (!is.null(input$filter_year_range) && length(input$filter_year_range) == 2) {
+      min_year <- input$filter_year_range[1]
+      max_year <- input$filter_year_range[2]
+      data <- data |> dplyr::filter(year >= min_year & year <= max_year)
     }
+
     data
   })
 
@@ -671,9 +864,13 @@ server <- function(input, output, session) {
       latest_paper_str <- format(latest_date, "%B %d, %Y")
     }
     
+    track <- track_config()
+    track_label <- if (!is.null(track)) track$label else "research"
+    track_query <- if (!is.null(track)) track$query else ""
+
     shiny::p(
-      "This dashboard monitors control chart research from ArXiv using the query: ",
-      shiny::tags$code('ti:"control chart" OR abs:"control chart"'),
+      "This dashboard monitors ", shiny::tags$strong(track_label), " research from ArXiv using the query: ",
+      shiny::tags$code(track_query),
       ". Each paper is analyzed using LLM extraction to identify methodology and findings. ",
       "Data current as of ", shiny::tags$strong(data_current_str), ". ",
       "Latest arXiv paper included is from ", shiny::tags$strong(latest_paper_str), "."
@@ -693,8 +890,16 @@ server <- function(input, output, session) {
     paste0(format(range_dates[1], "%Y"), " - ", format(range_dates[2], "%Y"))
   })
 
-  output$top_chart_type <- shiny::renderText({
-    get_top_category(combined_data(), "chart_family", 15)
+  output$top_primary_category <- shiny::renderText({
+    cols <- filter_cols()
+    if (is.null(cols)) return("N/A")
+    get_top_category(combined_data(), cols$primary, 15)
+  })
+
+  output$top_primary_label <- shiny::renderUI({
+    cols <- filter_cols()
+    label <- if (!is.null(cols)) paste0("Most Common ", cols$primary_label) else "Most Common Category"
+    shiny::div(class = "stat-label", label)
   })
 
   output$top_domain <- shiny::renderText({
@@ -706,7 +911,7 @@ server <- function(input, output, session) {
     if (is.null(data)) return(shiny::p("Loading..."))
 
     # Filter by period
-    period <- input$landscape_period
+    period <- if (!is.null(input$landscape_period)) input$landscape_period else "all"
     if (period != "all") {
       months <- as.numeric(period)
       cutoff <- Sys.Date() - (months * 30)
@@ -716,35 +921,107 @@ server <- function(input, output, session) {
     n_papers <- nrow(data)
     if (n_papers == 0) return(shiny::p("No papers in selected period."))
 
-    # Calculate stats
-    families <- count_pipe_delimited(data, "chart_family", NULL, TRUE)
-    univariate <- sum(families$count[grepl("Univariate", families$category, ignore.case = TRUE)])
-    multivariate <- sum(families$count[grepl("Multivariate", families$category, ignore.case = TRUE)])
-
-    phase_both <- sum(data$phase == "Both", na.rm = TRUE)
-    phase_i <- sum(data$phase == "Phase I", na.rm = TRUE)
-    phase_ii <- sum(data$phase == "Phase II", na.rm = TRUE)
-
-    with_code <- sum(data$code_availability_source %in% c("GitHub", "Personal website", "Supplementary material"), na.rm = TRUE)
-    nonparametric <- sum(data$assumes_normality == FALSE, na.rm = TRUE)
-
+    cols <- filter_cols()
+    track_id <- selected_track()
     period_label <- if (period == "all") "all time" else paste0("the last ", period, " months")
 
-    shiny::tagList(
-      shiny::tags$p(style = "line-height: 1.8;",
-        "In ", shiny::tags$strong(period_label, .noWS = "after"), ", the database contains ",
-        shiny::tags$strong(n_papers), " papers."
-      ),
-      shiny::tags$p(style = "line-height: 1.8;",
-        shiny::tags$strong("Chart Types: "), univariate, " univariate, and ", multivariate, " multivariate methods."
-      ),
-      shiny::tags$p(style = "line-height: 1.8;",
-        shiny::tags$strong("SPC Phases: "), phase_i, " Phase I, ", phase_ii, " Phase II, and ", phase_both, " both."
-      ),
-      shiny::tags$p(style = "line-height: 1.8;",
-        shiny::tags$strong("Methods: "), nonparametric, " nonparamteric/distribution-free, ", with_code, " with available code."
+    # Common stats
+    with_code <- sum(data$code_availability_source %in% c("GitHub", "Personal website", "Supplementary material"), na.rm = TRUE)
+
+    # Build track-specific summary
+    if (track_id == "spc") {
+      # SPC-specific stats
+      families <- count_pipe_delimited(data, "chart_family", NULL, TRUE)
+      univariate <- sum(families$count[grepl("Univariate", families$category, ignore.case = TRUE)])
+      multivariate <- sum(families$count[grepl("Multivariate", families$category, ignore.case = TRUE)])
+      phase_both <- sum(data$phase == "Both", na.rm = TRUE)
+      phase_i <- sum(data$phase == "Phase I", na.rm = TRUE)
+      phase_ii <- sum(data$phase == "Phase II", na.rm = TRUE)
+      nonparametric <- sum(data$assumes_normality == FALSE, na.rm = TRUE)
+
+      shiny::tagList(
+        shiny::tags$p(style = "line-height: 1.8;",
+          "In ", shiny::tags$strong(period_label, .noWS = "after"), ", the database contains ",
+          shiny::tags$strong(n_papers), " papers."
+        ),
+        shiny::tags$p(style = "line-height: 1.8;",
+          shiny::tags$strong("Chart Types: "), univariate, " univariate, and ", multivariate, " multivariate methods."
+        ),
+        shiny::tags$p(style = "line-height: 1.8;",
+          shiny::tags$strong("SPC Phases: "), phase_i, " Phase I, ", phase_ii, " Phase II, and ", phase_both, " both."
+        ),
+        shiny::tags$p(style = "line-height: 1.8;",
+          shiny::tags$strong("Methods: "), nonparametric, " nonparametric/distribution-free, ", with_code, " with available code."
+        )
       )
-    )
+    } else if (track_id == "exp_design") {
+      # DOE-specific stats
+      designs <- count_pipe_delimited(data, "design_type", NULL, TRUE)
+      top_designs <- head(designs, 3)
+      objectives <- count_pipe_delimited(data, "design_objective", NULL, TRUE)
+      top_objectives <- head(objectives, 3)
+
+      shiny::tagList(
+        shiny::tags$p(style = "line-height: 1.8;",
+          "In ", shiny::tags$strong(period_label, .noWS = "after"), ", the database contains ",
+          shiny::tags$strong(n_papers), " papers."
+        ),
+        shiny::tags$p(style = "line-height: 1.8;",
+          shiny::tags$strong("Top Design Types: "),
+          paste(paste0(top_designs$category, " (", top_designs$count, ")"), collapse = ", ")
+        ),
+        shiny::tags$p(style = "line-height: 1.8;",
+          shiny::tags$strong("Top Objectives: "),
+          paste(paste0(top_objectives$category, " (", top_objectives$count, ")"), collapse = ", ")
+        ),
+        shiny::tags$p(style = "line-height: 1.8;",
+          shiny::tags$strong("Code Availability: "), with_code, " papers with available code."
+        )
+      )
+    } else if (track_id == "reliability") {
+      # Reliability-specific stats
+      topics <- count_pipe_delimited(data, "reliability_topic", NULL, TRUE)
+      top_topics <- head(topics, 3)
+      approaches <- count_pipe_delimited(data, "modeling_approach", NULL, TRUE)
+      top_approaches <- head(approaches, 3)
+
+      shiny::tagList(
+        shiny::tags$p(style = "line-height: 1.8;",
+          "In ", shiny::tags$strong(period_label, .noWS = "after"), ", the database contains ",
+          shiny::tags$strong(n_papers), " papers."
+        ),
+        shiny::tags$p(style = "line-height: 1.8;",
+          shiny::tags$strong("Top Topics: "),
+          paste(paste0(top_topics$category, " (", top_topics$count, ")"), collapse = ", ")
+        ),
+        shiny::tags$p(style = "line-height: 1.8;",
+          shiny::tags$strong("Top Approaches: "),
+          paste(paste0(top_approaches$category, " (", top_approaches$count, ")"), collapse = ", ")
+        ),
+        shiny::tags$p(style = "line-height: 1.8;",
+          shiny::tags$strong("Code Availability: "), with_code, " papers with available code."
+        )
+      )
+    } else {
+      # Generic fallback
+      primary_col <- if (!is.null(cols)) cols$primary else "chart_family"
+      primaries <- count_pipe_delimited(data, primary_col, NULL, TRUE)
+      top_primaries <- head(primaries, 3)
+
+      shiny::tagList(
+        shiny::tags$p(style = "line-height: 1.8;",
+          "In ", shiny::tags$strong(period_label, .noWS = "after"), ", the database contains ",
+          shiny::tags$strong(n_papers), " papers."
+        ),
+        shiny::tags$p(style = "line-height: 1.8;",
+          shiny::tags$strong("Top Categories: "),
+          paste(paste0(top_primaries$category, " (", top_primaries$count, ")"), collapse = ", ")
+        ),
+        shiny::tags$p(style = "line-height: 1.8;",
+          shiny::tags$strong("Code Availability: "), with_code, " papers with available code."
+        )
+      )
+    }
   })
 
   output$mini_trend <- plotly::renderPlotly({
@@ -860,6 +1137,7 @@ server <- function(input, output, session) {
   output$main_timeline <- plotly::renderPlotly({
     data <- papers_data()
     if (is.null(data)) return(NULL)
+    if (is.null(input$timeline_range) || length(input$timeline_range) < 2) return(NULL)
 
     data <- data |> dplyr::filter(
       submitted_date >= input$timeline_range[1],
@@ -868,7 +1146,8 @@ server <- function(input, output, session) {
 
     if (nrow(data) == 0) return(NULL)
 
-    if (input$timeline_agg == "year") {
+    agg_mode <- if (!is.null(input$timeline_agg)) input$timeline_agg else "year"
+    if (agg_mode == "year") {
       plot_data <- data |> dplyr::count(year) |> dplyr::arrange(year)
       x_var <- ~year
       x_title <- "Year"
@@ -878,7 +1157,7 @@ server <- function(input, output, session) {
       x_title <- "Month"
     }
 
-    if (input$show_cumulative) {
+    if (isTRUE(input$show_cumulative)) {
       plot_data$cumulative <- cumsum(plot_data$n)
 
       plotly::plot_ly(plot_data, x = x_var) |>
@@ -911,6 +1190,7 @@ server <- function(input, output, session) {
     if (is.null(data)) return(NULL)
 
     cat <- input$trend_category
+    if (is.null(cat) || cat == "") return(NULL)
     counts <- count_pipe_delimited(data, cat, 10, TRUE)
     if (is.null(counts)) return(NULL)
 
@@ -922,9 +1202,9 @@ server <- function(input, output, session) {
   output$topic_trends <- plotly::renderPlotly({
     data <- combined_data()
     topics <- input$trend_topics
-    if (is.null(data) || is.null(topics) || length(topics) == 0) return(NULL)
-
     cat <- input$trend_category
+    if (is.null(data) || is.null(topics) || length(topics) == 0) return(NULL)
+    if (is.null(cat) || cat == "" || !cat %in% names(data)) return(NULL)
 
     trend_list <- lapply(topics, function(topic) {
       filtered <- data |> dplyr::filter(grepl(topic, .data[[cat]], fixed = TRUE))
@@ -956,35 +1236,169 @@ server <- function(input, output, session) {
   # Topic Analytics Tab
   # ===========================================================================
 
-  # Update filter choices
+  # ---------------------------------------------------------------------------
+  # Dynamic Filter UI Elements
+  # ---------------------------------------------------------------------------
+
+  # Primary filter dropdown (chart_family for SPC, design_type for DOE, etc.)
+  output$filter_primary_ui <- shiny::renderUI({
+    cols <- filter_cols()
+    data <- combined_data()
+    if (is.null(cols) || is.null(data)) {
+      return(shiny::selectInput("filter_chart_family", "Category:",
+        choices = c("All" = ""), selected = ""))
+    }
+
+    primary_col <- cols$primary
+    choices <- c("All" = "")
+    if (primary_col %in% names(data)) {
+      counts <- count_pipe_delimited(data, primary_col, NULL, TRUE)
+      if (!is.null(counts)) {
+        choices <- c("All" = "", setNames(counts$category, paste0(counts$category, " (", counts$count, ")")))
+      }
+    }
+
+    shiny::selectInput("filter_chart_family", paste0(cols$primary_label, ":"),
+      choices = choices, selected = "")
+  })
+
+  # Secondary filter dropdown (chart_statistic for SPC, design_objective for DOE, etc.)
+  output$filter_secondary_ui <- shiny::renderUI({
+    cols <- filter_cols()
+    data <- combined_data()
+    if (is.null(cols) || is.null(data)) {
+      return(shiny::selectInput("filter_statistic", "Category:",
+        choices = c("All" = ""), selected = ""))
+    }
+
+    secondary_col <- cols$secondary
+    choices <- c("All" = "")
+    if (secondary_col %in% names(data)) {
+      counts <- count_pipe_delimited(data, secondary_col, NULL, TRUE)
+      if (!is.null(counts)) {
+        choices <- c("All" = "", setNames(counts$category, paste0(counts$category, " (", counts$count, ")")))
+      }
+    }
+
+    shiny::selectInput("filter_statistic", paste0(cols$secondary_label, ":"),
+      choices = choices, selected = "")
+  })
+
+  # Tertiary filter dropdown (phase for SPC, optimality_criterion for DOE, etc.)
+  output$filter_tertiary_ui <- shiny::renderUI({
+    cols <- filter_cols()
+    data <- combined_data()
+    if (is.null(cols) || is.null(data)) {
+      return(shiny::selectInput("filter_phase", "Category:",
+        choices = c("All" = ""), selected = ""))
+    }
+
+    tertiary_col <- cols$tertiary
+    choices <- c("All" = "")
+    if (tertiary_col %in% names(data)) {
+      counts <- count_pipe_delimited(data, tertiary_col, NULL, TRUE)
+      if (!is.null(counts)) {
+        choices <- c("All" = "", setNames(counts$category, paste0(counts$category, " (", counts$count, ")")))
+      }
+    }
+
+    shiny::selectInput("filter_phase", paste0(cols$tertiary_label, ":"),
+      choices = choices, selected = "")
+  })
+
+  # Year range slider
+  output$year_range_ui <- shiny::renderUI({
+    data <- combined_data()
+    if (is.null(data) || nrow(data) == 0) {
+      return(shiny::sliderInput("filter_year_range", "Year Range:",
+        min = 2000, max = 2025, value = c(2000, 2025), step = 1, sep = ""))
+    }
+
+    years <- data$year[!is.na(data$year)]
+    if (length(years) == 0) {
+      return(shiny::sliderInput("filter_year_range", "Year Range:",
+        min = 2000, max = 2025, value = c(2000, 2025), step = 1, sep = ""))
+    }
+
+    min_year <- min(years)
+    max_year <- max(years)
+
+    shiny::sliderInput("filter_year_range", "Year Range:",
+      min = min_year, max = max_year, value = c(min_year, max_year),
+      step = 1, sep = "", width = "100%")
+  })
+
+  # Update domain filter choices (same for all tracks)
   shiny::observe({
     data <- combined_data()
     if (is.null(data)) return()
 
-    # Chart family
-    fam <- count_pipe_delimited(data, "chart_family", NULL, TRUE)
-    if (!is.null(fam)) {
-      shiny::updateSelectInput(session, "filter_chart_family",
-        choices = c("All" = "", setNames(fam$category, paste0(fam$category, " (", fam$count, ")"))))
-    }
-
-    # Statistic
-    stat <- count_pipe_delimited(data, "chart_statistic", NULL, TRUE)
-    if (!is.null(stat)) {
-      shiny::updateSelectInput(session, "filter_statistic",
-        choices = c("All" = "", setNames(stat$category, paste0(stat$category, " (", stat$count, ")"))))
-    }
-
-    # Domain
     dom <- count_pipe_delimited(data, "application_domain", NULL, TRUE)
     if (!is.null(dom)) {
       shiny::updateSelectInput(session, "filter_domain",
         choices = c("All" = "", setNames(dom$category, paste0(dom$category, " (", dom$count, ")"))))
     }
+  })
 
-    # Phase
-    phases <- unique(data$phase[!is.na(data$phase) & data$phase != ""])
-    shiny::updateSelectInput(session, "filter_phase", choices = c("All" = "", phases))
+  # ---------------------------------------------------------------------------
+  # Dynamic Chart Headings
+  # ---------------------------------------------------------------------------
+
+  # Helper to create chart heading with multi-value note
+  make_chart_heading <- function(label) {
+    shiny::tagList(
+      shiny::tags$h4(class = "section-heading",
+        paste0(label, " Distribution"),
+        shiny::tags$span(
+          class = "chart-info-icon",
+          title = "More than one category can apply to a single paper, so adding up the counts across the chart would be incorrect.",
+          shiny::icon("info-circle")
+        )
+      ),
+      shiny::tags$p(class = "chart-note", "More than one category can be present in a paper")
+    )
+  }
+
+  output$primary_chart_heading <- shiny::renderUI({
+    cols <- filter_cols()
+    label <- if (!is.null(cols)) cols$primary_label else "Primary Category"
+    make_chart_heading(label)
+  })
+
+  output$secondary_chart_heading <- shiny::renderUI({
+    cols <- filter_cols()
+    label <- if (!is.null(cols)) cols$secondary_label else "Secondary Category"
+    make_chart_heading(label)
+  })
+
+  output$tertiary_chart_heading <- shiny::renderUI({
+    cols <- filter_cols()
+    label <- if (!is.null(cols)) cols$tertiary_label else "Tertiary Category"
+    make_chart_heading(label)
+  })
+
+  output$domain_chart_heading <- shiny::renderUI({
+    make_chart_heading("Application Domain")
+  })
+
+  # ---------------------------------------------------------------------------
+  # Dynamic Timeline Category Dropdown
+  # ---------------------------------------------------------------------------
+
+  output$trend_category_ui <- shiny::renderUI({
+    cols <- filter_cols()
+    if (is.null(cols)) {
+      return(shiny::selectInput("trend_category", "Category:",
+        choices = c("Application Domain" = "application_domain")))
+    }
+
+    choices <- c(
+      setNames(cols$primary, cols$primary_label),
+      setNames(cols$secondary, cols$secondary_label),
+      "Application Domain" = "application_domain"
+    )
+
+    shiny::selectInput("trend_category", "Category:", choices = choices)
   })
 
   # Clear filters
@@ -994,21 +1408,44 @@ server <- function(input, output, session) {
     shiny::updateSelectInput(session, "filter_statistic", selected = "")
     shiny::updateSelectInput(session, "filter_domain", selected = "")
     shiny::updateSelectInput(session, "filter_phase", selected = "")
+
+    # Reset year range to full range
+    data <- combined_data()
+    if (!is.null(data) && nrow(data) > 0) {
+      years <- data$year[!is.na(data$year)]
+      if (length(years) > 0) {
+        shiny::updateSliderInput(session, "filter_year_range",
+          value = c(min(years), max(years)))
+      }
+    }
   })
 
   # Filter summary
   output$filter_summary <- shiny::renderText({
-    total <- nrow(combined_data())
+    data <- combined_data()
+    total <- nrow(data)
     filtered <- nrow(filtered_data())
     if (is.null(total) || is.null(filtered)) return("")
 
     filters <- c()
-    search_term <- trimws(input$global_search)
+    search_term <- if (!is.null(input$global_search)) trimws(input$global_search) else ""
     if (search_term != "") filters <- c(filters, paste0("Search: '", search_term, "'"))
-    if (input$filter_chart_family != "") filters <- c(filters, input$filter_chart_family)
-    if (input$filter_statistic != "") filters <- c(filters, input$filter_statistic)
-    if (input$filter_domain != "") filters <- c(filters, input$filter_domain)
-    if (input$filter_phase != "") filters <- c(filters, input$filter_phase)
+    if (!is.null(input$filter_chart_family) && input$filter_chart_family != "") filters <- c(filters, input$filter_chart_family)
+    if (!is.null(input$filter_statistic) && input$filter_statistic != "") filters <- c(filters, input$filter_statistic)
+    if (!is.null(input$filter_domain) && input$filter_domain != "") filters <- c(filters, input$filter_domain)
+    if (!is.null(input$filter_phase) && input$filter_phase != "") filters <- c(filters, input$filter_phase)
+
+    # Check if year filter is applied (not full range)
+    if (!is.null(input$filter_year_range) && length(input$filter_year_range) == 2 && !is.null(data)) {
+      years <- data$year[!is.na(data$year)]
+      if (length(years) > 0) {
+        data_min <- min(years)
+        data_max <- max(years)
+        if (input$filter_year_range[1] > data_min || input$filter_year_range[2] < data_max) {
+          filters <- c(filters, paste0("Years: ", input$filter_year_range[1], "-", input$filter_year_range[2]))
+        }
+      }
+    }
 
     if (length(filters) == 0) {
       paste0("Showing all ", total, " papers")
@@ -1040,11 +1477,15 @@ server <- function(input, output, session) {
   }
 
   output$chart_family_plot <- plotly::renderPlotly({
-    make_bar_chart(filtered_data(), "chart_family", CHART_COLORS[1])
+    cols <- filter_cols()
+    col_name <- if (!is.null(cols)) cols$primary else "chart_family"
+    make_bar_chart(filtered_data(), col_name, CHART_COLORS[1])
   })
 
   output$statistic_plot <- plotly::renderPlotly({
-    make_bar_chart(filtered_data(), "chart_statistic", CHART_COLORS[2])
+    cols <- filter_cols()
+    col_name <- if (!is.null(cols)) cols$secondary else "chart_statistic"
+    make_bar_chart(filtered_data(), col_name, CHART_COLORS[2])
   })
 
   output$domain_plot <- plotly::renderPlotly({
@@ -1053,44 +1494,53 @@ server <- function(input, output, session) {
 
   output$phase_plot <- plotly::renderPlotly({
     data <- filtered_data()
-    if (is.null(data)) return(NULL)
+    cols <- filter_cols()
+    if (is.null(data) || is.null(cols)) return(NULL)
 
-    phase_counts <- data |>
-      dplyr::filter(!is.na(phase) & phase != "") |>
-      dplyr::count(phase) |>
-      dplyr::arrange(desc(n))
+    tertiary_col <- cols$tertiary
+    if (!tertiary_col %in% names(data)) return(NULL)
 
-    if (nrow(phase_counts) == 0) return(NULL)
-
-    plotly::plot_ly(phase_counts, x = ~n, y = ~reorder(phase, n), type = "bar",
-      orientation = "h", marker = list(color = CHART_COLORS[4]),
-      text = ~paste0(n, " papers"), hoverinfo = "text") |>
-      plotly::layout(
-        xaxis = list(title = "Papers"),
-        yaxis = list(title = ""),
-        margin = list(l = 100)
-      ) |>
-      plotly::config(displayModeBar = FALSE)
+    # Use the dynamic tertiary column
+    make_bar_chart(data, tertiary_col, CHART_COLORS[4])
   })
 
   # Papers table
   output$filtered_papers_table <- DT::renderDataTable({
     data <- filtered_data()
-    if (is.null(data)) return(NULL)
+    cols <- filter_cols()
+    if (is.null(data) || is.null(cols)) return(NULL)
+
+    # Get column names for this track
+    primary_col <- cols$primary
+    secondary_col <- cols$secondary
+
+    # Safely extract column values
+    get_col_value <- function(row, col_name, max_len = 30) {
+      if (!col_name %in% names(data)) return("N/A")
+      val <- row[[col_name]]
+      if (is.na(val)) return("N/A")
+      substr(as.character(val), 1, max_len)
+    }
 
     display <- data |>
       dplyr::arrange(desc(submitted_date)) |>
+      dplyr::rowwise() |>
       dplyr::mutate(
         ID = id,
         PDF = paste0('<a href="', link_pdf, '" target="_blank" class="pdf-btn"><i class="fa fa-file-pdf"></i></a>'),
         Summary = paste0('<button class="summary-btn" onclick="Shiny.setInputValue(\'topic_summary_id\', \'', id, '\', {priority: \'event\'})"><i class="fa fa-robot"></i></button>'),
         Title = title,
         Year = year,
-        `Chart Type` = ifelse(is.na(chart_family), "N/A", substr(chart_family, 1, 30)),
-        Method = ifelse(is.na(chart_statistic), "N/A", substr(chart_statistic, 1, 25)),
+        Primary = get_col_value(dplyr::cur_data(), primary_col, 30),
+        Secondary = get_col_value(dplyr::cur_data(), secondary_col, 25),
         Domain = ifelse(is.na(application_domain), "N/A", substr(application_domain, 1, 25))
       ) |>
-      dplyr::select(ID, PDF, Summary, Title, Year, `Chart Type`, Method, Domain)
+      dplyr::ungroup() |>
+      dplyr::select(ID, PDF, Summary, Title, Year, Primary, Secondary, Domain)
+
+    # Rename columns based on track
+    names(display)[names(display) == "Primary"] <- cols$primary_label
+    names(display)[names(display) == "Secondary"] <- cols$secondary_label
 
     DT::datatable(display, escape = FALSE, selection = "single",
       options = list(pageLength = 10, scrollX = TRUE, columnDefs = list(
@@ -1191,14 +1641,26 @@ server <- function(input, output, session) {
         ))
       }
 
-      # Metadata and PDF link
+      # Metadata and PDF link - use track-specific labels
+      cols <- filter_cols()
+      primary_col <- if (!is.null(cols)) cols$primary else "category1"
+      secondary_col <- if (!is.null(cols)) cols$secondary else "category2"
+      tertiary_col <- if (!is.null(cols)) cols$tertiary else "category3"
+      primary_label <- if (!is.null(cols)) cols$primary_label else "Primary"
+      secondary_label <- if (!is.null(cols)) cols$secondary_label else "Secondary"
+      tertiary_label <- if (!is.null(cols)) cols$tertiary_label else "Tertiary"
+
+      primary_val <- if (primary_col %in% names(paper)) paper[[primary_col]] else NA
+      secondary_val <- if (secondary_col %in% names(paper)) paper[[secondary_col]] else NA
+      tertiary_val <- if (tertiary_col %in% names(paper)) paper[[tertiary_col]] else NA
+
       content <- c(content, list(
         shiny::tags$div(
           style = "margin-top: 15px; padding: 15px; background: #F5F5F5; border-radius: 6px;",
           shiny::fluidRow(
-            shiny::column(4, shiny::tags$strong("Chart Family: "), ifelse(is.na(paper$chart_family), "N/A", paper$chart_family)),
-            shiny::column(4, shiny::tags$strong("Method: "), ifelse(is.na(paper$chart_statistic), "N/A", paper$chart_statistic)),
-            shiny::column(4, shiny::tags$strong("Phase: "), ifelse(is.na(paper$phase), "N/A", paper$phase))
+            shiny::column(4, shiny::tags$strong(paste0(primary_label, ": ")), ifelse(is.na(primary_val), "N/A", primary_val)),
+            shiny::column(4, shiny::tags$strong(paste0(secondary_label, ": ")), ifelse(is.na(secondary_val), "N/A", secondary_val)),
+            shiny::column(4, shiny::tags$strong(paste0(tertiary_label, ": ")), ifelse(is.na(tertiary_val), "N/A", tertiary_val))
           )
         ),
         shiny::tags$div(

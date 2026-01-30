@@ -46,6 +46,7 @@ jobs:
           R -e "remotes::install_version('lubridate', version='1.9.4', repos='https://cloud.r-project.org')"
           R -e "remotes::install_version('stringr', version='1.5.1', repos='https://cloud.r-project.org')"
           R -e "remotes::install_version('tibble', version='3.2.1', repos='https://cloud.r-project.org')"
+          R -e "remotes::install_version('jsonlite', version='1.9.1', repos='https://cloud.r-project.org')"
 
           # Other packages your workflow referenced
           R -e "remotes::install_version('aRxiv', version='0.18', repos='https://cloud.r-project.org')"
@@ -67,14 +68,17 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          git add data/arxiv_metadata.csv data/spc_factsheet.csv
+          git add data/tracks.json
+          git add data/spc_arxiv_metadata.csv data/spc_factsheet.csv
+          git add data/exp_design_arxiv_metadata.csv data/exp_design_factsheet.csv
+          git add data/reliability_arxiv_metadata.csv data/reliability_factsheet.csv
 
           if git diff --cached --quiet; then
             echo "No changes to commit."
             exit 0
           fi
 
-          git commit -m "Daily update: arXiv metadata + SPC factsheets"
+          git commit -m "Daily update: arXiv metadata + factsheets for all tracks"
           git push
 
       - name: Push to Hugging Face Space
