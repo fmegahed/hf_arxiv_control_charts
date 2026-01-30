@@ -9,25 +9,26 @@ library(plotly)
 library(DT)
 library(ellmer)
 library(jsonlite)
+library(commonmark)
 
 # Ensuring that the API key is being read from the app's secrets; ellmer requires a zero input function
 OPENAI_API_KEY = Sys.getenv("OPENAI_API_KEY")
 get_openai_api_key = function(){return(OPENAI_API_KEY)}
 
 # Color palette for charts
+# First 4 colors are for topic analytics (NOT track colors)
+# Track colors: Teal (#1b9e77) = Control Charts, Orange (#d95f02) = Experimental Design, Purple (#7570b3) = Reliability
 CHART_COLORS <- c(
-  "#C41230", # Miami Red
-  "#1B9E77", # teal
-  "#D95F02", # orange
-  "#7570B3", # purple
-  "#66A61E", # green
-  "#E6AB02", # mustard
-  "#E7298A", # magenta
-  "#A6761D", # brown
-  "#666666", # gray
-  "#4E79A7", # blue
-  "#F28E2B", # lighter orange
-  "#59A14F"  # medium green
+  "#e7298a", # Magenta (for topic charts)
+  "#66a61e", # Green (for topic charts)
+  "#e6ab02", # Mustard (for topic charts)
+  "#a6761d", # Brown (for topic charts)
+  "#1b9e77", # Teal (track: Control Charts)
+  "#d95f02", # Orange (track: Experimental Design)
+  "#7570b3", # Purple (track: Reliability)
+  "#666666", # Gray
+  "#4E79A7", # Blue
+  "#F28E2B"  # Lighter orange
 )
 
 # ============================================================================
@@ -131,7 +132,7 @@ get_track_paper_count <- function(track_id) {
   }, error = function(e) 0)
 }
 
-# Count pipe-delimited values, excluding "Other"
+# Count pipe-delimited values, with option to exclude non-informative categories
 count_pipe_delimited <- function(data, column_name, top_n = 10, exclude_other = FALSE) {
   if (is.null(data) || is.null(column_name) || !column_name %in% names(data)) return(NULL)
 
@@ -140,7 +141,10 @@ count_pipe_delimited <- function(data, column_name, top_n = 10, exclude_other = 
   all_values <- all_values[all_values != "" & !is.na(all_values)]
 
   if (exclude_other) {
-    all_values <- all_values[!tolower(all_values) %in% c("other", "others", "n/a", "na", "none")]
+    # Exclude non-informative categories like "Other", "Not Applicable", "N/A", etc.
+    exclude_patterns <- c("other", "others", "n/a", "na", "none", "not applicable",
+                          "not specified", "unspecified", "unknown", "general")
+    all_values <- all_values[!tolower(all_values) %in% exclude_patterns]
   }
 
   if (length(all_values) == 0) return(NULL)
@@ -188,7 +192,7 @@ ui <- shiny::fluidPage(
   shiny::tags$head(
     shiny::tags$link(rel = "icon", type = "image/svg+xml", href = "favicon.svg"),
     shiny::tags$link(rel = "stylesheet", type = "text/css", href = "miami-theme.css"),
-    shiny::tags$title("ArXiv Literature Monitor"),
+    shiny::tags$title("QE ArXiv Watch"),
 
     # MathJax config MUST come before the MathJax loader
     shiny::tags$script(shiny::HTML("
@@ -215,6 +219,16 @@ ui <- shiny::fluidPage(
         MathJax.typesetPromise();
       }
     });
+  ")),
+
+    # Enter key handler for chat input
+    shiny::tags$script(shiny::HTML("
+    $(document).on('keydown', '#chat_input', function(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        $('#send_chat_msg').click();
+      }
+    });
   "))
   ),
 
@@ -227,8 +241,8 @@ ui <- shiny::fluidPage(
       class = "landing-page",
       shiny::div(
         class = "landing-hero",
-        shiny::tags$h1("ArXiv Literature Monitor"),
-        shiny::tags$p(class = "landing-subtitle", "AI-Powered Tracking of Quality Engineering Research")
+        shiny::tags$h1("QE ArXiv Watch"),
+        shiny::tags$p(class = "landing-subtitle", "Analytics insights across timelines, topics, and authors, plus AI summaries, paper chat, and PDF access")
       ),
       shiny::div(
         class = "track-selector-container",
@@ -238,33 +252,45 @@ ui <- shiny::fluidPage(
             shiny::div(
               class = "track-card",
               id = "track_card_spc",
+              style = "border: 3px solid #1b9e77;",
               onclick = "Shiny.setInputValue('select_track', 'spc', {priority: 'event'})",
-              shiny::div(class = "track-card-icon", shiny::icon("chart-bar")),
-              shiny::tags$h3("Control Charts (SPC)"),
-              shiny::tags$p("Statistical Process Control and control chart research"),
-              shiny::div(class = "track-card-count", shiny::textOutput("spc_paper_count", inline = TRUE), " papers")
+              onmouseover = "this.style.boxShadow='0 12px 40px rgba(27, 158, 119, 0.3)'; this.style.transform='translateY(-8px)';",
+              onmouseout = "this.style.boxShadow=''; this.style.transform='';",
+              shiny::div(class = "track-card-icon", style = "color: #1b9e77;", shiny::icon("chart-bar")),
+              shiny::tags$h3(style = "color: #1b9e77;", "Control Charts"),
+              shiny::tags$p("Statistical process monitoring and control charting research"),
+              shiny::div(class = "track-card-count", style = "background: rgba(27, 158, 119, 0.15); border: 1px solid #1b9e77;",
+                shiny::textOutput("spc_paper_count", inline = TRUE), " papers")
             )
           ),
           shiny::column(4,
             shiny::div(
-              class = "track-card track-card-doe",
+              class = "track-card",
               id = "track_card_exp_design",
+              style = "border: 3px solid #d95f02;",
               onclick = "Shiny.setInputValue('select_track', 'exp_design', {priority: 'event'})",
-              shiny::div(class = "track-card-icon", shiny::icon("flask")),
-              shiny::tags$h3("Experimental Design (DOE)"),
+              onmouseover = "this.style.boxShadow='0 12px 40px rgba(217, 95, 2, 0.3)'; this.style.transform='translateY(-8px)';",
+              onmouseout = "this.style.boxShadow=''; this.style.transform='';",
+              shiny::div(class = "track-card-icon", style = "color: #d95f02;", shiny::icon("flask")),
+              shiny::tags$h3(style = "color: #d95f02;", "Experimental Design"),
               shiny::tags$p("Design of experiments and response surface methodology research"),
-              shiny::div(class = "track-card-count", shiny::textOutput("exp_design_paper_count", inline = TRUE), " papers")
+              shiny::div(class = "track-card-count", style = "background: rgba(217, 95, 2, 0.15); border: 1px solid #d95f02;",
+                shiny::textOutput("exp_design_paper_count", inline = TRUE), " papers")
             )
           ),
           shiny::column(4,
             shiny::div(
-              class = "track-card track-card-reliability",
+              class = "track-card",
               id = "track_card_reliability",
+              style = "border: 3px solid #7570b3;",
               onclick = "Shiny.setInputValue('select_track', 'reliability', {priority: 'event'})",
-              shiny::div(class = "track-card-icon", shiny::icon("cogs")),
-              shiny::tags$h3("Reliability Engineering"),
+              onmouseover = "this.style.boxShadow='0 12px 40px rgba(117, 112, 179, 0.3)'; this.style.transform='translateY(-8px)';",
+              onmouseout = "this.style.boxShadow=''; this.style.transform='';",
+              shiny::div(class = "track-card-icon", style = "color: #7570b3;", shiny::icon("cogs")),
+              shiny::tags$h3(style = "color: #7570b3;", "Reliability Engineering"),
               shiny::tags$p("Reliability engineering, degradation modeling, and maintenance optimization"),
-              shiny::div(class = "track-card-count", shiny::textOutput("reliability_paper_count", inline = TRUE), " papers")
+              shiny::div(class = "track-card-count", style = "background: rgba(117, 112, 179, 0.15); border: 1px solid #7570b3;",
+                shiny::textOutput("reliability_paper_count", inline = TRUE), " papers")
             )
           )
         )
@@ -292,24 +318,8 @@ ui <- shiny::fluidPage(
   shiny::conditionalPanel(
     condition = "!output.show_landing",
 
-    # Header with dynamic title
-    shiny::div(
-      class = "app-header",
-      shiny::div(
-        class = "header-content",
-        shiny::div(
-          class = "header-left",
-          shiny::uiOutput("dynamic_header_title"),
-          shiny::uiOutput("dynamic_header_subtitle")
-        ),
-        shiny::div(
-          class = "header-right",
-          shiny::actionButton("change_track", shiny::tagList(shiny::icon("exchange-alt"), " Switch Track"),
-            class = "btn-header"),
-          shiny::tags$p(style = "margin-top: 8px;", "Version 2.0.0 | January 2026")
-        )
-      )
-    ),
+    # Header with dynamic title and track-specific color
+    shiny::uiOutput("dynamic_header"),
 
     # Logo container
     shiny::div(
@@ -641,19 +651,27 @@ ui <- shiny::fluidPage(
             shiny::uiOutput("chat_status"),
             shiny::div(id = "chat_box",
               style = "height: 350px; overflow-y: auto; border: 1px solid #CCC9B8; border-radius: 6px; padding: 15px; background: #FAFAFA; margin-bottom: 15px;",
+              shiny::div(id = "chat_thinking", style = "display: none; padding: 10px;",
+                shiny::div(class = "chat-thinking-indicator",
+                  shiny::tags$span(class = "typing-dot"),
+                  shiny::tags$span(class = "typing-dot"),
+                  shiny::tags$span(class = "typing-dot")
+                )
+              ),
               shiny::uiOutput("chat_history")
             ),
             shiny::div(
               shiny::tags$h5("Quick Questions:"),
               shiny::uiOutput("quick_questions")
             ),
-            shiny::fluidRow(style = "margin-top: 15px;",
-              shiny::column(10,
-                shiny::textAreaInput("chat_input", NULL, placeholder = "Ask a question about this paper...", rows = 2)
+            shiny::div(
+              style = "display: flex; gap: 10px; align-items: flex-end; margin-top: 15px;",
+              shiny::div(style = "flex: 1;",
+                shiny::textAreaInput("chat_input", NULL,
+                  placeholder = "Ask a question about this paper...", rows = 2, width = "100%")
               ),
-              shiny::column(2,
-                shiny::actionButton("send_chat_msg", shiny::icon("paper-plane"), class = "btn-primary", style = "width:100%; height: 60px;")
-              )
+              shiny::actionButton("send_chat_msg", shiny::icon("paper-plane"),
+                class = "btn-primary", style = "height: 60px; min-width: 60px;")
             )
           )
         )
@@ -745,24 +763,76 @@ server <- function(input, output, session) {
     chat_messages(list())
   })
 
-  # Dynamic header title
-  output$dynamic_header_title <- shiny::renderUI({
-    track <- track_config()
-    if (is.null(track)) {
-      shiny::tags$h1("ArXiv Literature Monitor")
-    } else {
-      shiny::tags$h1(paste0("ArXiv ", track$label, " Monitor"))
-    }
-  })
+  # Dynamic header with track-specific colors
 
-  # Dynamic header subtitle
-  output$dynamic_header_subtitle <- shiny::renderUI({
+  output$dynamic_header <- shiny::renderUI({
     track <- track_config()
-    if (is.null(track)) {
-      shiny::tags$p(class = "subtitle", "AI-Powered Tracking of Quality Engineering Research")
+
+    # Default to Miami red if no track selected
+    if (is.null(track) || is.null(track$color)) {
+      header_color <- "#C41230"
+      header_color_dark <- "#9E0F28"
+      title_text <- "QE ArXiv Watch"
+      subtitle_text <- "Analytics insights across timelines, topics, and authors, plus AI summaries, paper chat, and PDF access"
     } else {
-      shiny::tags$p(class = "subtitle", track$description)
+      header_color <- track$color
+      # Create darker shade for gradient
+      header_color_dark <- switch(track$id,
+        spc = "#147a5c",
+        exp_design = "#a64a02",
+        reliability = "#5a558a",
+        header_color
+      )
+      title_text <- paste0("QE ArXiv Watch: ", track$label)
+      subtitle_text <- track$description
     }
+
+    # Dynamic CSS for active tabs to match track color
+    tab_css <- shiny::tags$style(shiny::HTML(paste0("
+      .nav-tabs > li.active > a,
+      .nav-tabs > li.active > a:hover,
+      .nav-tabs > li.active > a:focus {
+        background-color: ", header_color, " !important;
+        color: #FFFFFF !important;
+      }
+      .nav-tabs > li > a:hover {
+        color: ", header_color, " !important;
+      }
+      .section-heading {
+        color: ", header_color, " !important;
+      }
+      .info-card h4 {
+        color: ", header_color, " !important;
+      }
+      .stat-icon {
+        color: ", header_color, " !important;
+      }
+      .stat-value {
+        color: ", header_color, " !important;
+      }
+    ")))
+
+    shiny::tagList(
+      tab_css,
+      shiny::div(
+        class = "app-header",
+        style = paste0("background: linear-gradient(135deg, ", header_color, " 0%, ", header_color_dark, " 100%);"),
+        shiny::div(
+          class = "header-content",
+          shiny::div(
+            class = "header-left",
+            shiny::tags$h1(title_text),
+            shiny::tags$p(class = "subtitle", subtitle_text)
+          ),
+          shiny::div(
+            class = "header-right",
+            shiny::actionButton("change_track", shiny::tagList(shiny::icon("exchange-alt"), " Switch Track"),
+              class = "btn-header"),
+            shiny::tags$p(style = "margin-top: 8px;", "Version 2.1.0 | January 2026")
+          )
+        )
+      )
+    )
   })
 
   # Combined data
@@ -1028,9 +1098,13 @@ server <- function(input, output, session) {
     data <- papers_data()
     if (is.null(data)) return(NULL)
 
+    # Get track color
+    track <- track_config()
+    track_color <- if (!is.null(track) && !is.null(track$color)) track$color else "#1b9e77"
+
     yearly <- data |> dplyr::count(year) |> dplyr::arrange(year)
 
-    plotly::plot_ly(yearly, x = ~year, y = ~n, type = "bar", marker = list(color = "#C41230")) |>
+    plotly::plot_ly(yearly, x = ~year, y = ~n, type = "bar", marker = list(color = track_color)) |>
       plotly::layout(
         xaxis = list(title = "", dtick = 2),
         yaxis = list(title = "Papers"),
@@ -1157,25 +1231,35 @@ server <- function(input, output, session) {
       x_title <- "Month"
     }
 
+    # Get track color for timeline charts
+    track <- track_config()
+    track_color <- if (!is.null(track) && !is.null(track$color)) track$color else "#1b9e77"
+
     if (isTRUE(input$show_cumulative)) {
       plot_data$cumulative <- cumsum(plot_data$n)
 
       plotly::plot_ly(plot_data, x = x_var) |>
-        plotly::add_bars(y = ~n, name = "Per Period", marker = list(color = "#C41230")) |>
+        plotly::add_bars(y = ~n, name = "Per Period", marker = list(color = track_color)) |>
         plotly::add_lines(y = ~cumulative, name = "Cumulative", yaxis = "y2",
           line = list(color = "#EFDB72", width = 3)) |>
         plotly::layout(
           xaxis = list(title = x_title, tickangle = -45),
           yaxis = list(title = "Papers per Period"),
-          yaxis2 = list(title = "Cumulative", overlaying = "y", side = "right"),
+          yaxis2 = list(
+            title = list(text = "Cumulative", standoff = 20),
+            overlaying = "y",
+            side = "right",
+            automargin = TRUE
+          ),
           legend = list(x = 0.02, y = 0.98),
-          hovermode = "x unified"
+          hovermode = "x unified",
+          margin = list(r = 80)
         ) |>
         plotly::config(displayModeBar = FALSE)
     } else {
       plotly::plot_ly(plot_data, x = x_var, y = ~n, type = "scatter", mode = "lines+markers",
-        fill = "tozeroy", line = list(color = "#C41230", width = 2),
-        marker = list(color = "#C41230", size = 8), fillcolor = "rgba(196, 18, 48, 0.2)") |>
+        fill = "tozeroy", line = list(color = track_color, width = 2),
+        marker = list(color = track_color, size = 8), fillcolor = paste0(track_color, "33")) |>
         plotly::layout(
           xaxis = list(title = x_title, tickangle = -45),
           yaxis = list(title = "Number of Papers"),
@@ -1460,9 +1544,10 @@ server <- function(input, output, session) {
     paste0("(", n, " papers)")
   })
 
-  # Helper for bar charts
+  # Helper for bar charts in Topic Analytics - excludes "Other" and "Not Applicable"
   make_bar_chart <- function(data, col_name, color) {
-    counts <- count_pipe_delimited(data, col_name, 10, FALSE)
+    # exclude_other = TRUE to filter out non-informative categories
+    counts <- count_pipe_delimited(data, col_name, 10, exclude_other = TRUE)
     if (is.null(counts)) return(NULL)
 
     plotly::plot_ly(counts, x = ~count, y = ~reorder(category, count), type = "bar",
@@ -1699,10 +1784,14 @@ server <- function(input, output, session) {
     auth_data <- all_authors()
     if (is.null(auth_data)) return(NULL)
 
+    # Get track color
+    track <- track_config()
+    track_color <- if (!is.null(track) && !is.null(track$color)) track$color else "#1b9e77"
+
     top <- auth_data |> dplyr::count(author) |> dplyr::arrange(desc(n)) |> head(15)
 
     plotly::plot_ly(top, x = ~n, y = ~reorder(author, n), type = "bar",
-      orientation = "h", marker = list(color = "#C41230")) |>
+      orientation = "h", marker = list(color = track_color)) |>
       plotly::layout(xaxis = list(title = "Papers"), yaxis = list(title = ""),
         margin = list(l = 180)) |>
       plotly::config(displayModeBar = FALSE)
@@ -1975,8 +2064,8 @@ server <- function(input, output, session) {
               m$content))
         } else {
           shiny::div(style = "text-align: left; margin-bottom: 10px;",
-            shiny::div(style = "display: inline-block; background: #EDECE2; padding: 10px 15px; border-radius: 15px 15px 15px 0; max-width: 75%;",
-              shiny::HTML(m$content)))
+            shiny::div(class = "chat-response", style = "display: inline-block; background: #EDECE2; padding: 10px 15px; border-radius: 15px 15px 15px 0; max-width: 75%;",
+              shiny::HTML(commonmark::markdown_html(m$content))))
         }
       })
     )
@@ -2000,6 +2089,9 @@ server <- function(input, output, session) {
     # Clear input
     shiny::updateTextAreaInput(session, "chat_input", value = "")
 
+    # Show thinking indicator
+    shinyjs::show("chat_thinking")
+
     # Get LLM response
     tryCatch({
       if (is_first_message) {
@@ -2022,6 +2114,12 @@ server <- function(input, output, session) {
         content = paste("<em>Error getting response:</em>", e$message))))
       chat_messages(msgs)
     })
+
+    # Hide thinking indicator
+    shinyjs::hide("chat_thinking")
+
+    # Re-typeset MathJax for any equations in response
+    shinyjs::runjs("if (window.MathJax && MathJax.typesetPromise) { MathJax.typesetPromise(); }")
 
     # Scroll to bottom
     shinyjs::runjs("document.getElementById('chat_box').scrollTop = document.getElementById('chat_box').scrollHeight;")

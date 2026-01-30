@@ -9,11 +9,22 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 COPY . /app
 
-# Install packages (and fail build if anything goes wrong)
-RUN R -e "install.packages('remotes', repos='https://cloud.r-project.org')" && \
-    R -e "remotes::install_github('rstudio/httpuv')" && \
-    R -e "install.packages(c('shiny','shinyjs','dplyr','tidyr','purrr','readr','lubridate','plotly','DT','httr','ellmer','jsonlite'), repos='https://cloud.r-project.org')" && \
-    R -e "stopifnot(requireNamespace('shiny', quietly = TRUE))"
+# Install packages with pinned versions for reproducibility
+RUN R -e "install.packages('remotes', repos='https://cloud.r-project.org')" \
+    && R -e "remotes::install_version('shiny', version='1.10.0', repos='https://cloud.r-project.org')" \
+    && R -e "remotes::install_version('shinyjs', version='2.1.0', repos='https://cloud.r-project.org')" \
+    && R -e "remotes::install_version('dplyr', version='1.1.4', repos='https://cloud.r-project.org')" \
+    && R -e "remotes::install_version('tidyr', version='1.3.2', repos='https://cloud.r-project.org')" \
+    && R -e "remotes::install_version('purrr', version='1.2.1', repos='https://cloud.r-project.org')" \
+    && R -e "remotes::install_version('readr', version='2.1.6', repos='https://cloud.r-project.org')" \
+    && R -e "remotes::install_version('lubridate', version='1.9.4', repos='https://cloud.r-project.org')" \
+    && R -e "remotes::install_version('plotly', version='4.10.4', repos='https://cloud.r-project.org')" \
+    && R -e "remotes::install_version('DT', version='0.33', repos='https://cloud.r-project.org')" \
+    && R -e "remotes::install_version('httr', version='1.4.7', repos='https://cloud.r-project.org')" \
+    && R -e "remotes::install_version('ellmer', version='0.4.0', repos='https://cloud.r-project.org')" \
+    && R -e "remotes::install_version('jsonlite', version='1.9.1', repos='https://cloud.r-project.org')" \
+    && R -e "remotes::install_version('commonmark', version='1.9.2', repos='https://cloud.r-project.org')" \
+    && R -e "stopifnot(requireNamespace('shiny', quietly = TRUE))"
 
 EXPOSE 7860
 

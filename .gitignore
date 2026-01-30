@@ -12,6 +12,9 @@ data/spc_factsheet_cache.rds
 # local_papers
 local_papers/
 
+# logs
+logs/
+
 # History files
 .Rhistory
 .Rapp.history

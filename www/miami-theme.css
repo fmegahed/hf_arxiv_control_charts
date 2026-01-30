@@ -1091,30 +1091,43 @@ hr {
   font-weight: 600;
 }
 
-/* DOE card accent */
+/* SPC/Control Charts card accent - Teal */
+.track-card-spc:hover {
+  border-color: #1b9e77;
+}
+
+.track-card-spc .track-card-icon {
+  color: #1b9e77;
+}
+
+.track-card-spc h3 {
+  color: #1b9e77;
+}
+
+/* DOE/Experimental Design card accent - Orange */
 .track-card-doe:hover {
-  border-color: #1B9E77;
+  border-color: #d95f02;
 }
 
 .track-card-doe .track-card-icon {
-  color: #1B9E77;
+  color: #d95f02;
 }
 
 .track-card-doe h3 {
-  color: #1B9E77;
+  color: #d95f02;
 }
 
-/* Reliability card accent */
+/* Reliability card accent - Purple */
 .track-card-reliability:hover {
-  border-color: #D95F02;
+  border-color: #7570b3;
 }
 
 .track-card-reliability .track-card-icon {
-  color: #D95F02;
+  color: #7570b3;
 }
 
 .track-card-reliability h3 {
-  color: #D95F02;
+  color: #7570b3;
 }
 
 .landing-footer {
@@ -1208,4 +1221,99 @@ hr {
   .landing-logo-container img {
     height: 30px;
   }
+}
+
+/* ============================================================================
+   Chat Thinking Indicator
+   ============================================================================ */
+
+.chat-thinking-indicator {
+  display: flex;
+  gap: 4px;
+  padding: 10px 15px;
+  background: #EDECE2;
+  border-radius: 15px 15px 15px 0;
+  width: fit-content;
+}
+
+.typing-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #999;
+  animation: typing 1.4s infinite ease-in-out;
+}
+
+.typing-dot:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.typing-dot:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+@keyframes typing {
+  0%, 80%, 100% {
+    transform: scale(0.6);
+    opacity: 0.6;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* ============================================================================
+   Chat Input Form Fix
+   ============================================================================ */
+
+/* Fix margin in chat input container */
+#chat_input {
+  margin-bottom: 0;
+}
+
+.form-group:has(#chat_input) {
+  margin-bottom: 0;
+}
+
+/* ============================================================================
+   Chat Response Markdown Styling
+   ============================================================================ */
+
+.chat-response p {
+  margin: 0 0 0.5em 0;
+}
+
+.chat-response p:last-child {
+  margin-bottom: 0;
+}
+
+.chat-response ul,
+.chat-response ol {
+  margin: 0.5em 0;
+  padding-left: 1.5em;
+}
+
+.chat-response li {
+  margin-bottom: 0.25em;
+}
+
+.chat-response code {
+  background: rgba(0, 0, 0, 0.05);
+  padding: 0.1em 0.3em;
+  border-radius: 3px;
+  font-size: 0.9em;
+}
+
+.chat-response pre {
+  background: rgba(0, 0, 0, 0.05);
+  padding: 0.5em;
+  border-radius: 4px;
+  overflow-x: auto;
+  margin: 0.5em 0;
+}
+
+.chat-response pre code {
+  background: none;
+  padding: 0;
 }
