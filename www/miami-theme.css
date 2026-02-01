@@ -912,37 +912,42 @@ hr {
    ============================================================================ */
 
 .pdf-btn,
-.summary-btn {
-  padding: 3px 8px;
-  margin: 0 2px;
-  border-radius: 4px;
-  text-decoration: none;
+.summary-btn,
+.delete-btn {
+  padding: 3px 8px !important;
+  margin: 0 2px !important;
+  border-radius: 4px !important;
   display: inline-block;
   cursor: pointer;
   font-size: 0.85em;
+  border: none !important;
 }
 
 .pdf-btn {
   background-color: var(--miami-red);
   color: white !important;
-  border: none;
 }
 
 .pdf-btn:hover {
   background-color: var(--miami-dark-red);
-  color: white !important;
-  text-decoration: none;
 }
 
 .summary-btn {
   background-color: var(--miami-yellow);
   color: var(--miami-black);
-  border: none;
 }
 
 .summary-btn:hover {
   background-color: #d4c060;
+}
+
+.delete-btn {
+  background-color: var(--miami-medium-tan);
   color: var(--miami-black);
+}
+
+.delete-btn:hover {
+  background-color: #b0ada0;
 }
 
 /* ============================================================================
@@ -1316,4 +1321,201 @@ hr {
 .chat-response pre code {
   background: none;
   padding: 0;
+}
+
+/* ============================================================================
+   Bookmark Icons
+   ============================================================================ */
+
+.bookmark-icon {
+  cursor: pointer;
+  color: var(--miami-medium-tan);
+  transition: all 0.2s ease;
+  font-size: 1.1em;
+  padding: 2px 5px;
+  display: inline-block;
+}
+
+.bookmark-icon:hover {
+  color: var(--miami-yellow);
+  transform: scale(1.15);
+}
+
+.bookmark-icon.bookmarked {
+  color: var(--miami-yellow);
+}
+
+.bookmark-icon.bookmarked:hover {
+  color: #d4c060;
+}
+
+/* ============================================================================
+   Toast Notifications
+   ============================================================================ */
+
+.toast-notification {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: #333;
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  z-index: 10000;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.3s, transform 0.3s;
+  font-size: 0.95em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.toast-notification.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.toast-notification.toast-success {
+  background: #2e7d32;
+}
+
+.toast-notification.toast-info {
+  background: #1976d2;
+}
+
+.toast-notification.toast-warning {
+  background: #f57c00;
+}
+
+.toast-notification i {
+  font-size: 1.1em;
+}
+
+/* ============================================================================
+   RSS Help Tooltip
+   ============================================================================ */
+
+.rss-help-tooltip {
+  position: relative;
+  display: inline-block;
+  cursor: help;
+}
+
+.rss-help-tooltip .tooltip-content {
+  visibility: hidden;
+  opacity: 0;
+  position: fixed;
+  z-index: 9999;
+  width: 300px;
+  background: #333;
+  color: #fff;
+  padding: 12px 15px;
+  border-radius: 6px;
+  font-size: 0.85em;
+  line-height: 1.5;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: opacity 0.2s, visibility 0.2s;
+}
+
+.rss-help-tooltip:hover .tooltip-content,
+.rss-help-tooltip:focus .tooltip-content {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* ============================================================================
+   Feed Reader Links
+   ============================================================================ */
+
+.feed-reader-links a {
+  color: var(--miami-red);
+  text-decoration: none;
+  margin: 0 5px;
+  transition: color 0.2s;
+}
+
+.feed-reader-links a:hover {
+  color: var(--miami-dark-red);
+  text-decoration: underline;
+}
+
+/* ============================================================================
+   My Library Tab Styles
+   ============================================================================ */
+
+.library-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.library-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.rss-section {
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 2px solid var(--miami-light-tan);
+}
+
+.rss-feed-card {
+  background: var(--miami-light-tan);
+  border-radius: 8px;
+  padding: 15px 20px;
+  margin-bottom: 15px;
+}
+
+.rss-feed-card h5 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  color: var(--miami-red);
+}
+
+.rss-feed-url {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fff;
+  padding: 8px 12px;
+  border-radius: 4px;
+  border: 1px solid var(--miami-medium-tan);
+  font-family: monospace;
+  font-size: 0.9em;
+  word-break: break-all;
+}
+
+.rss-feed-url button {
+  flex-shrink: 0;
+}
+
+/* ============================================================================
+   Collection Chat Modal Styling
+   ============================================================================ */
+
+.modal-body #collection_chat_box {
+  background: #FAFAFA !important;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.modal-body .chat-user,
+.modal-body .chat-response {
+  max-width: 80%;
+}
+
+.modal-dialog.modal-lg .modal-body {
+  padding: 15px 20px;
+}
+
+/* Ensure chat container fills modal width */
+#collection_chat_history {
+  width: 100%;
 }

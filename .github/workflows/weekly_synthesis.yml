@@ -1,0 +1,76 @@
+name: Weekly Synthesis Digest
+
+on:
+  schedule:
+    # Every Monday at 12:00 UTC
+    - cron: "0 12 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  synthesis:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup R (pinned)
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: '4.5.2'
+          use-public-rspm: true
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libcurl4-openssl-dev \
+            libssl-dev \
+            libxml2-dev
+
+      - name: Install R dependencies (pinned versions)
+        shell: bash
+        run: |
+          R -e "install.packages('remotes', repos='https://cloud.r-project.org')"
+
+          # Core / tidyverse-ish
+          R -e "remotes::install_version('dplyr', version='1.1.4', repos='https://cloud.r-project.org')"
+          R -e "remotes::install_version('readr', version='2.1.6', repos='https://cloud.r-project.org')"
+          R -e "remotes::install_version('lubridate', version='1.9.4', repos='https://cloud.r-project.org')"
+          R -e "remotes::install_version('jsonlite', version='1.9.1', repos='https://cloud.r-project.org')"
+
+          # ellmer for LLM synthesis
+          R -e "remotes::install_version('ellmer', version='0.4.0', repos='https://cloud.r-project.org')"
+
+      - name: Run weekly synthesis
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          Rscript 02_weekly_synthesis.r
+
+      - name: Commit digest files to GitHub
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add data/weekly_digest.xml data/weekly_digest.json
+
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+
+          git commit -m "Weekly synthesis: $(date +%Y-%m-%d)"
+          git push
+
+      - name: Push to Hugging Face Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          git remote add space https://fmegahed:${HF_TOKEN}@huggingface.co/spaces/fmegahed/arxiv_control_charts || true
+          git push --force space HEAD:main

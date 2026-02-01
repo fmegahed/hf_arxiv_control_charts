@@ -192,6 +192,7 @@ ui <- shiny::fluidPage(
   shiny::tags$head(
     shiny::tags$link(rel = "icon", type = "image/svg+xml", href = "favicon.svg"),
     shiny::tags$link(rel = "stylesheet", type = "text/css", href = "miami-theme.css"),
+    shiny::tags$script(src = "personalization.js"),
     shiny::tags$title("QE ArXiv Watch"),
 
     # MathJax config MUST come before the MathJax loader
@@ -675,6 +676,78 @@ ui <- shiny::fluidPage(
             )
           )
         )
+      ),
+
+      # =======================================================================
+      # Tab 6: My Library
+      # =======================================================================
+      shiny::tabPanel(
+        title = shiny::tagList(shiny::icon("bookmark"), " My Library"),
+        value = "my_library",
+        shiny::div(
+          class = "tab-content-wrapper",
+
+          # Header with actions
+          shiny::tags$div(
+            class = "library-header",
+            shiny::tags$h4(shiny::icon("star"), " Bookmarked Papers"),
+            shiny::tags$div(
+              class = "library-actions",
+              shiny::downloadButton("download_bibtex", shiny::tagList(shiny::icon("file-export"), " Export BibTeX"),
+                class = "btn-info"),
+              shiny::actionButton("chat_all_papers", shiny::tagList(shiny::icon("comments"), " Chat with Collection"),
+                class = "btn-primary")
+            )
+          ),
+
+          # Info text
+          shiny::tags$p(class = "help-block",
+            "Bookmarks are stored in your browser's local storage. They work across all research tracks and persist between sessions."),
+
+          # Bookmarked papers table
+          DT::dataTableOutput("bookmarked_papers_table"),
+
+          # RSS Feed Section - Weekly Digest Only
+          shiny::div(
+            class = "rss-section",
+            shiny::tags$h4(shiny::icon("rss"), " Weekly Research Digest"),
+            shiny::tags$p("Subscribe to receive a curated weekly summary of new quality engineering research with AI-synthesized insights."),
+
+            shiny::div(class = "rss-feed-card", style = "max-width: 600px;",
+              shiny::tags$h5(shiny::icon("newspaper"), " QE ArXiv Watch Weekly"),
+              shiny::tags$p("Every Monday, receive our AI-generated synthesis of the week's new papers across Control Charts, Experimental Design, and Reliability Engineering. Our AI analyzes each paper to highlight key contributions, emerging trends, and practical implications for researchers and practitioners."),
+              shiny::div(class = "rss-feed-url",
+                shiny::tags$span(id = "weekly_feed_url", "https://huggingface.co/spaces/fmegahed/arxiv_control_charts/resolve/main/data/weekly_digest.xml"),
+                shiny::tags$button(class = "btn btn-sm btn-info",
+                  onclick = "navigator.clipboard.writeText(document.getElementById('weekly_feed_url').textContent); QEPersonalization.showToast('URL copied!', 'success');",
+                  shiny::icon("copy"), " Copy URL")
+              )
+            ),
+
+            # RSS Help
+            shiny::div(style = "margin-top: 20px;",
+              shiny::tags$span(class = "rss-help-tooltip",
+                shiny::icon("question-circle"), " What is RSS?",
+                shiny::tags$span(class = "tooltip-content",
+                  "RSS (Really Simple Syndication) lets you subscribe to updates from websites. ",
+                  "Copy the feed URL above and paste it into your RSS reader app to receive our weekly digest automatically."
+                )
+              )
+            ),
+
+            # Feed reader links
+            shiny::tags$p(class = "help-block feed-reader-links", style = "margin-top: 15px;",
+              "Popular RSS readers: ",
+              shiny::tags$a(href = "https://feedly.com", target = "_blank", "Feedly"),
+              " | ",
+              shiny::tags$a(href = "https://www.inoreader.com", target = "_blank", "Inoreader"),
+              " | ",
+              shiny::tags$a(href = "https://netnewswire.com", target = "_blank", "NetNewsWire"),
+              " (Mac/iOS) | ",
+              shiny::tags$a(href = "https://newsblur.com", target = "_blank", "NewsBlur")
+            )
+          )
+        )
       )
 
       )
@@ -828,7 +901,7 @@ server <- function(input, output, session) {
             class = "header-right",
             shiny::actionButton("change_track", shiny::tagList(shiny::icon("exchange-alt"), " Switch Track"),
               class = "btn-header"),
-            shiny::tags$p(style = "margin-top: 8px;", "Version 2.1.0 | January 2026")
+            shiny::tags$p(style = "margin-top: 8px;", "Version 3.1.0 | February 2026")
           )
         )
       )
@@ -1141,10 +1214,11 @@ server <- function(input, output, session) {
         `First Author` = sapply(authors, parse_first_author),
         short_id = sapply(id, extract_short_id),
         ID = short_id,
+        `Bookmark` = paste0('<span class="bookmark-icon" data-paper-id="', id, '" onclick="QEPersonalization.toggleBookmark(\'', id, '\')"><i class="fa fa-star-o"></i></span>'),
         `PDF` = paste0('<a href="', link_pdf, '" target="_blank" class="pdf-btn"><i class="fa fa-file-pdf"></i> ', short_id, '</a>'),
         `AI Summary` = paste0('<button class="summary-btn" onclick="Shiny.setInputValue(\'overview_summary_id\', \'', id, '\', {priority: \'event\'})"><i class="fa fa-robot"></i> View</button>')
       ) |>
-      dplyr::select(ID, `Submitted`, `Title`, `First Author`, `PDF`, `AI Summary`)
+      dplyr::select(ID, `Bookmark`, `Submitted`, `Title`, `First Author`, `PDF`, `AI Summary`)
 
     DT::datatable(display, escape = FALSE, selection = "none",
       options = list(pageLength = 10, scrollX = TRUE, dom = "frtip"),
@@ -1612,6 +1686,7 @@ server <- function(input, output, session) {
       dplyr::rowwise() |>
       dplyr::mutate(
         ID = id,
+        Bookmark = paste0('<span class="bookmark-icon" data-paper-id="', id, '" onclick="QEPersonalization.toggleBookmark(\'', id, '\')"><i class="fa fa-star-o"></i></span>'),
         PDF = paste0('<a href="', link_pdf, '" target="_blank" class="pdf-btn"><i class="fa fa-file-pdf"></i></a>'),
         Summary = paste0('<button class="summary-btn" onclick="Shiny.setInputValue(\'topic_summary_id\', \'', id, '\', {priority: \'event\'})"><i class="fa fa-robot"></i></button>'),
         Title = title,
@@ -1621,7 +1696,7 @@ server <- function(input, output, session) {
         Domain = ifelse(is.na(application_domain), "N/A", substr(application_domain, 1, 25))
       ) |>
       dplyr::ungroup() |>
-      dplyr::select(ID, PDF, Summary, Title, Year, Primary, Secondary, Domain)
+      dplyr::select(ID, Bookmark, PDF, Summary, Title, Year, Primary, Secondary, Domain)
 
     # Rename columns based on track
     names(display)[names(display) == "Primary"] <- cols$primary_label
@@ -1999,9 +2074,10 @@ server <- function(input, output, session) {
 
     make_section <- function(title, content, icon_name, bg, is_math = FALSE) {
       if (is.na(content) || content == "") return(NULL)
-      content_div <- if (is_math) {
+      # Apply math-content class to AI Summary and Key Equations sections for consistent MathJax rendering
+      content_div <- if (is_math || title == "AI Summary") {
         shiny::tags$div(class = "math-content", style = paste0("padding: 15px; background: ", bg, "; border-radius: 6px;"),
-          shiny::HTML(content))
+          shiny::HTML(commonmark::markdown_html(content)))
       } else {
         shiny::tags$div(style = paste0("padding: 15px; background: ", bg, "; border-radius: 6px;"), content)
       }
@@ -2024,6 +2100,16 @@ server <- function(input, output, session) {
           shiny::icon("file-pdf"), " View PDF on ArXiv")
       )
     )
+  })
+
+  # Trigger MathJax after Deep Dive content renders
+  shiny::observe({
+    paper <- current_paper()
+    shiny::req(paper)
+    # Delay to ensure DOM is ready
+    shinyjs::delay(100, {
+      shinyjs::runjs("if (window.MathJax && MathJax.typesetPromise) { MathJax.typesetPromise(); }")
+    })
   })
 
   # Quick questions
@@ -2123,6 +2209,429 @@ server <- function(input, output, session) {
 
     # Scroll to bottom
     shinyjs::runjs("document.getElementById('chat_box').scrollTop = document.getElementById('chat_box').scrollHeight;")
+  })
+
+  # ===========================================================================
+  # My Library Tab
+  # ===========================================================================
+
+  # Collection chat system prompt (track-agnostic)
+  COLLECTION_SYSTEM_PROMPT <- paste0(
+    "You are a research synthesis assistant helping analyze a collection of academic papers. ",
+    "Your expertise spans quality engineering domains including:\n",
+    "- Statistical Process Control (SPC) and control charts\n",
+    "- Design of Experiments (DOE) and experimental design\n",
+    "- Reliability engineering and lifetime analysis\n\n",
+    "When analyzing this collection, you should:\n",
+    "1. Identify common themes, methodologies, and theoretical frameworks\n",
+    "2. Compare and contrast approaches across papers\n",
+    "3. Highlight complementary findings and potential contradictions\n",
+    "4. Suggest research gaps or future directions\n",
+    "5. Synthesize key takeaways for practitioners\n\n",
+    "Be specific when referencing papers - cite by title or first author.\n",
+    "Use clear, accessible language suitable for both researchers and practitioners."
+  )
+
+  # Reactive for collection chat session
+  collection_chat_session <- shiny::reactiveVal(NULL)
+  collection_chat_messages <- shiny::reactiveVal(list())
+  collection_first_message <- shiny::reactiveVal(TRUE)
+  collection_papers <- shiny::reactiveVal(NULL)
+
+  # Bookmarked papers table
+  output$bookmarked_papers_table <- DT::renderDataTable({
+    bookmarks <- input$personalization_bookmarks
+    if (is.null(bookmarks) || length(bookmarks) == 0) {
+      return(DT::datatable(
+        data.frame(Message = "No bookmarked papers yet. Click the star icon on any paper to bookmark it."),
+        options = list(dom = 't', ordering = FALSE),
+        rownames = FALSE,
+        selection = "none"
+      ))
+    }
+
+    # Get data from all tracks
+    all_data <- list()
+    for (track_id in names(TRACKS_CONFIG)) {
+      track_data <- load_track_data(track_id)
+      if (!is.null(track_data$metadata) && !is.null(track_data$factsheet)) {
+        combined <- dplyr::left_join(track_data$metadata, track_data$factsheet, by = "id")
+        combined$track <- track_id
+        all_data[[track_id]] <- combined
+      }
+    }
+
+    data <- dplyr::bind_rows(all_data)
+    if (nrow(data) == 0) return(NULL)
+
+    papers <- data |> dplyr::filter(id %in% bookmarks)
+    if (nrow(papers) == 0) {
+      return(DT::datatable(
+        data.frame(Message = "No bookmarked papers found in current data."),
+        options = list(dom = 't', ordering = FALSE),
+        rownames = FALSE,
+        selection = "none"
+      ))
+    }
+
+    # Parse first author
+    parse_first_author <- function(authors_str) {
+      if (is.na(authors_str) || authors_str == "") return("Unknown")
+      first <- strsplit(as.character(authors_str), "\\|")[[1]][1]
+      trimws(first)
+    }
+
+    # Extract short arXiv ID
+    extract_short_id <- function(full_id) {
+      if (is.na(full_id)) return("")
+      match <- regmatches(full_id, regexpr("[0-9]+\\.[0-9]+", full_id))
+      if (length(match) > 0) match else full_id
+    }
+
+    display <- papers |>
+      dplyr::arrange(desc(submitted_date)) |>
+      dplyr::mutate(
+        ID = sapply(id, extract_short_id),
+        Title = title,
+        `First Author` = sapply(authors, parse_first_author),
+        Track = dplyr::case_when(
+          track == "spc" ~ "SPC",
+          track == "exp_design" ~ "DOE",
+          track == "reliability" ~ "Reliability",
+          TRUE ~ track
+        ),
+        Actions = paste0(
+          '<a href="', link_pdf, '" target="_blank" class="btn btn-sm pdf-btn"><i class="fa fa-file-pdf"></i></a>',
+          '<button class="btn btn-sm summary-btn" onclick="Shiny.setInputValue(\'library_summary_id\', \'', id, '\', {priority: \'event\'})"><i class="fa fa-robot"></i></button>',
+          '<button class="btn btn-sm delete-btn" ',
+          'onclick="QEPersonalization.toggleBookmark(\'', id, '\'); ',
+          'Shiny.setInputValue(\'refresh_library\', Date.now());"><i class="fa fa-trash"></i></button>'
+        )
+      ) |>
+      dplyr::select(Actions, ID, Title, `First Author`, Track)
+
+    DT::datatable(display, escape = FALSE, selection = "none",
+      options = list(
+        pageLength = 10,
+        dom = 'ftp',
+        scrollX = TRUE,
+        columnDefs = list(
+          list(width = '100px', targets = 0),  # Actions
+          list(width = '80px', targets = 1),   # ID
+          list(width = '40%', targets = 2)     # Title
+        )
+      ),
+      rownames = FALSE)
+  })
+
+  # Refresh library table when bookmark changes
+  shiny::observeEvent(input$refresh_library, {
+    # Trigger reactive invalidation - the table will re-render automatically
+    # since it depends on input$personalization_bookmarks
+  })
+
+  # Modal for AI Summary from Library table
+  shiny::observeEvent(input$library_summary_id, {
+    pid <- input$library_summary_id
+    if (is.null(pid) || pid == "") return()
+
+    # Get data from all tracks
+    all_data <- list()
+    for (track_id in names(TRACKS_CONFIG)) {
+      track_data <- load_track_data(track_id)
+      if (!is.null(track_data$metadata) && !is.null(track_data$factsheet)) {
+        combined <- dplyr::left_join(track_data$metadata, track_data$factsheet, by = "id")
+        all_data[[track_id]] <- combined
+      }
+    }
+    data <- dplyr::bind_rows(all_data)
+    paper <- data |> dplyr::filter(id == pid) |> dplyr::slice(1)
+    if (nrow(paper) == 0) return()
+
+    # Build modal content
+    modal_content <- list(
+      shiny::tags$p(shiny::tags$strong("Authors: "), paper$authors),
+      shiny::tags$p(shiny::tags$strong("Date: "), as.character(paper$submitted_date)),
+      shiny::hr()
+    )
+
+    if (!is.na(paper$summary) && paper$summary != "") {
+      modal_content <- c(modal_content, list(
+        shiny::tags$h5(shiny::icon("robot"), " AI Summary"),
+        shiny::tags$div(class = "math-content", style = "background: #EDECE2; padding: 15px; border-radius: 6px; margin-bottom: 15px;",
+          shiny::HTML(commonmark::markdown_html(paper$summary)))
+      ))
+    }
+
+    if (!is.na(paper$key_results) && paper$key_results != "") {
+      modal_content <- c(modal_content, list(
+        shiny::tags$h5(shiny::icon("chart-line"), " Key Results"),
+        shiny::tags$div(style = "background: #F5FFF5; padding: 15px; border-radius: 6px; margin-bottom: 15px;", paper$key_results)
+      ))
+    }
+
+    if (!is.na(paper$key_equations) && paper$key_equations != "") {
+      modal_content <- c(modal_content, list(
+        shiny::tags$h5(shiny::icon("square-root-alt"), " Key Equations"),
+        shiny::tags$div(class = "math-content", style = "background: #F5F5FF; padding: 15px; border-radius: 6px;",
+          shiny::HTML(paper$key_equations))
+      ))
+    }
+
+    modal_content <- c(modal_content, list(
+      shiny::tags$div(style = "margin-top: 15px;",
+        shiny::tags$a(href = paper$link_pdf, target = "_blank", class = "btn btn-primary",
+          shiny::icon("file-pdf"), " View PDF on ArXiv"))
+    ))
+
+    shiny::showModal(shiny::modalDialog(
+      title = shiny::tags$div(style = "color: #C41230;", paper$title),
+      size = "l",
+      easyClose = TRUE,
+      shiny::tagList(modal_content),
+      footer = shiny::modalButton("Close")
+    ))
+  })
+
+  # BibTeX export download handler
+  output$download_bibtex <- shiny::downloadHandler(
+    filename = function() {
+      paste0("qe_arxiv_papers_", format(Sys.Date(), "%Y%m%d"), ".bib")
+    },
+    content = function(file) {
+      bookmarks <- input$personalization_bookmarks
+      if (is.null(bookmarks) || length(bookmarks) == 0) {
+        writeLines("% No bookmarked papers to export", file)
+        return()
+      }
+
+      # Get data from all tracks
+      all_data <- list()
+      for (track_id in names(TRACKS_CONFIG)) {
+        track_data <- load_track_data(track_id)
+        if (!is.null(track_data$metadata) && !is.null(track_data$factsheet)) {
+          combined <- dplyr::left_join(track_data$metadata, track_data$factsheet, by = "id")
+          all_data[[track_id]] <- combined
+        }
+      }
+
+      data <- dplyr::bind_rows(all_data)
+      papers <- data |> dplyr::filter(id %in% bookmarks)
+
+      if (nrow(papers) == 0) {
+        writeLines("% No matching papers found", file)
+        return()
+      }
+
+      # Header comment
+      header <- paste0(
+        "% Bibliography exported from QE ArXiv Watch\n",
+        "% https://huggingface.co/spaces/fmegahed/arxiv_control_charts\n",
+        "% Export date: ", format(Sys.time(), "%Y-%m-%d %H:%M:%S %Z"), "\n",
+        "% Total papers: ", nrow(papers), "\n\n"
+      )
+
+      # Generate entries
+      entries <- sapply(seq_len(nrow(papers)), function(i) {
+        p <- papers[i, ]
+
+        # Extract arXiv ID
+        arxiv_id <- regmatches(p$id, regexpr("[0-9]+\\.[0-9]+", p$id))
+        if (length(arxiv_id) == 0) arxiv_id <- p$id
+
+        # Citation key: FirstAuthorYear
+        first_author <- strsplit(p$authors, "\\|")[[1]][1]
+        last_name <- trimws(tail(strsplit(trimws(first_author), " ")[[1]], 1))
+        cite_key <- paste0(tolower(gsub("[^a-zA-Z]", "", last_name)), p$year, "_", substr(arxiv_id, 1, 4))
+
+        # Format authors: "Last, First and Last, First"
+        authors_list <- strsplit(p$authors, "\\|")[[1]]
+        authors_bib <- paste(trimws(authors_list), collapse = " and ")
+
+        # Clean title
+        clean_title <- gsub("[{}]", "", p$title)
+
+        # Clean abstract (truncate and escape)
+        abstract_clean <- if (!is.na(p$abstract)) {
+          gsub("\n", " ", substr(p$abstract, 1, 500))
+        } else {
+          ""
+        }
+
+        paste0(
+          "@article{", cite_key, ",\n",
+          "  title     = {{", clean_title, "}},\n",
+          "  author    = {", authors_bib, "},\n",
+          "  year      = {", p$year, "},\n",
+          "  eprint    = {", arxiv_id, "},\n",
+          "  archivePrefix = {arXiv},\n",
+          "  primaryClass = {stat.ME},\n",
+          "  url       = {", p$link_pdf, "},\n",
+          "  abstract  = {", abstract_clean, "}\n",
+          "}"
+        )
+      })
+
+      writeLines(c(header, paste(entries, collapse = "\n\n")), file)
+    }
+  )
+
+  # Initialize collection chat when button clicked
+  shiny::observeEvent(input$chat_all_papers, {
+    bookmarks <- input$personalization_bookmarks
+
+    if (is.null(bookmarks) || length(bookmarks) == 0) {
+      shiny::showNotification("No bookmarked papers to chat with. Bookmark some papers first!",
+        type = "warning", duration = 5)
+      return()
+    }
+
+    # Get data from all tracks
+    all_data <- list()
+    for (track_id in names(TRACKS_CONFIG)) {
+      track_data <- load_track_data(track_id)
+      if (!is.null(track_data$metadata) && !is.null(track_data$factsheet)) {
+        combined <- dplyr::left_join(track_data$metadata, track_data$factsheet, by = "id")
+        all_data[[track_id]] <- combined
+      }
+    }
+
+    data <- dplyr::bind_rows(all_data)
+    papers <- data |> dplyr::filter(id %in% bookmarks)
+
+    if (nrow(papers) == 0) {
+      shiny::showNotification("No bookmarked papers found.", type = "warning")
+      return()
+    }
+
+    # Create chat with synthesis model
+    tryCatch({
+      chat <- ellmer::chat_openai(
+        model = "gpt-5.2-2025-12-11",
+        system_prompt = COLLECTION_SYSTEM_PROMPT,
+        api_key = get_openai_api_key()
+      )
+
+      collection_chat_session(chat)
+      collection_chat_messages(list())
+      collection_first_message(TRUE)
+      collection_papers(papers)
+
+      # Show modal
+      shiny::showModal(shiny::modalDialog(
+        title = paste0("Chat with Your Collection (", nrow(papers), " papers)"),
+        size = "l",
+        easyClose = FALSE,
+
+        # Warning/info banner
+        shiny::div(class = "alert alert-info", style = "margin-bottom: 15px;",
+          shiny::icon("info-circle"), " ",
+          shiny::tags$strong(nrow(papers), " papers"), " will be analyzed. ",
+          "Typically works well with up to ~10-15 papers. ",
+          "Larger collections may take longer or hit token limits."
+        ),
+
+        # Chat history
+        shiny::div(id = "collection_chat_box",
+          style = "height: 300px; overflow-y: auto; border: 1px solid #CCC9B8; border-radius: 6px; padding: 15px; background: #FAFAFA; margin-bottom: 15px;",
+          shiny::div(id = "collection_thinking", style = "display: none; padding: 10px;",
+            shiny::div(class = "chat-thinking-indicator",
+              shiny::tags$span(class = "typing-dot"),
+              shiny::tags$span(class = "typing-dot"),
+              shiny::tags$span(class = "typing-dot")
+            )
+          ),
+          shiny::uiOutput("collection_chat_history")
+        ),
+
+        # Input area
+        shiny::textAreaInput("collection_chat_input", NULL,
+          placeholder = "Ask about your collection... (e.g., 'Compare the methodologies used' or 'What are the key findings?')",
+          rows = 2, width = "100%"),
+
+        footer = shiny::tagList(
+          shiny::actionButton("send_collection_msg", shiny::tagList(shiny::icon("paper-plane"), " Send"),
+            class = "btn-primary"),
+          shiny::modalButton("Close")
+        )
+      ))
+    }, error = function(e) {
+      shiny::showNotification(paste("Could not initialize chat:", e$message),
+        type = "error", duration = 5)
+    })
+  })
+
+  # Send message handler for collection chat
+  shiny::observeEvent(input$send_collection_msg, {
+    chat <- collection_chat_session()
+    papers <- collection_papers()
+    msg <- trimws(input$collection_chat_input)
+    if (is.null(chat) || is.null(papers) || msg == "") return()
+
+    is_first <- collection_first_message()
+
+    # Add user message to display
+    msgs <- collection_chat_messages()
+    msgs <- append(msgs, list(list(role = "user", content = msg)))
+    collection_chat_messages(msgs)
+
+    # Clear input and show thinking
+    shiny::updateTextAreaInput(session, "collection_chat_input", value = "")
+    shinyjs::show("collection_thinking")
+
+    tryCatch({
+      if (is_first) {
+        # First message: include ALL PDFs via content_pdf_url
+        pdf_urls <- papers$link_pdf
+        pdf_contents <- lapply(pdf_urls, ellmer::content_pdf_url)
+
+        # Use do.call to splice the pdf_contents list
+        args <- c(list(msg), pdf_contents)
+        response <- do.call(chat$chat, args)
+        collection_first_message(FALSE)
+      } else {
+        # Subsequent messages: ellmer maintains history automatically
+        response <- chat$chat(msg)
+      }
+
+      msgs <- collection_chat_messages()
+      msgs <- append(msgs, list(list(role = "assistant", content = response)))
+      collection_chat_messages(msgs)
+    }, error = function(e) {
+      msgs <- collection_chat_messages()
+      error_msg <- paste0("<em>Error getting response:</em> ", e$message,
+        "<br><small>This may occur with very large collections. Try with fewer papers.</small>")
+      msgs <- append(msgs, list(list(role = "assistant", content = error_msg)))
+      collection_chat_messages(msgs)
+    })
+
+    # Hide thinking, typeset MathJax, scroll
+    shinyjs::hide("collection_thinking")
+    shinyjs::runjs("if (window.MathJax && MathJax.typesetPromise) { MathJax.typesetPromise(); }")
+    shinyjs::runjs("document.getElementById('collection_chat_box').scrollTop = document.getElementById('collection_chat_box').scrollHeight;")
+  })
+
+  # Render collection chat history
+  output$collection_chat_history <- shiny::renderUI({
+    msgs <- collection_chat_messages()
+    if (length(msgs) == 0) {
+      return(shiny::tags$p(class = "text-muted", style = "text-align: center; margin-top: 50px;",
+        "Start by asking a question about your bookmarked papers..."))
+    }
+
+    shiny::tagList(
+      lapply(msgs, function(m) {
+        if (m$role == "user") {
+          shiny::div(style = "text-align: right; margin-bottom: 10px;",
+            shiny::div(class = "chat-user", style = "display: inline-block; background: #C41230; color: white; padding: 10px 15px; border-radius: 15px 15px 0 15px; max-width: 75%;",
+              m$content))
+        } else {
+          shiny::div(style = "text-align: left; margin-bottom: 10px;",
+            shiny::div(class = "chat-response math-content", style = "display: inline-block; background: #EDECE2; padding: 10px 15px; border-radius: 15px 15px 15px 0; max-width: 75%;",
+              shiny::HTML(commonmark::markdown_html(m$content))))
+        }
+      })
+    )
   })
 
 }
