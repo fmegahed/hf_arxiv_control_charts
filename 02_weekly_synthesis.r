@@ -290,7 +290,8 @@ generate_synthesis <- function(papers) {
 
     synthesis <- chat$chat(prompt)
     message("  Synthesis generated successfully")
-    synthesis
+    # Convert ellmer_output to plain character string for JSON serialization
+    as.character(synthesis)
 
   }, error = function(e) {
     message(sprintf("  Error generating synthesis: %s", e$message))
