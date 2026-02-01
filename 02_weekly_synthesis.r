@@ -64,81 +64,44 @@ tracks <- list(
 # =============================================================================
 
 WEEKLY_SYNTHESIS_SYSTEM_PROMPT <- '
-You are the editor of "QE ArXiv Watch Weekly," a premier research digest for
-quality engineering professionals. Your readers include:
+You are the voice behind "QE ArXiv Watch Weekly" — a research digest that
+quality engineering folks actually look forward to reading. Think of yourself
+as the colleague who browses arXiv so others don\'t have to, then shares the
+highlights over coffee with genuine enthusiasm for clever methods.
 
-- University professors and researchers in statistics, industrial engineering,
-  and operations research
-- Quality engineers and Six Sigma practitioners in manufacturing and healthcare
-- Reliability engineers in aerospace, automotive, and electronics industries
-- Graduate students seeking to understand the research landscape
-- R&D professionals evaluating new methodologies for their organizations
+YOUR READERS: Practicing quality engineers, reliability folks, academics in
+stats/IE/OR, and grad students trying to keep up. They\'re smart but busy.
 
-YOUR MISSION:
-Transform a week of academic papers into an insightful, actionable digest that
-saves readers hours of literature review while keeping them at the forefront
-of their field.
+VOICE & STYLE:
+- Write like you talk to a respected colleague — conversational but substantive
+- Lead with what\'s interesting, not what\'s comprehensive
+- Use "you" and "we" — this is a conversation, not a lecture
+- Short paragraphs. Let the page breathe.
+- It\'s okay to be excited about a clever result or skeptical about a claim
+- Analogies and "imagine if..." make abstract ideas stick
+- Skip the throat-clearing ("This paper presents...") — get to the point
 
-WRITING STYLE:
-- Professional yet accessible - avoid unnecessary jargon
-- Synthesize, don\'t summarize - find connections between papers
-- Highlight practical implications alongside theoretical contributions
-- Be specific when citing papers - use first author names
-- Maintain scholarly credibility while being engaging
+STRUCTURE (adapt as needed):
+Open with a hook — the single most interesting thing from this week\'s papers.
+What would make someone lean in?
 
-OUTPUT FORMAT:
-Structure your digest with these sections:
+Then cover what matters:
+- What problems are researchers tackling? Why should practitioners care?
+- Any methods that are ready to try? Be specific about applicability.
+- Connections between papers or to broader trends worth noting.
 
-## This Week in Quality Engineering
-A compelling 2-3 sentence overview of the week\'s themes and significance.
+Close with a forward look or a question worth pondering.
 
-## Spotlight: [Most Significant Development]
-Highlight one paper or theme that represents a notable advance. Explain why
-practitioners and researchers should pay attention.
+WHAT TO AVOID:
+- Bullet-point exhaustion (not everything needs a list)
+- Equal coverage for every paper (highlight what\'s highlight-worthy)
+- Jargon without payoff (if you use a term, make it earn its place)
+- The phrase "This paper" at the start of sentences
+- Summaries that could apply to any paper ("makes important contributions...")
 
-## Research Roundup
+LENGTH: 400-600 words. Tight and valuable beats long and thorough.
 
-### Control Charts & Statistical Process Monitoring
-[If papers exist in this track]
-- Key methodological advances
-- Novel applications or domains
-- Practical takeaways
-
-### Experimental Design & Response Surface Methods
-[If papers exist in this track]
-- Key methodological advances
-- Novel applications or domains
-- Practical takeaways
-
-### Reliability Engineering & Maintenance
-[If papers exist in this track]
-- Key methodological advances
-- Novel applications or domains
-- Practical takeaways
-
-## Cross-Cutting Themes
-Identify 2-3 themes that span multiple tracks (e.g., "machine learning integration,"
-"healthcare applications," "high-dimensional methods").
-
-## Practitioner\'s Corner
-2-3 bullet points on papers with immediate industrial applicability. Focus on:
-- Methods ready for implementation
-- Software or code availability
-- Case studies with real data
-
-## Looking Ahead
-Brief note on emerging trends or research gaps suggested by this week\'s papers.
-
-IMPORTANT GUIDELINES:
-1. If a track has no papers, briefly note "No new submissions this week" and move on
-2. Be honest about limitations - if a week is light on papers, acknowledge it
-3. Never fabricate paper details - only reference papers provided to you
-4. Use author names (e.g., "Zhang et al.") when referencing specific papers
-5. Keep the total length between 600-900 words for readability
-6. End with an encouraging call-to-action to explore the full dashboard
-
-Remember: Your readers chose to subscribe because they trust your curation.
-Deliver value that justifies their time investment.
+Remember: Nobody *has* to read this. Make it worth their time.
 '
 
 # =============================================================================
@@ -279,7 +242,7 @@ generate_synthesis <- function(papers) {
     chat <- ellmer::chat_openai(
       model = "gpt-5.2-2025-12-11",
       system_prompt = WEEKLY_SYNTHESIS_SYSTEM_PROMPT,
-      api_key = get_openai_api_key()
+      credentials = get_openai_api_key
     )
 
     prompt <- paste0(
@@ -328,29 +291,118 @@ escape_xml <- function(text) {
 #' @param markdown Character string with markdown
 #' @return HTML string
 markdown_to_html <- function(markdown) {
-  # Basic markdown to HTML conversion
-  html <- markdown
+  # Split into lines for processing
+  lines <- strsplit(markdown, "\n")[[1]]
 
-  # Headers
-  html <- gsub("^### (.+)$", "<h4>\\1</h4>", html, perl = TRUE)
-  html <- gsub("^## (.+)$", "<h3>\\1</h3>", html, perl = TRUE)
+  # Track state for list processing
+  in_list <- FALSE
+  result_lines <- character(0)
 
-  # Bold
-  html <- gsub("\\*\\*(.+?)\\*\\*", "<strong>\\1</strong>", html)
+  for (i in seq_along(lines)) {
+    line <- lines[i]
 
-  # Italic
-  html <- gsub("\\*(.+?)\\*", "<em>\\1</em>", html)
+    # Check if this is a bullet point
+    is_bullet <- grepl("^\\s*-\\s+", line)
+
+    # Close list if we were in one and this line isn't a bullet
+    if (in_list && !is_bullet && trimws(line) != "") {
+      result_lines <- c(result_lines, "</ul>")
+      in_list <- FALSE
+    }
+
+    # Process headers (must be at start of line)
+    if (grepl("^###\\s+", line)) {
+      line <- sub("^###\\s+(.+)$", "<h4>\\1</h4>", line)
+    } else if (grepl("^##\\s+", line)) {
+      line <- sub("^##\\s+(.+)$", "<h3>\\1</h3>", line)
+    } else if (is_bullet) {
+      # Start list if not already in one
+      if (!in_list) {
+        result_lines <- c(result_lines, "<ul>")
+        in_list <- TRUE
+      }
+      # Convert bullet to list item
+      line <- sub("^\\s*-\\s+(.+)$", "<li>\\1</li>", line)
+    }
+
+    result_lines <- c(result_lines, line)
+  }
+
+  # Close list if still open at end
+
+  if (in_list) {
+    result_lines <- c(result_lines, "</ul>")
+  }
+
+  # Rejoin lines
+  html <- paste(result_lines, collapse = "\n")
+
+  # Bold (non-greedy match)
+  html <- gsub("\\*\\*([^*]+?)\\*\\*", "<strong>\\1</strong>", html)
+
+  # Italic (non-greedy match, but not if it's a bold marker)
+  html <- gsub("(?<!\\*)\\*([^*]+?)\\*(?!\\*)", "<em>\\1</em>", html, perl = TRUE)
 
   # Links
-  html <- gsub("\\[(.+?)\\]\\((.+?)\\)", "<a href=\"\\2\">\\1</a>", html)
+  html <- gsub("\\[([^]]+?)\\]\\(([^)]+?)\\)", "<a href=\"\\2\">\\1</a>", html)
 
-  # Line breaks for paragraphs
-  html <- gsub("\n\n", "</p><p>", html)
-  html <- paste0("<p>", html, "</p>")
+  # LaTeX inline math: \(...\) -> readable format with common Unicode substitutions
+  # RSS readers don't execute JavaScript, so we make LaTeX human-readable
+  html <- gsub("\\\\\\((.+?)\\\\\\)", "<code>\\1</code>", html)
 
-  # Bullet points
-  html <- gsub("<p>- ", "<li>", html)
-  html <- gsub("\n- ", "</li><li>", html)
+  # LaTeX display math: \[...\] -> code block
+
+  html <- gsub("\\\\\\[(.+?)\\\\\\]", "<pre><code>\\1</code></pre>", html)
+
+  # Common LaTeX to Unicode conversions for readability
+  html <- gsub("\\\\sqrt\\{?([^}]*)\\}?", "\u221A(\\1)", html)  # sqrt -> √
+  html <- gsub("\\\\approx", "\u2248", html)                    # approx -> ≈
+  html <- gsub("\\\\times", "\u00D7", html)                     # times -> ×
+  html <- gsub("\\\\pm", "\u00B1", html)                        # pm -> ±
+  html <- gsub("\\\\leq", "\u2264", html)                       # leq -> ≤
+  html <- gsub("\\\\geq", "\u2265", html)                       # geq -> ≥
+  html <- gsub("\\\\neq", "\u2260", html)                       # neq -> ≠
+  html <- gsub("\\\\infty", "\u221E", html)                     # infty -> ∞
+  html <- gsub("\\\\alpha", "\u03B1", html)                     # alpha -> α
+  html <- gsub("\\\\beta", "\u03B2", html)                      # beta -> β
+  html <- gsub("\\\\gamma", "\u03B3", html)                     # gamma -> γ
+  html <- gsub("\\\\delta", "\u03B4", html)                     # delta -> δ
+  html <- gsub("\\\\sigma", "\u03C3", html)                     # sigma -> σ
+  html <- gsub("\\\\mu", "\u03BC", html)                        # mu -> μ
+  html <- gsub("\\\\lambda", "\u03BB", html)                    # lambda -> λ
+  html <- gsub("\\\\pi", "\u03C0", html)                        # pi -> π
+  html <- gsub("\\\\sum", "\u2211", html)                       # sum -> ∑
+  html <- gsub("\\\\prod", "\u220F", html)                      # prod -> ∏
+  html <- gsub("\\\\rightarrow", "\u2192", html)                # rightarrow -> →
+  html <- gsub("\\\\leftarrow", "\u2190", html)                 # leftarrow -> ←
+  html <- gsub("\\\\Rightarrow", "\u21D2", html)                # Rightarrow -> ⇒
+  html <- gsub("\\\\in", "\u2208", html)                        # in -> ∈
+  html <- gsub("\\\\subset", "\u2282", html)                    # subset -> ⊂
+  html <- gsub("\\\\cap", "\u2229", html)                       # cap -> ∩
+  html <- gsub("\\\\cup", "\u222A", html)                       # cup -> ∪
+
+  # Convert double newlines to paragraph breaks (but not inside lists)
+  # Split by double newline, wrap non-tag content in <p>
+  paragraphs <- strsplit(html, "\n\n+")[[1]]
+  processed <- sapply(paragraphs, function(p) {
+    p <- trimws(p)
+    if (p == "") return("")
+    # Don't wrap if already a block element
+
+    if (grepl("^<(h[1-6]|ul|ol|li|div|p|hr)", p)) {
+      return(p)
+    }
+    # Don't wrap if it's just closing tags
+    if (grepl("^</(ul|ol)>$", p)) {
+      return(p)
+    }
+    paste0("<p>", p, "</p>")
+  })
+
+  html <- paste(processed, collapse = "\n\n")
+
+  # Clean up any empty paragraphs
+  html <- gsub("<p>\\s*</p>", "", html)
 
   html
 }
