@@ -7,7 +7,7 @@
     <language>en-us</language>
     <copyright>CC BY 4.0 - QE ArXiv Watch</copyright>
     <managingEditor>noreply@example.com (QE ArXiv Watch)</managingEditor>
-    <lastBuildDate>Sun, 01 Feb 2026 23:27:06 +0000</lastBuildDate>
+    <lastBuildDate>Mon, 02 Feb 2026 12:15:58 +0000</lastBuildDate>
     <ttl>10080</ttl>
     <image>
       <url>https://huggingface.co/spaces/fmegahed/arxiv_control_charts/resolve/main/www/favicon.svg</url>
@@ -16,44 +16,54 @@
     </image>
     <atom:link href="https://huggingface.co/spaces/fmegahed/arxiv_control_charts/resolve/main/data/weekly_digest.xml" rel="self" type="application/rss+xml"/>
     <item>
-      <title>QE ArXiv Watch: Week of January 25 - February 01, 2026</title>
+      <title>QE ArXiv Watch: Week of January 26 - February 02, 2026</title>
       <link>https://huggingface.co/spaces/fmegahed/arxiv_control_charts</link>
-      <guid isPermaLink="false">qe-weekly-2026-02-01</guid>
-      <pubDate>Sun, 01 Feb 2026 23:27:06 +0000</pubDate>
+      <guid isPermaLink="false">qe-weekly-2026-02-02</guid>
+      <pubDate>Mon, 02 Feb 2026 12:15:58 +0000</pubDate>
       <description><![CDATA[
-<p>If you’ve ever wondered why a “great loss curve” can still produce a lousy decision rule—or why turning a whole system “on vs. off” in an experiment can stubbornly refuse to average out—this week had a nice theme: <strong>local errors and local interference matter</strong>, and our usual global metrics can be wildly overconfident.</p>
+<h3>QE ArXiv Watch Weekly — Week ending Feb 02, 2026 (3 papers)</h3>
 
-<h4>The hook: cross-entropy can lie to you (badly) in diffusion guidance</h4>
+<p>If you’ve ever trusted a “loss went down” plot and still ended up with a model that behaves oddly in production, you’ll appreciate this week’s best wake-up call: **cross-entropy can go to zero while the <em>gradient you actually use for guidance</em> stays wrong—or even blows up.<strong> That’s not a philosophical nit. It’s a concrete failure mode with proofs and toy experiments you can recreate.</p>
 
-<p>Sahu et al. take aim at a quietly common assumption in classifier-guided diffusion: <em>if my time-dependent classifier has low cross-entropy/KL error, then the guidance gradient I’m using must be accurate.</em> Not so.</p>
+<h4>When “good classifier” doesn’t mean “good guidance” (Sahu et al.)</h4>
+Classifier-guided diffusion hinges on a vector field: the gradient of the log-conditional, <code>\nabla \log p(y\mid x_t)</code>. Most training focuses on cross-entropy (conditional KL). The catch: </strong>a small KL gap doesn’t necessarily control gradient error.<strong>
 
-<p>They construct explicit counterexamples where the conditional KL goes to zero while the <strong>guidance vector field error stays constant—or even blows up</strong>. The mechanism is almost too relatable: high-frequency perturbations that barely move the average loss, but wreak havoc on derivatives. If you’re using guidance in a safety-critical or “must-not-drift” setting, that’s the punchline: <strong>optimizing the scalar objective doesn’t necessarily control the thing you actually use at sampling time (a gradient).</strong></p>
+<p>They build explicit high-frequency perturbations where the classifier’s KL error vanishes (think <code>O(1/n)</code>), yet the guidance-gradient error stays <code>\Omega(1)</code>, and in a stronger construction the gradient error grows like <code>\Omega(n)</code> while KL still shrinks. In other words, the classifier can be “right on average” but </strong>locally jagged**, and guidance cares about local geometry.</p>
 
-<p>The good news: under stronger (but clear) smoothness and bounded-support assumptions—think “the classifier behaves nicely and doesn’t hide razor blades in its derivatives”—they prove a bound linking per-time cross-entropy error to <strong>L2 guidance-gradient MSE</strong>, with explicit dependence on dimension, noise level, and class probability. They even argue the ε-dependence is unimprovable. For practitioners, this reads like a spec sheet: if your guidance is unstable at small σₜ, the theory says it’s not surprising.</p>
+<p>The constructive part is the remedy: if you assume bounded support and real smoothness/regularity—bounds on gradients and Hessians aligned with the true conditional—then cross-entropy error <code>\varepsilon</code> <em>does</em> imply an <code>L_2</code> guidance-gradient MSE bound scaling roughly like  
+<pre><code>
+\tilde O\Big(\frac{d(\varepsilon+\varepsilon^2)}{σ_t^2\,P(y)^{3/2}}\Big),
+</code></pre>
+which also clarifies where guidance gets fragile: <strong>high dimension <code>d</code>, low noise <code>σ_t</code>, and rare classes <code>P(y)</code>.</strong> They push through to sampler error bounds and a step complexity result that stays near-linear in dimension, which is reassuring if you’re budgeting compute.</p>
 
-<p>What to do Monday morning? If you’re deploying guided diffusion for inspection image synthesis, data augmentation, or anomaly generation: add <strong>derivative-sensitive validation</strong>. Don’t just track cross-entropy; probe gradient sanity (finite-difference checks, gradient norms vs. σₜ, or stress tests with slight input perturbations).</p>
+<p><strong>Practitioner takeaway:</strong> if you’re deploying guided generative models for inspection images or defect synthesis, don’t stop at “validation CE looks fine.” Add <strong>gradient-focused diagnostics</strong> (stability/Lipschitz proxies, smoothing/regularization, stress tests at low <code>σ_t</code>, and especially checks for rare-class guidance).</p>
 
-<h4>Self-supervised ultrasound enhancement that acts like a reliability preprocessor</h4>
+<p>---</p>
 
-<p>Khan et al. go after a very practical pain point: ultrasound images are noisy (speckle-ish), blurred (PSF-ish), and you rarely have “clean targets” or calibrated PSFs. Their move is a clever self-supervised loop: synthesize training pairs from real frames using a <strong>physics-guided degradation model</strong> (Gaussian PSF surrogate + noise/complex perturbations), and use <strong>non-local low-rank denoising</strong> to create “clean-like” targets.</p>
+<h4>Self-supervised ultrasound enhancement that acts like a reliability preprocessor (Khan et al.)</h4>
+Ultrasound is a worst-case “measurement system”: speckle-like noise, PSF blur, and often no clean reference. The clever move here is <strong>self-supervised training pairs from real frames</strong> using a physics-guided degradation model—Gaussian PSF surrogate blur plus noise (either additive Gaussian or Fourier-domain complex perturbations)—and “clean-like” targets created via <strong>non-local low-rank denoising</strong>.
 
-<p>Model-wise, they use a Swin-style attention + convolution U-Net hybrid (SC-UNet). The headline isn’t just PSNR/SSIM gains (though they report sizable improvements under heavier noise/blur); it’s that as a plug-in preprocessor, it <strong>improves downstream segmentation Dice</strong> under nasty noise regimes.</p>
+<p>The restoration net is a Swin-Convolutional U-Net (local conv + shifted-window attention), and the reported gains are not just cosmetic: across datasets and blur levels they claim <strong>+3.6 to +13.8 dB PSNR</strong> and <strong>+0.01 to +0.26 SSIM</strong>, plus sharper edges (FWHM down, gradient metrics up). The most QE-relevant result: as a plug-in preprocessor it <strong>improves downstream segmentation Dice</strong> under severe noise—exactly where pipelines usually fall apart.</p>
 
-<p>For quality/reliability folks, the interesting framing is: <em>treat enhancement as upstream risk reduction.</em> If your acceptance decision, measurement, or segmentation pipeline is brittle to imaging conditions, a self-supervised enhancer that doesn’t need calibration starts to look like a controllable “virtual fixture” for the sensing process.</p>
+<p><strong>Where you might try it:</strong> any imaging-driven decision where you can’t recalibrate the sensor (fielded systems, legacy probes, multi-site variability). Treat it like a <strong>front-end robustness module</strong> and measure impact on your actual CTQ (segmentation, detection, measurement repeatability), not just PSNR.</p>
 
-<p>Worth skepticism: their degradation model uses a Gaussian PSF surrogate—often a pragmatic stand-in, not reality. The segmentation lift helps credibility, but if you’re in a regulated workflow, you’d still want site-specific stress tests (different probes, depths, gain settings).</p>
+<p>---</p>
 
-<h4>DOE for matching: randomize locally, not globally</h4>
+<h4>DOE meets matching: randomize locally, not globally (Wang et al.)</h4>
+If you’ve ever evaluated two matching policies (assignments, pairing, workforce-to-task) and felt that “just randomize which matching we use” is too blunt—you’re right. Switching wholesale between two matchings can have <strong>non-vanishing variance</strong> because match feasibility creates interference.
 
-<p>Wang et al. tackle experiments where the “treatment” is a <strong>matching plan</strong> (who gets paired with whom)—think workforce assignment, ride-sharing, patient-provider matching. The snag is <em>matching interference</em>: choosing one edge can block others. If you naively randomize between two full matchings, variance can refuse to vanish with N (worst-case constant variance), which is exactly what makes teams lose faith in experimentation.</p>
+<p>They exploit a beautiful graph fact: the <em>disagreement edges</em> between two one-to-one matchings decompose into disjoint alternating paths and even cycles. That decomposition localizes interference. Their <strong>Alternating Path (AP) Design</strong> randomizes within each component with a single parameter <code>p</code>, keeping feasibility intact, and pairs with a Horvitz–Thompson estimator.</p>
 
-<p>Their Alternating Path (AP) design exploits structure in the <strong>disagreement set</strong> (edges present in exactly one matching). For one-to-one matchings, it decomposes into disjoint alternating paths/cycles, then randomizes <em>within</em> each component while maintaining feasibility. You get a Horvitz–Thompson estimator with variance that scales like <strong>O(1/N)</strong>, and a minimax-optimal long-component randomization probability converging to <strong>√2−1 ≈ 0.4142</strong>—a delightfully specific number to tape to your monitor.</p>
+<p>Under worst-case bounded outcomes, variance drops like <strong><code>O(1/N)</code></strong> (versus constant variance for the naive switch). Even better, the minimax-optimal <code>p</code> for long components converges to <code>√(2-1 ≈ 0.4142</code>—a rare “use this number on Monday” result. Simulations show AP variance shrinking with size while naive variance stays ~flat, and a finite-population CLT supports normal approximations for inference.</p>
 
-<p>If you’re experimenting on assignment systems: this is a concrete blueprint for “variance that actually shrinks” without pretending units are independent.</p>
+<p><strong>QE angle:</strong> this is design-based causal inference for operational systems with constraints—exactly the kind of scenario we see in allocation, routing, pairing, and staffing.</p>
 
-<h4>The trend to watch</h4>
+<p>---</p>
 
-<p>Across all three: we’re moving from global metrics (overall loss, whole-plan randomization, PSNR alone) toward <strong>local control</strong>—control the gradients you use, randomize where interference lives, validate enhancements by downstream task impact. Question for next week: where in our own QE pipelines are we still trusting a scalar summary when the decision hinges on something derivative, local, or constrained?</p><h4>Featured Papers This Week</h4><ul><li><strong>Khan et al.</strong>: <a href="https://arxiv.org/pdf/2601.21856v1">Blind Ultrasound Image Enhancement via Self-Supervised Physics-Guided Degradation Modeling</a> <em>(Reliability)</em></li><li><strong>Sahu et al.</strong>: <a href="https://arxiv.org/pdf/2601.21200v1">Provably Reliable Classifier Guidance through Cross-entropy Error Control</a> <em>(Reliability)</em></li><li><strong>Wang et al.</strong>: <a href="https://arxiv.org/pdf/2601.21036v1">Experimental Design for Matching</a> <em>(Experimental Design)</em></li></ul><hr/><p><strong>Explore More:</strong> Visit the <a href="https://huggingface.co/spaces/fmegahed/arxiv_control_charts">QE ArXiv Watch Dashboard</a> to browse all papers with AI summaries, interactive filtering, and paper chat.</p><p style="color: #666; font-size: 0.9em;">This digest is automatically generated every Monday. Questions or feedback? Open an issue on our <a href="https://github.com/fmegahed/arxiv_control_charts">GitHub repository</a>.</p>
+<h4>The connective tissue this week</h4>
+Across all three: <strong>we’re getting more honest about what our objectives actually control.</strong> Cross-entropy doesn’t guarantee good guidance; PSNR doesn’t guarantee better segmentation; global randomization doesn’t guarantee good precision under interference. The win comes from targeting the quantity that drives the decision.
+
+<p><strong>Question to ponder:</strong> in your current pipeline, what’s the equivalent of “training the wrong loss”—the metric that looks reassuring but doesn’t control the failure mode you care about?)</p><h4>Featured Papers This Week</h4><ul><li><strong>Khan et al.</strong>: <a href="https://arxiv.org/pdf/2601.21856v1">Blind Ultrasound Image Enhancement via Self-Supervised Physics-Guided Degradation Modeling</a> <em>(Reliability)</em></li><li><strong>Sahu et al.</strong>: <a href="https://arxiv.org/pdf/2601.21200v1">Provably Reliable Classifier Guidance through Cross-entropy Error Control</a> <em>(Reliability)</em></li><li><strong>Wang et al.</strong>: <a href="https://arxiv.org/pdf/2601.21036v1">Experimental Design for Matching</a> <em>(Experimental Design)</em></li></ul><hr/><p><strong>Explore More:</strong> Visit the <a href="https://huggingface.co/spaces/fmegahed/arxiv_control_charts">QE ArXiv Watch Dashboard</a> to browse all papers with AI summaries, interactive filtering, and paper chat.</p><p style="color: #666; font-size: 0.9em;">This digest is automatically generated every Monday. Questions or feedback? Open an issue on our <a href="https://github.com/fmegahed/arxiv_control_charts">GitHub repository</a>.</p>
 ]]></description>
     </item>
   </channel>
