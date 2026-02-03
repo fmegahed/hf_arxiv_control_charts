@@ -22,6 +22,7 @@ RUN R -e "install.packages('remotes', repos='https://cloud.r-project.org')" \
     && R -e "remotes::install_version('DT', version='0.33', repos='https://cloud.r-project.org')" \
     && R -e "remotes::install_version('httr', version='1.4.7', repos='https://cloud.r-project.org')" \
     && R -e "remotes::install_version('ellmer', version='0.4.0', repos='https://cloud.r-project.org')" \
+    && R -e "remotes::install_version('shinychat', version='0.3.0', repos='https://cloud.r-project.org')" \
     && R -e "remotes::install_version('jsonlite', version='2.0.0', repos='https://cloud.r-project.org')" \
     && R -e "remotes::install_version('commonmark', version='2.0.0', repos='https://cloud.r-project.org')" \
     && R -e "stopifnot(requireNamespace('shiny', quietly = TRUE))"

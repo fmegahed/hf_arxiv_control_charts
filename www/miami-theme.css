@@ -869,22 +869,19 @@ hr {
    ============================================================================ */
 
 .chat-status {
-  padding: 8px 15px;
-  border-radius: 4px;
-  margin-bottom: 10px;
-  font-size: 0.9em;
+  font-size: 12px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .chat-status-ready {
-  background-color: #d4edda;
-  color: #155724;
-  border: 1px solid #c3e6cb;
+  color: #28a745;
 }
 
 .chat-status-loading {
-  background-color: #fff3cd;
-  color: #856404;
-  border: 1px solid #ffeeba;
+  color: #666;
 }
 
 /* ============================================================================
@@ -1133,28 +1130,6 @@ hr {
 
 .track-card-reliability h3 {
   color: #7570b3;
-}
-
-.landing-footer {
-  margin-top: auto;
-  padding-top: 50px;
-  text-align: center;
-  color: #666;
-  font-size: 0.9em;
-}
-
-.landing-logo-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 30px;
-  margin-top: 20px;
-  opacity: 0.8;
-}
-
-.landing-logo-container img {
-  height: 40px;
-  width: auto;
 }
 
 /* ============================================================================
@@ -1518,4 +1493,461 @@ hr {
 /* Ensure chat container fills modal width */
 #collection_chat_history {
   width: 100%;
+}
+
+/* ============================================================================
+   shinychat Miami Theme Overrides
+   ============================================================================ */
+
+.miami-chat-container {
+  --chat-user-bg: #C41230;
+  --chat-assistant-bg: #EDECE2;
+}
+
+/* Force the chat container to use proper flex distribution */
+.miami-chat-container > div {
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+/* Messages container - takes ALL available space */
+.miami-chat-container .chat-messages {
+  background: linear-gradient(to bottom, #FAFAFA, #F5F5F5);
+  border: 1px solid #CCC9B8;
+  border-radius: 6px;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+}
+
+/* Input area - FIXED small height, does not grow */
+.miami-chat-container .chat-input {
+  flex: 0 0 auto !important;
+  height: auto !important;
+  max-height: 70px !important;
+  padding-top: 10px;
+  border-top: 1px solid #E5E5E5;
+  margin-top: 8px;
+}
+
+/* Force textarea to be small */
+.miami-chat-container .chat-input textarea,
+.miami-chat-container textarea.form-control {
+  border: 2px solid #CCC9B8 !important;
+  border-radius: 20px !important;
+  padding: 8px 16px !important;
+  height: 42px !important;
+  min-height: 42px !important;
+  max-height: 42px !important;
+  resize: none !important;
+  font-size: 14px !important;
+  line-height: 1.5 !important;
+  overflow-y: hidden !important;
+}
+
+.miami-chat-container .chat-input textarea:focus,
+.miami-chat-container textarea.form-control:focus {
+  border-color: #C41230 !important;
+  box-shadow: 0 0 0 3px rgba(196, 18, 48, 0.1) !important;
+}
+
+/* User bubbles - Miami Red */
+.miami-chat-container [data-role="user"] .message-content {
+  background-color: #C41230 !important;
+  color: white !important;
+  border-radius: 15px 15px 0 15px !important;
+}
+
+/* Assistant bubbles - Miami Tan */
+.miami-chat-container [data-role="assistant"] .message-content {
+  background-color: #EDECE2 !important;
+  color: #333 !important;
+  border-radius: 15px 15px 15px 0 !important;
+  max-width: 85%;
+}
+
+/* Send button - circular chat style */
+.miami-chat-container .chat-input button[type="submit"],
+.miami-chat-container button.btn-primary {
+  background-color: #C41230 !important;
+  border-color: #C41230 !important;
+  border-radius: 50% !important;
+  width: 42px !important;
+  height: 42px !important;
+  min-width: 42px !important;
+  max-width: 42px !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+}
+
+.miami-chat-container .chat-input button[type="submit"]:hover,
+.miami-chat-container button.btn-primary:hover {
+  background-color: #A30F28 !important;
+}
+
+/* Welcome/placeholder message styling */
+.miami-chat-container .chat-messages > p:first-child:last-child,
+.miami-chat-container .chat-welcome {
+  text-align: center;
+  color: #666;
+  font-style: italic;
+  padding: 40px 20px;
+  margin: 0;
+}
+
+/* Markdown in responses */
+.miami-chat-container .message-content p {
+  margin: 0 0 0.5em 0;
+}
+.miami-chat-container .message-content p:last-child {
+  margin-bottom: 0;
+}
+.miami-chat-container .message-content code {
+  background: rgba(0, 0, 0, 0.05);
+  padding: 0.1em 0.3em;
+  border-radius: 3px;
+  font-size: 0.9em;
+}
+.miami-chat-container .message-content pre {
+  background: rgba(0, 0, 0, 0.03);
+  padding: 10px;
+  border-radius: 4px;
+  overflow-x: auto;
+}
+.miami-chat-container .message-content ul,
+.miami-chat-container .message-content ol {
+  margin: 0.5em 0;
+  padding-left: 1.5em;
+}
+
+/* MathJax equations in chat */
+.miami-chat-container .message-content .MathJax {
+  font-size: 1em !important;
+}
+.miami-chat-container .message-content mjx-container {
+  margin: 0.25em 0 !important;
+}
+
+/* ============================================================================
+   Collection Chat Modal - Resizable
+   ============================================================================ */
+
+/* Modal with resizable class (added via JS) */
+.modal-dialog.resizable-modal {
+  resize: both;
+  overflow: auto;
+  min-width: 450px;
+  min-height: 350px;
+  max-width: 90vw;
+  max-height: 85vh;
+}
+
+.modal-dialog.resizable-modal .modal-content {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-dialog.resizable-modal .modal-body {
+  flex: 1 1 auto;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.collection-chat {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 200px;
+  overflow: hidden;
+}
+
+.collection-chat > div {
+  flex: 1 1 auto;
+  display: flex !important;
+  flex-direction: column !important;
+  min-height: 0;
+}
+
+.collection-chat .chat-messages {
+  flex: 1 1 auto !important;
+  min-height: 100px;
+  overflow-y: auto !important;
+}
+
+/* Resize handle indicator */
+.modal-dialog.resizable-modal::after {
+  content: "⋱";
+  position: absolute;
+  bottom: 2px;
+  right: 6px;
+  font-size: 14px;
+  color: #999;
+  pointer-events: none;
+}
+
+/* Typing/streaming indicator pulse */
+.miami-chat-container .chat-message-streaming .message-content::after {
+  content: "●";
+  animation: pulse 1s infinite;
+  margin-left: 4px;
+  color: #C41230;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+/* ============================================================================
+   Enhanced Landing Page - v3.3.0
+   ============================================================================ */
+
+/* Hero Enhancements */
+.landing-hero {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.landing-tagline {
+  font-size: 1.5em;
+  color: #C41230;
+  font-weight: 600;
+  margin: 0 0 10px 0;
+}
+
+.landing-hero-actions {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  flex-wrap: wrap;
+  margin-top: 25px;
+}
+
+.hero-cta {
+  background: #C41230;
+  border-color: #C41230;
+  padding: 12px 30px;
+  border-radius: 30px;
+  font-size: 1.1em;
+}
+
+.hero-cta:hover {
+  background: #A30F28;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(196, 18, 48, 0.3);
+}
+
+.hero-tutorial {
+  border: 2px solid #C41230;
+  color: #C41230;
+  background: transparent;
+  padding: 12px 30px;
+  border-radius: 30px;
+  font-size: 1.1em;
+}
+
+.hero-tutorial:hover {
+  background: #C41230;
+  color: white;
+}
+
+/* Features Strip - Subtle non-clickable highlight */
+.landing-features-strip {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 40px;
+  padding: 0 20px;
+}
+
+.feature-pill {
+  background: rgba(196, 18, 48, 0.08);
+  color: #666;
+  padding: 8px 18px;
+  border-radius: 20px;
+  font-size: 0.9em;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.feature-pill i {
+  color: #C41230;
+  font-size: 1em;
+}
+
+/* Video Modal */
+.video-modal {
+  display: none;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: 10000;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.video-modal-content {
+  background: white;
+  border-radius: 12px;
+  padding: 25px;
+  max-width: 800px;
+  width: 100%;
+  position: relative;
+}
+
+.video-modal-close {
+  position: absolute;
+  top: 10px; right: 15px;
+  font-size: 2em;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #666;
+}
+
+.video-modal-close:hover {
+  color: #C41230;
+}
+
+.video-container {
+  position: relative;
+  padding-bottom: 56.25%;
+  height: 0;
+}
+
+.video-container iframe {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  border-radius: 8px;
+}
+
+/* Stats Section */
+.landing-stats {
+  display: flex;
+  justify-content: center;
+  gap: 60px;
+  max-width: 700px;
+  margin: 40px auto;
+  padding: 25px 40px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+
+.landing-stat {
+  text-align: center;
+  flex: 0 0 auto;
+}
+
+.landing-stat-value {
+  font-size: 2.2em;
+  font-weight: 700;
+  color: #C41230;
+  line-height: 1.1;
+}
+
+.landing-stat-label {
+  font-size: 0.9em;
+  color: #666;
+  margin-top: 5px;
+  white-space: nowrap;
+}
+
+/* Polished Footer */
+.landing-footer {
+  margin-top: auto;
+  padding-top: 40px;
+  width: 100%;
+}
+
+.landing-footer-content {
+  background: white;
+  border-radius: 16px 16px 0 0;
+  padding: 30px 40px;
+  text-align: center;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
+}
+
+.landing-logo-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 40px;
+  margin-bottom: 20px;
+}
+
+.landing-logo-container img {
+  height: 50px;
+  width: auto;
+  opacity: 0.85;
+  transition: opacity 0.2s;
+}
+
+.landing-logo-container img:hover {
+  opacity: 1;
+}
+
+.landing-authors {
+  margin-bottom: 15px;
+}
+
+.landing-authors p {
+  color: #555;
+  font-size: 0.95em;
+  margin: 0;
+  line-height: 1.6;
+}
+
+.landing-version {
+  display: inline-block;
+  background: #EDECE2;
+  color: #666;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.8em;
+  font-weight: 500;
+}
+
+/* Enhanced Landing Page Responsive */
+@media (max-width: 992px) {
+  .landing-hero-actions { flex-direction: column; align-items: center; }
+  .hero-cta, .hero-tutorial { width: 100%; max-width: 280px; }
+  .landing-stats { gap: 40px; padding: 20px 30px; }
+  .landing-logo-container { gap: 25px; }
+  .landing-logo-container img { height: 40px; }
+}
+
+@media (max-width: 576px) {
+  .landing-tagline { font-size: 1.2em; }
+  .landing-stats {
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px;
+  }
+  .landing-stat-value { font-size: 1.8em; }
+  .landing-stat-label { white-space: normal; }
+  .landing-features-strip { gap: 8px; }
+  .feature-pill { padding: 6px 12px; font-size: 0.8em; }
+  .landing-logo-container {
+    flex-wrap: wrap;
+    gap: 15px;
+  }
+  .landing-logo-container img { height: 35px; }
+  .landing-footer-content { padding: 25px 20px; }
 }

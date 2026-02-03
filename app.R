@@ -8,6 +8,7 @@ library(lubridate)
 library(plotly)
 library(DT)
 library(ellmer)
+library(shinychat)
 library(jsonlite)
 library(commonmark)
 
@@ -222,13 +223,111 @@ ui <- shiny::fluidPage(
     });
   ")),
 
-    # Enter key handler for chat input
+    # Tutorial modal and scroll JavaScript
     shiny::tags$script(shiny::HTML("
-    $(document).on('keydown', '#chat_input', function(e) {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        $('#send_chat_msg').click();
+    $(document).ready(function() {
+      var videoUrl = 'https://www.youtube.com/embed/VIDEO_ID_PLACEHOLDER';
+      var modal = document.getElementById('tutorial-modal');
+      var video = document.getElementById('tutorial-video');
+
+      // Open tutorial modal
+      $('#open-tutorial-modal').click(function() {
+        modal.style.display = 'flex';
+        video.src = videoUrl;
+        document.body.style.overflow = 'hidden';
+      });
+
+      // Close tutorial modal
+      function closeModal() {
+        modal.style.display = 'none';
+        video.src = '';
+        document.body.style.overflow = 'auto';
       }
+
+      $('#close-tutorial-modal').click(closeModal);
+      $(modal).click(function(e) {
+        if (e.target === modal) closeModal();
+      });
+      $(document).keydown(function(e) {
+        if (e.key === 'Escape' && modal.style.display === 'flex') closeModal();
+      });
+
+      // Scroll to tracks
+      $('#scroll-to-tracks').click(function() {
+        $('html, body').animate({
+          scrollTop: $('.track-selector-container').offset().top - 20
+        }, 500);
+      });
+    });
+  ")),
+
+    # MathJax observer for shinychat - watches for new messages and typesets them
+    shiny::tags$script(shiny::HTML("
+    $(document).ready(function() {
+      // Debounce function to avoid excessive MathJax calls
+      let mathJaxTimeout = null;
+      const triggerMathJax = function(container) {
+        if (mathJaxTimeout) clearTimeout(mathJaxTimeout);
+        mathJaxTimeout = setTimeout(function() {
+          if (window.MathJax && MathJax.typesetPromise) {
+            MathJax.typesetPromise(container ? [container] : undefined).catch(function(err) {
+              console.log('MathJax typeset skipped:', err.message);
+            });
+          }
+        }, 100);
+      };
+
+      // Watch for new chat messages in miami-chat-container
+      const observeChatContainer = function(container) {
+        const messagesArea = container.querySelector('.chat-messages');
+        if (!messagesArea) return;
+
+        const observer = new MutationObserver(function(mutations) {
+          let hasNewContent = false;
+          mutations.forEach(function(mutation) {
+            if (mutation.addedNodes.length > 0 || mutation.type === 'characterData') {
+              hasNewContent = true;
+            }
+          });
+          if (hasNewContent) {
+            triggerMathJax(messagesArea);
+          }
+        });
+
+        observer.observe(messagesArea, {
+          childList: true,
+          subtree: true,
+          characterData: true
+        });
+      };
+
+      // Initialize observers for existing chat containers
+      document.querySelectorAll('.miami-chat-container').forEach(observeChatContainer);
+
+      // Watch for dynamically added chat containers (e.g., in modals)
+      const bodyObserver = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+          mutation.addedNodes.forEach(function(node) {
+            if (node.nodeType === 1) {
+              const containers = node.querySelectorAll ?
+                node.querySelectorAll('.miami-chat-container') : [];
+              containers.forEach(observeChatContainer);
+              if (node.classList && node.classList.contains('miami-chat-container')) {
+                observeChatContainer(node);
+              }
+            }
+          });
+        });
+      });
+      bodyObserver.observe(document.body, { childList: true, subtree: true });
+
+      // Make collection chat modal resizable
+      $(document).on('shown.bs.modal', '.modal', function() {
+        const modal = $(this);
+        if (modal.find('.collection-chat').length > 0) {
+          modal.find('.modal-dialog').addClass('resizable-modal');
+        }
+      });
     });
   "))
   ),
@@ -240,10 +339,72 @@ ui <- shiny::fluidPage(
     condition = "output.show_landing",
     shiny::div(
       class = "landing-page",
+
+      # Tutorial Video Modal
+      shiny::div(
+        id = "tutorial-modal",
+        class = "video-modal",
+        shiny::div(
+          class = "video-modal-content",
+          shiny::tags$button(
+            id = "close-tutorial-modal",
+            class = "video-modal-close",
+            shiny::HTML("&times;")
+          ),
+          shiny::tags$h3(
+            style = "color: #C41230; margin: 0 0 20px 0;",
+            shiny::icon("play-circle"), " Getting Started"
+          ),
+          shiny::div(
+            class = "video-container",
+            shiny::tags$iframe(
+              id = "tutorial-video",
+              src = "",
+              title = "QE ArXiv Watch Tutorial",
+              frameborder = "0",
+              allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture",
+              allowfullscreen = NA
+            )
+          )
+        )
+      ),
+
+      # Enhanced Hero Section
       shiny::div(
         class = "landing-hero",
         shiny::tags$h1("QE ArXiv Watch"),
-        shiny::tags$p(class = "landing-subtitle", "Analytics insights across timelines, topics, and authors, plus AI summaries, paper chat, and PDF access")
+        shiny::tags$p(class = "landing-tagline", "Your AI-Powered Research Companion"),
+        shiny::tags$p(class = "landing-subtitle",
+          "Never miss a breakthrough. Get daily updates, AI summaries, and deep insights from the latest quality engineering research on arXiv."),
+        shiny::div(class = "landing-hero-actions",
+          shiny::tags$button(
+            class = "btn btn-primary btn-lg hero-cta",
+            id = "scroll-to-tracks",
+            shiny::icon("rocket"), " Get Started"
+          ),
+          shiny::tags$button(
+            id = "open-tutorial-modal",
+            class = "btn btn-outline-secondary btn-lg hero-tutorial",
+            shiny::icon("play-circle"), " Watch Tutorial"
+          )
+        )
+      ),
+
+      # Features Highlight Strip (non-clickable)
+      shiny::div(
+        class = "landing-features-strip",
+        shiny::div(class = "feature-pill",
+          shiny::icon("robot"), " AI Summaries"
+        ),
+        shiny::div(class = "feature-pill",
+          shiny::icon("comments"), " Chat with Papers"
+        ),
+        shiny::div(class = "feature-pill",
+          shiny::icon("chart-line"), " Trend Analytics"
+        ),
+        shiny::div(class = "feature-pill",
+          shiny::icon("bookmark"), " Personal Library"
+        )
       ),
       shiny::div(
         class = "track-selector-container",
@@ -259,7 +420,7 @@ ui <- shiny::fluidPage(
               onmouseout = "this.style.boxShadow=''; this.style.transform='';",
               shiny::div(class = "track-card-icon", style = "color: #1b9e77;", shiny::icon("chart-line")),
               shiny::tags$h3(style = "color: #1b9e77;", "Control Charts"),
-              shiny::tags$p("Statistical process monitoring and control charting research"),
+              shiny::tags$p("Master SPC research with AI summaries, chart family analysis, and publication trends"),
               shiny::div(class = "track-card-count", style = "background: rgba(27, 158, 119, 0.15); border: 1px solid #1b9e77;",
                 shiny::textOutput("spc_paper_count", inline = TRUE), " papers")
             )
@@ -274,7 +435,7 @@ ui <- shiny::fluidPage(
               onmouseout = "this.style.boxShadow=''; this.style.transform='';",
               shiny::div(class = "track-card-icon", style = "color: #d95f02;", shiny::icon("flask")),
               shiny::tags$h3(style = "color: #d95f02;", "Experimental Design"),
-              shiny::tags$p("Design of experiments and response surface methodology research"),
+              shiny::tags$p("Explore DOE breakthroughs from response surfaces to optimal designs"),
               shiny::div(class = "track-card-count", style = "background: rgba(217, 95, 2, 0.15); border: 1px solid #d95f02;",
                 shiny::textOutput("exp_design_paper_count", inline = TRUE), " papers")
             )
@@ -289,25 +450,51 @@ ui <- shiny::fluidPage(
               onmouseout = "this.style.boxShadow=''; this.style.transform='';",
               shiny::div(class = "track-card-icon", style = "color: #7570b3;", shiny::icon("cogs")),
               shiny::tags$h3(style = "color: #7570b3;", "Reliability Engineering"),
-              shiny::tags$p("Reliability engineering, degradation modeling, and maintenance optimization"),
+              shiny::tags$p("Stay current on degradation modeling, maintenance optimization, and failure analysis"),
               shiny::div(class = "track-card-count", style = "background: rgba(117, 112, 179, 0.15); border: 1px solid #7570b3;",
                 shiny::textOutput("reliability_paper_count", inline = TRUE), " papers")
             )
           )
         )
       ),
+
+      # Stats Section
+      shiny::div(
+        class = "landing-stats",
+        shiny::div(class = "landing-stat",
+          shiny::div(class = "landing-stat-value",
+            shiny::textOutput("total_landing_papers", inline = TRUE)),
+          shiny::div(class = "landing-stat-label", "Research Papers")
+        ),
+        shiny::div(class = "landing-stat",
+          shiny::div(class = "landing-stat-value", "Daily"),
+          shiny::div(class = "landing-stat-label", "Automated Updates")
+        ),
+        shiny::div(class = "landing-stat",
+          shiny::div(class = "landing-stat-value", "3"),
+          shiny::div(class = "landing-stat-label", "Research Tracks")
+        )
+      ),
+
       # Footer on landing page
       shiny::div(
         class = "landing-footer",
-        shiny::tags$p(
-          shiny::tags$strong("Authors: "),
-          "Fadel M. Megahed, Ying-Ju (Tessa) Chen, Allison Jones-Farmer, Ibrahim Yousif, and Inez M. Zwetsloot"
-        ),
         shiny::div(
-          class = "landing-logo-container",
-          shiny::tags$img(src = "miami-logo.png", alt = "Miami University", style = "height: 45px;"),
-          shiny::tags$img(src = "university-of-dayton-vector-logo.png", alt = "University of Dayton", style = "height: 40px;"),
-          shiny::tags$img(src = "uva-compacte-logo.png", alt = "University of Amsterdam", style = "height: 40px;")
+          class = "landing-footer-content",
+          shiny::div(
+            class = "landing-logo-container",
+            shiny::tags$img(src = "miami-logo.png", alt = "Miami University"),
+            shiny::tags$img(src = "university-of-dayton-vector-logo.png", alt = "University of Dayton"),
+            shiny::tags$img(src = "uva-compacte-logo.png", alt = "University of Amsterdam")
+          ),
+          shiny::div(
+            class = "landing-authors",
+            shiny::tags$p("Fadel M. Megahed, Ying-Ju (Tessa) Chen, Allison Jones-Farmer, Ibrahim Yousif & Inez M. Zwetsloot")
+          ),
+          shiny::div(
+            class = "landing-version",
+            "Version 3.3.0"
+          )
         )
       )
     )
@@ -645,34 +832,36 @@ ui <- shiny::fluidPage(
             shiny::uiOutput("deep_dive_content")
           ),
 
-          # Chat section (integrated)
+          # Chat section (streaming with shinychat)
           shiny::div(
             class = "info-card",
-            shiny::tags$h4(class = "section-heading", shiny::icon("comments"), " Chat with Paper"),
+            shiny::tags$h4(class = "section-heading", shiny::icon("robot"), " Ask the AI"),
             shiny::uiOutput("chat_status"),
-            shiny::div(id = "chat_box",
-              style = "height: 350px; overflow-y: auto; border: 1px solid #CCC9B8; border-radius: 6px; padding: 15px; background: #FAFAFA; margin-bottom: 15px;",
-              shiny::div(id = "chat_thinking", style = "display: none; padding: 10px;",
-                shiny::div(class = "chat-thinking-indicator",
-                  shiny::tags$span(class = "typing-dot"),
-                  shiny::tags$span(class = "typing-dot"),
-                  shiny::tags$span(class = "typing-dot")
-                )
-              ),
-              shiny::uiOutput("chat_history")
-            ),
+
+            # Quick Questions
             shiny::div(
-              shiny::tags$h5("Quick Questions:"),
+              style = "margin-bottom: 10px;",
+              shiny::tags$h5(style = "margin-bottom: 8px; font-size: 13px; color: #666;", "Try asking:"),
               shiny::uiOutput("quick_questions")
             ),
+
+            # shinychat component
             shiny::div(
-              style = "display: flex; gap: 10px; align-items: flex-end; margin-top: 15px;",
-              shiny::div(style = "flex: 1;",
-                shiny::textAreaInput("chat_input", NULL,
-                  placeholder = "Ask a question about this paper...", rows = 2, width = "100%")
-              ),
-              shiny::actionButton("send_chat_msg", shiny::icon("paper-plane"),
-                class = "btn-primary", style = "height: 60px; min-width: 60px;")
+              class = "miami-chat-container",
+              shinychat::chat_ui(
+                id = "paper_chat",
+                messages = shiny::tagList(
+                  shiny::div(class = "chat-welcome",
+                    shiny::icon("comments", style = "font-size: 1.5em; color: #C41230; display: block; margin-bottom: 8px;"),
+                    "Select a paper above, then type a question below",
+                    shiny::tags$br(),
+                    shiny::tags$small(style = "color: #999;", "I can explain methods, equations, findings, and more")
+                  )
+                ),
+                placeholder = "Type your question and press Enter...",
+                height = "380px",
+                fill = FALSE
+              )
             )
           )
         )
@@ -778,7 +967,7 @@ server <- function(input, output, session) {
   papers_data <- shiny::reactiveVal(NULL)
   factsheet_data <- shiny::reactiveVal(NULL)
   track_config <- shiny::reactiveVal(NULL)
-  chat_messages <- shiny::reactiveVal(list())
+  paper_chat_first_message <- shiny::reactiveVal(TRUE)
 
   # Filter columns for current track
   filter_cols <- shiny::reactive({
@@ -810,6 +999,18 @@ server <- function(input, output, session) {
     format(get_track_paper_count("reliability"), big.mark = ",")
   })
 
+  # Total papers across all tracks for landing page stats
+  output$total_landing_papers <- shiny::renderText({
+    total <- 0
+    for (track_id in names(TRACKS_CONFIG)) {
+      track_data <- load_track_data(track_id)
+      if (!is.null(track_data$metadata)) {
+        total <- total + nrow(track_data$metadata)
+      }
+    }
+    format(total, big.mark = ",")
+  })
+
   # Track selection handler
   shiny::observeEvent(input$select_track, {
     track_id <- input$select_track
@@ -823,8 +1024,9 @@ server <- function(input, output, session) {
     factsheet_data(data$factsheet)
     track_config(data$track)
 
-    # Reset chat messages
-    chat_messages(list())
+    # Reset chat
+    shinychat::chat_clear("paper_chat")
+    paper_chat_first_message(TRUE)
   })
 
   # Switch track button handler
@@ -833,7 +1035,8 @@ server <- function(input, output, session) {
     papers_data(NULL)
     factsheet_data(NULL)
     track_config(NULL)
-    chat_messages(list())
+    shinychat::chat_clear("paper_chat")
+    paper_chat_first_message(TRUE)
   })
 
   # Dynamic header with track-specific colors
@@ -901,7 +1104,7 @@ server <- function(input, output, session) {
             class = "header-right",
             shiny::actionButton("change_track", shiny::tagList(shiny::icon("exchange-alt"), " Switch Track"),
               class = "btn-header"),
-            shiny::tags$p(style = "margin-top: 8px;", "Version 3.1.0 | February 2026")
+            shiny::tags$p(style = "margin-top: 8px;", "Version 3.3.0 | February 2026")
           )
         )
       )
@@ -2003,7 +2206,8 @@ server <- function(input, output, session) {
       chat_session(NULL)
       current_chat_paper_id(NULL)
       current_paper(NULL)
-      chat_messages(list())
+      shinychat::chat_clear("paper_chat")
+      paper_chat_first_message(TRUE)
       return()
     }
 
@@ -2013,7 +2217,8 @@ server <- function(input, output, session) {
     }
 
     # Reset chat for new paper
-    chat_messages(list())
+    shinychat::chat_clear("paper_chat")
+    paper_chat_first_message(TRUE)
     current_chat_paper_id(pid)
 
     data <- combined_data()
@@ -2045,23 +2250,24 @@ server <- function(input, output, session) {
     })
   })
 
-  # Chat status indicator
+  # Chat status indicator - compact inline status
   output$chat_status <- shiny::renderUI({
     pid <- input$deep_dive_select
     chat <- chat_session()
 
     if (is.null(pid) || pid == "") {
-      return(shiny::div(class = "chat-status chat-status-loading",
-        shiny::icon("info-circle"), " Select a paper to start chatting"))
+      return(NULL)  # Welcome message in chat handles this
     }
 
     if (is.null(chat)) {
       return(shiny::div(class = "chat-status chat-status-loading",
-        shiny::icon("spinner", class = "fa-spin"), " Loading paper for chat..."))
+        style = "font-size: 12px; color: #666; margin-bottom: 8px;",
+        shiny::icon("spinner", class = "fa-spin"), " Preparing AI..."))
     }
 
     shiny::div(class = "chat-status chat-status-ready",
-      shiny::icon("check-circle"), " Chat ready - ask questions about this paper")
+      style = "font-size: 12px; color: #28a745; margin-bottom: 8px;",
+      shiny::icon("check-circle"), " Ready")
   })
 
   output$deep_dive_content <- shiny::renderUI({
@@ -2130,85 +2336,37 @@ server <- function(input, output, session) {
   })
 
   shiny::observeEvent(input$quick_q, {
-    shiny::updateTextAreaInput(session, "chat_input", value = input$quick_q)
+    shinychat::update_chat_user_input("paper_chat", value = input$quick_q, focus = TRUE)
   })
 
-  # Chat history display
-  output$chat_history <- shiny::renderUI({
-    msgs <- chat_messages()
-    if (length(msgs) == 0) {
-      return(shiny::div(style = "text-align: center; color: #999; padding: 50px;",
-        shiny::icon("comments", style = "font-size: 2em;"),
-        shiny::tags$p("Select a paper and ask a question.")))
-    }
-
-    shiny::tagList(
-      lapply(msgs, function(m) {
-        if (m$role == "user") {
-          shiny::div(style = "text-align: right; margin-bottom: 10px;",
-            shiny::div(style = "display: inline-block; background: #C41230; color: white; padding: 10px 15px; border-radius: 15px 15px 0 15px; max-width: 75%;",
-              m$content))
-        } else {
-          shiny::div(style = "text-align: left; margin-bottom: 10px;",
-            shiny::div(class = "chat-response", style = "display: inline-block; background: #EDECE2; padding: 10px 15px; border-radius: 15px 15px 15px 0; max-width: 75%;",
-              shiny::HTML(commonmark::markdown_html(m$content))))
-        }
-      })
-    )
-  })
-
-  # Send chat message handler - uses ellmer with PDF support
-  shiny::observeEvent(input$send_chat_msg, {
+  # Send chat message handler - streaming with shinychat
+  shiny::observeEvent(input$paper_chat_user_input, {
     chat <- chat_session()
     paper <- current_paper()
-    msg <- trimws(input$chat_input)
-    if (is.null(chat) || is.null(paper) || msg == "") return()
+    msg <- input$paper_chat_user_input
 
-    # Check if this is the first message (need to include PDF)
-    msgs <- chat_messages()
-    is_first_message <- length(msgs) == 0
+    if (is.null(chat) || is.null(paper) || is.null(msg) || msg == "") return()
 
-    # Add user message to display
-    msgs <- append(msgs, list(list(role = "user", content = msg)))
-    chat_messages(msgs)
+    is_first <- paper_chat_first_message()
 
-    # Clear input
-    shiny::updateTextAreaInput(session, "chat_input", value = "")
-
-    # Show thinking indicator
-    shinyjs::show("chat_thinking")
-
-    # Get LLM response
     tryCatch({
-      if (is_first_message) {
-        # First message: include PDF via content_pdf_url
-        response <- chat$chat(
-          msg,
-          ellmer::content_pdf_url(paper$link_pdf)
-        )
+      if (is_first) {
+        stream <- chat$stream_async(msg, ellmer::content_pdf_url(paper$link_pdf))
+        paper_chat_first_message(FALSE)
       } else {
-        # Subsequent messages: ellmer maintains history automatically
-        response <- chat$chat(msg)
+        stream <- chat$stream_async(msg)
       }
 
-      msgs <- chat_messages()
-      msgs <- append(msgs, list(list(role = "assistant", content = response)))
-      chat_messages(msgs)
+      shinychat::chat_append("paper_chat", stream) |>
+        promises::then(
+          onFulfilled = function(value) {
+            shinyjs::runjs("if (window.MathJax && MathJax.typesetPromise) { MathJax.typesetPromise(); }")
+          }
+        )
     }, error = function(e) {
-      msgs <- chat_messages()
-      msgs <- append(msgs, list(list(role = "assistant",
-        content = paste("<em>Error getting response:</em>", e$message))))
-      chat_messages(msgs)
+      shinychat::chat_append("paper_chat",
+        paste("<em>Error:</em>", htmltools::htmlEscape(e$message)))
     })
-
-    # Hide thinking indicator
-    shinyjs::hide("chat_thinking")
-
-    # Re-typeset MathJax for any equations in response
-    shinyjs::runjs("if (window.MathJax && MathJax.typesetPromise) { MathJax.typesetPromise(); }")
-
-    # Scroll to bottom
-    shinyjs::runjs("document.getElementById('chat_box').scrollTop = document.getElementById('chat_box').scrollHeight;")
   })
 
   # ===========================================================================
@@ -2234,7 +2392,6 @@ server <- function(input, output, session) {
 
   # Reactive for collection chat session
   collection_chat_session <- shiny::reactiveVal(NULL)
-  collection_chat_messages <- shiny::reactiveVal(list())
   collection_first_message <- shiny::reactiveVal(TRUE)
   collection_papers <- shiny::reactiveVal(NULL)
 
@@ -2509,51 +2666,44 @@ server <- function(input, output, session) {
       chat <- ellmer::chat_openai(
         model = "gpt-5.2-2025-12-11",
         system_prompt = COLLECTION_SYSTEM_PROMPT,
-        api_key = get_openai_api_key()
+        credentials = get_openai_api_key
       )
 
       collection_chat_session(chat)
-      collection_chat_messages(list())
       collection_first_message(TRUE)
       collection_papers(papers)
 
-      # Show modal
+      # Show modal with shinychat
       shiny::showModal(shiny::modalDialog(
         title = paste0("Chat with Your Collection (", nrow(papers), " papers)"),
         size = "l",
         easyClose = FALSE,
 
-        # Warning/info banner
-        shiny::div(class = "alert alert-info", style = "margin-bottom: 15px;",
-          shiny::icon("info-circle"), " ",
-          shiny::tags$strong(nrow(papers), " papers"), " will be analyzed. ",
-          "Typically works well with up to ~10-15 papers. ",
-          "Larger collections may take longer or hit token limits."
+        shiny::div(class = "alert alert-info", style = "margin-bottom: 12px; padding: 10px 15px;",
+          shiny::icon("info-circle"), " Analyzing ",
+          shiny::tags$strong(nrow(papers), " papers"), " from your library."
         ),
 
-        # Chat history
-        shiny::div(id = "collection_chat_box",
-          style = "height: 300px; overflow-y: auto; border: 1px solid #CCC9B8; border-radius: 6px; padding: 15px; background: #FAFAFA; margin-bottom: 15px;",
-          shiny::div(id = "collection_thinking", style = "display: none; padding: 10px;",
-            shiny::div(class = "chat-thinking-indicator",
-              shiny::tags$span(class = "typing-dot"),
-              shiny::tags$span(class = "typing-dot"),
-              shiny::tags$span(class = "typing-dot")
-            )
-          ),
-          shiny::uiOutput("collection_chat_history")
+        shiny::div(
+          class = "miami-chat-container collection-chat",
+          style = "flex: 1 1 auto; min-height: 250px;",
+          shinychat::chat_ui(
+            id = "collection_chat",
+            messages = shiny::tagList(
+              shiny::div(class = "chat-welcome",
+                shiny::icon("layer-group", style = "font-size: 1.3em; color: #C41230; display: block; margin-bottom: 6px;"),
+                "Ask me to compare, synthesize, or find patterns",
+                shiny::tags$br(),
+                shiny::tags$small(style = "color: #999;", "e.g., \"What methods are most common?\" or \"Compare the approaches\"")
+              )
+            ),
+            placeholder = "Type your question and press Enter...",
+            height = "100%",
+            fill = TRUE
+          )
         ),
 
-        # Input area
-        shiny::textAreaInput("collection_chat_input", NULL,
-          placeholder = "Ask about your collection... (e.g., 'Compare the methodologies used' or 'What are the key findings?')",
-          rows = 2, width = "100%"),
-
-        footer = shiny::tagList(
-          shiny::actionButton("send_collection_msg", shiny::tagList(shiny::icon("paper-plane"), " Send"),
-            class = "btn-primary"),
-          shiny::modalButton("Close")
-        )
+        footer = shiny::modalButton("Close")
       ))
     }, error = function(e) {
       shiny::showNotification(paste("Could not initialize chat:", e$message),
@@ -2561,77 +2711,36 @@ server <- function(input, output, session) {
     })
   })
 
-  # Send message handler for collection chat
-  shiny::observeEvent(input$send_collection_msg, {
+  # Send message handler for collection chat - streaming with shinychat
+  shiny::observeEvent(input$collection_chat_user_input, {
     chat <- collection_chat_session()
     papers <- collection_papers()
-    msg <- trimws(input$collection_chat_input)
-    if (is.null(chat) || is.null(papers) || msg == "") return()
+    msg <- input$collection_chat_user_input
+
+    if (is.null(chat) || is.null(papers) || is.null(msg) || msg == "") return()
 
     is_first <- collection_first_message()
 
-    # Add user message to display
-    msgs <- collection_chat_messages()
-    msgs <- append(msgs, list(list(role = "user", content = msg)))
-    collection_chat_messages(msgs)
-
-    # Clear input and show thinking
-    shiny::updateTextAreaInput(session, "collection_chat_input", value = "")
-    shinyjs::show("collection_thinking")
-
     tryCatch({
       if (is_first) {
-        # First message: include ALL PDFs via content_pdf_url
-        pdf_urls <- papers$link_pdf
-        pdf_contents <- lapply(pdf_urls, ellmer::content_pdf_url)
-
-        # Use do.call to splice the pdf_contents list
-        args <- c(list(msg), pdf_contents)
-        response <- do.call(chat$chat, args)
+        pdf_contents <- lapply(papers$link_pdf, ellmer::content_pdf_url)
+        stream <- do.call(chat$stream_async, c(list(msg), pdf_contents))
         collection_first_message(FALSE)
       } else {
-        # Subsequent messages: ellmer maintains history automatically
-        response <- chat$chat(msg)
+        stream <- chat$stream_async(msg)
       }
 
-      msgs <- collection_chat_messages()
-      msgs <- append(msgs, list(list(role = "assistant", content = response)))
-      collection_chat_messages(msgs)
+      shinychat::chat_append("collection_chat", stream) |>
+        promises::then(
+          onFulfilled = function(value) {
+            shinyjs::runjs("if (window.MathJax && MathJax.typesetPromise) { MathJax.typesetPromise(); }")
+          }
+        )
     }, error = function(e) {
-      msgs <- collection_chat_messages()
-      error_msg <- paste0("<em>Error getting response:</em> ", e$message,
-        "<br><small>This may occur with very large collections. Try with fewer papers.</small>")
-      msgs <- append(msgs, list(list(role = "assistant", content = error_msg)))
-      collection_chat_messages(msgs)
+      shinychat::chat_append("collection_chat",
+        paste0("<em>Error:</em> ", htmltools::htmlEscape(e$message),
+               "<br><small>Try with fewer papers.</small>"))
     })
-
-    # Hide thinking, typeset MathJax, scroll
-    shinyjs::hide("collection_thinking")
-    shinyjs::runjs("if (window.MathJax && MathJax.typesetPromise) { MathJax.typesetPromise(); }")
-    shinyjs::runjs("document.getElementById('collection_chat_box').scrollTop = document.getElementById('collection_chat_box').scrollHeight;")
-  })
-
-  # Render collection chat history
-  output$collection_chat_history <- shiny::renderUI({
-    msgs <- collection_chat_messages()
-    if (length(msgs) == 0) {
-      return(shiny::tags$p(class = "text-muted", style = "text-align: center; margin-top: 50px;",
-        "Start by asking a question about your bookmarked papers..."))
-    }
-
-    shiny::tagList(
-      lapply(msgs, function(m) {
-        if (m$role == "user") {
-          shiny::div(style = "text-align: right; margin-bottom: 10px;",
-            shiny::div(class = "chat-user", style = "display: inline-block; background: #C41230; color: white; padding: 10px 15px; border-radius: 15px 15px 0 15px; max-width: 75%;",
-              m$content))
-        } else {
-          shiny::div(style = "text-align: left; margin-bottom: 10px;",
-            shiny::div(class = "chat-response math-content", style = "display: inline-block; background: #EDECE2; padding: 10px 15px; border-radius: 15px 15px 15px 0; max-width: 75%;",
-              shiny::HTML(commonmark::markdown_html(m$content))))
-        }
-      })
-    )
   })
 
 }

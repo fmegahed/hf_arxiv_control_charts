@@ -12,168 +12,150 @@ short_description: Monitor quality engineering research from ArXiv
 
 # QE ArXiv Watch
 
-**Live app (Hugging Face Space):** https://huggingface.co/spaces/fmegahed/arxiv_control_charts
-**GitHub repo (primary, source of truth):** https://github.com/fmegahed/hf_arxiv_control_charts
+**Your AI-Powered Research Companion for Quality Engineering**
 
-This repository powers (and mirrors) the Hugging Face Space above. The **primary development happens on GitHub**, and the Space is kept in sync by pushing the same `main` branch to Hugging Face.
+[![Live App](https://img.shields.io/badge/Live_App-Hugging_Face-yellow)](https://huggingface.co/spaces/fmegahed/arxiv_control_charts)
+[![GitHub](https://img.shields.io/badge/Source-GitHub-blue)](https://github.com/fmegahed/hf_arxiv_control_charts)
 
-## What this project does
+Never miss a breakthrough. Get daily updates, AI summaries, and deep insights from the latest quality engineering research on arXiv.
 
-QE ArXiv Watch is a multi-track literature monitoring dashboard for quality engineering research on ArXiv. It supports three research tracks:
+---
 
-| Track | Color | Query |
-|-------|-------|-------|
-| **Control Charts** | Teal (#1b9e77) | `(ti:"control chart" OR abs:"control chart")` |
-| **Experimental Design** | Orange (#d95f02) | `(ti:"experimental design" OR ti:"designed experiment" OR ...)` |
-| **Reliability Engineering** | Purple (#7570b3) | `((ti:reliability OR ti:degradation OR ...) AND (cat:stat.ME OR ...))` |
+## What is QE ArXiv Watch?
 
-### 1) Daily discovery of new arXiv papers
+QE ArXiv Watch automatically monitors arXiv for new research papers in quality engineering, then uses AI to extract structured insights from each paper. Whether you're a researcher staying current in your field or a practitioner looking for the latest methods, this tool helps you:
 
-A scheduled GitHub Actions workflow runs every day at **10:00 UTC**. It searches arXiv using track-specific queries.
+- **Save time** - No more manual searching through arXiv
+- **Understand faster** - AI-generated summaries highlight key findings
+- **Discover trends** - Interactive analytics reveal publication patterns and emerging topics
+- **Go deeper** - Chat with any paper to ask specific questions about methodology or results
 
-The extraction pipeline is implemented in `01_extract_arxiv_papers.r`, which:
+---
 
-- pulls matching metadata from arXiv for each track
-- downloads new PDFs (politely, with retries and rate limiting)
-- caches outputs in CSVs so you do not repeatedly re-process the same papers
+## Key Features
 
-### 2) AI factsheets for each paper (structured extraction)
+| Feature | Description |
+|---------|-------------|
+| **AI Summaries** | Every paper gets an AI-generated factsheet with key contributions, methods, equations, and findings |
+| **Chat with Papers** | Ask questions about any paper and get instant answers based on the PDF content |
+| **Trend Analytics** | Interactive charts showing publication trends, topic evolution, and research landscape |
+| **Author Analytics** | Discover top contributors, collaboration patterns, and author profiles |
+| **Personal Library** | Bookmark papers, export BibTeX citations, and analyze your collection |
+| **Weekly Digest** | Subscribe to an RSS feed for AI-synthesized weekly research summaries |
 
-For each new PDF, the pipeline extracts track-relevant fields using **ellmer** and an OpenAI model configured as `gpt-5.2-2025-12-11`.
+---
 
-The extracted artifacts are written to track-specific files:
+## Research Tracks
 
-- `data/{track}_arxiv_metadata.csv`
-- `data/{track}_factsheet.csv`
+| Track | Focus | Papers Updated Daily |
+|-------|-------|---------------------|
+| **Control Charts** | Statistical process monitoring, SPC methods, Shewhart/CUSUM/EWMA charts | ✓ |
+| **Experimental Design** | DOE, response surface methodology, optimal designs | ✓ |
+| **Reliability Engineering** | Degradation modeling, maintenance optimization, failure analysis | ✓ |
 
-(These are the files the automation commits back to GitHub each day.)
+---
 
-### 3) A Shiny app that explores the literature and lets users chat with a paper
+## Quick Start
 
-`app.R` is the deployed Shiny application.
+1. **Visit** the [live app](https://huggingface.co/spaces/fmegahed/arxiv_control_charts)
+2. **Choose** a research track that matches your interests
+3. **Explore** the Overview dashboard for key metrics and trends
+4. **Dive deep** into any paper using the Paper Deep Dive tab
+5. **Chat** with papers to ask specific questions about methods or results
 
-It provides:
-- **Landing page** with track selection cards (color-coded)
-- **Overview** dashboard with key metrics and research landscape
-- **Timeline** analysis with publication trends and topic evolution
-- **Topic Analytics** with interactive filtering (excludes "Other"/"Not Applicable" categories)
-- **Author Analytics** with top contributors and collaboration patterns
-- **Paper Deep Dive** with AI summaries, key equations, and PDF-aware chat
+---
 
-The app uses track-specific colors throughout:
-- Dynamic header gradient matches the selected track
-- Active tab highlighting follows track color
-- Charts and icons use track-appropriate colors
+## How It Works
 
-In the Deep Dive, the app initializes an ellmer chat session using `gpt-5-mini-2025-08-07` and supports PDF-aware chat with:
-- Markdown rendering via `commonmark`
-- MathJax equation support
-- Thinking indicator during API calls
-- Enter key to send messages
-
-## Important files in this repo
-
-- `app.R`
-  The Shiny app deployed on the Hugging Face Space.
-
-- `data/tracks.json`
-  Configuration for all research tracks (labels, colors, queries, file paths).
-
-- `01_extract_arxiv_papers.r`
-  The daily ingestion + PDF download + structured AI extraction pipeline.
-
-- `.github/workflows/daily_update.yml`
-  GitHub Actions workflow that runs the pipeline daily, commits updated CSVs to GitHub, and mirrors the same commit to Hugging Face.
-
-- `Dockerfile`
-  Container build for the app (matches the Space configuration: `sdk: docker`, `app_port: 7860`).
-
-- `www/miami-theme.css`
-  Custom CSS with Miami University branding and track-specific color support.
-
-## Required secrets
-
-This repo expects two secrets to exist in **GitHub repo settings**:
-
-- `OPENAI_API_KEY`
-  Used by the extraction pipeline in `01_extract_arxiv_papers.r` and injected into the workflow run environment.
-
-- `HF_TOKEN`
-  A Hugging Face access token with write permission for the Space. The workflow uses it to authenticate and push to the Space remote.
-
-Note: the secret name is case sensitive. The workflow references `HF_TOKEN` (all caps).
-
-## How the daily automation works
-
-At a high level, the workflow:
-
-1. checks out the repo
-2. installs pinned R + system dependencies
-3. runs `Rscript 01_extract_arxiv_papers.r`
-4. commits updated CSVs to GitHub
-5. pushes the same HEAD commit to Hugging Face Space (`HEAD:main`)
-
-## Deploying to both GitHub and Hugging Face
-
-### Recommended approach (manual pushes)
-
-Keep GitHub as your default remote (your `main` should track `origin/main`). Use this workflow for day-to-day updates:
-
-```bash
-git status
-git pull
-git add .
-git commit -m "Your message"
-git push
-
-# optional: also update the Hugging Face Space
-git push space main:main
+```
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│   Daily arXiv   │────>│  AI Extraction  │────>│  Interactive    │
+│   Monitoring    │     │  (Summaries &   │     │  Dashboard      │
+│                 │     │   Factsheets)   │     │                 │
+└─────────────────┘     └─────────────────┘     └─────────────────┘
 ```
 
-### Optional: one command to push to both
+Every day at 10:00 UTC, automated workflows search arXiv for new papers, download PDFs, and use AI to extract structured information. The web app then lets you explore this data interactively.
 
-If you ever want a single command, you can run:
+---
 
-```bash
-git push origin main && git push space main:main
+<details>
+<summary><strong>For Developers</strong></summary>
+
+### Repository Structure
+
+```
+├── app.R                    # Shiny application
+├── 01_extract_arxiv_papers.r # Daily ingestion pipeline
+├── data/
+│   ├── tracks.json          # Track configuration
+│   ├── {track}_arxiv_metadata.csv
+│   └── {track}_factsheet.csv
+├── www/
+│   └── miami-theme.css      # Custom styling
+├── Dockerfile               # Container build
+└── .github/workflows/
+    └── daily_update.yml     # Automation
 ```
 
-(You can also create a simple git alias for this in your global git config.)
+### Required Secrets (GitHub)
 
-## Running locally
+| Secret | Purpose |
+|--------|---------|
+| `OPENAI_API_KEY` | AI extraction pipeline |
+| `HF_TOKEN` | Hugging Face Space deployment |
 
-### Option A: Run with R
+### Running Locally
 
+**With R:**
 ```r
-# From the repo root
 shiny::runApp('.', host = '0.0.0.0', port = 7860)
 ```
 
-### Option B: Run with Docker
-
+**With Docker:**
 ```bash
-docker build -t arxiv-control-charts .
-docker run --rm -p 7860:7860 arxiv-control-charts
+docker build -t qe-arxiv-watch .
+docker run --rm -p 7860:7860 qe-arxiv-watch
 ```
 
-## Recent Updates (January 2026)
+### Deployment
 
-### Version 2.1.0 - UI Polish & Deployment Fixes
+The workflow pushes to both GitHub (primary) and Hugging Face Space (mirror):
 
-- **Dynamic theming**: Header, tabs, and UI elements change color based on selected track
-- **Landing page**: Color-coded track selection cards with inline styles for cross-platform reliability
-- **Chat improvements**: Markdown rendering, thinking indicator, Enter key support, MathJax equations
-- **Topic Analytics**: Filters out "Other" and "Not Applicable" categories from charts
-- **Timeline fixes**: Cumulative axis labels no longer overlap tick marks
-- **Renamed**: "ArXiv Literature Monitor" → "QE ArXiv Watch"
-- **Dockerfile**: Pinned R package versions for reproducible builds
+```bash
+# Standard push
+git push origin main
 
-### Version 2.0.0 - Multi-Track Support
+# Also update Hugging Face
+git push space main:main
+```
 
-- **Multi-track support**: Added Experimental Design and Reliability Engineering tracks
+### Recent Updates
+
+**Version 3.3.0 (February 2026)**
+- Enhanced landing page with feature showcase
+- Video tutorial modal
+- Stats section showing total papers
+- Improved track card descriptions
+
+**Version 3.2.0**
+- Weekly research digest RSS feed
+- AI-synthesized weekly summaries
+
+**Version 2.1.0**
+- Dynamic theming based on track selection
+- Chat improvements with MathJax support
+
+</details>
+
+---
 
 ## Authors
 
-Fadel M. Megahed, Ying-Ju (Tessa) Chen, Allison Jones-Farmer, Ibrahim Yousif, and Inez M. Zwetsloot.
+**Fadel M. Megahed**, **Ying-Ju (Tessa) Chen**, **Allison Jones-Farmer**, **Ibrahim Yousif**, and **Inez M. Zwetsloot**
 
 A collaboration between Miami University, the University of Dayton, and the University of Amsterdam.
+
+---
+
+**[Try It Now](https://huggingface.co/spaces/fmegahed/arxiv_control_charts)**
