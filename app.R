@@ -226,7 +226,7 @@ ui <- shiny::fluidPage(
     # Tutorial modal and scroll JavaScript
     shiny::tags$script(shiny::HTML("
     $(document).ready(function() {
-      var videoUrl = 'https://www.youtube.com/embed/VIDEO_ID_PLACEHOLDER';
+      var videoUrl = 'https://www.youtube.com/embed/WHlLehxlzcs';
       var modal = document.getElementById('tutorial-modal');
       var video = document.getElementById('tutorial-video');
 
