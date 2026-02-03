@@ -22,6 +22,14 @@ logs/
 # R stuff to ignore
 .Renviron
 .Rhistory
-.Rprofile
 *.Rproj
 .Rproj.user
+
+# renv - ignore library but track lockfile and activation
+renv/library/
+renv/staging/
+renv/cellar/
+renv/local/
+renv/lock/
+renv/python/
+renv/sandbox/
