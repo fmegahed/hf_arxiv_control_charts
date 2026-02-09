@@ -1,43 +1,75 @@
 {
   "metadata": {
-    "generated_at": "2026-02-02T12:15:58Z",
-    "week_start": "2026-01-26",
-    "week_end": "2026-02-02",
+    "generated_at": "2026-02-09T12:15:02Z",
+    "week_start": "2026-02-02",
+    "week_end": "2026-02-09",
     "version": "3.1.0"
   },
   "summary": {
-    "total_papers": 3,
+    "total_papers": 7,
     "papers_by_track": {
       "spc": 0,
-      "exp_design": 1,
-      "reliability": 2
+      "exp_design": 2,
+      "reliability": 5
     }
   },
-  "synthesis": "## QE ArXiv Watch Weekly — Week ending Feb 02, 2026 (3 papers)\n\nIf you’ve ever trusted a “loss went down” plot and still ended up with a model that behaves oddly in production, you’ll appreciate this week’s best wake-up call: **cross-entropy can go to zero while the *gradient you actually use for guidance* stays wrong—or even blows up.** That’s not a philosophical nit. It’s a concrete failure mode with proofs and toy experiments you can recreate.\n\n### When “good classifier” doesn’t mean “good guidance” (Sahu et al.)\nClassifier-guided diffusion hinges on a vector field: the gradient of the log-conditional, \\(\\nabla \\log p(y\\mid x_t)\\). Most training focuses on cross-entropy (conditional KL). The catch: **a small KL gap doesn’t necessarily control gradient error.**\n\nThey build explicit high-frequency perturbations where the classifier’s KL error vanishes (think \\(O(1/n)\\)), yet the guidance-gradient error stays \\(\\Omega(1)\\), and in a stronger construction the gradient error grows like \\(\\Omega(n)\\) while KL still shrinks. In other words, the classifier can be “right on average” but **locally jagged**, and guidance cares about local geometry.\n\nThe constructive part is the remedy: if you assume bounded support and real smoothness/regularity—bounds on gradients and Hessians aligned with the true conditional—then cross-entropy error \\(\\varepsilon\\) *does* imply an \\(L_2\\) guidance-gradient MSE bound scaling roughly like  \n\\[\n\\tilde O\\Big(\\frac{d(\\varepsilon+\\varepsilon^2)}{\\sigma_t^2\\,P(y)^{3/2}}\\Big),\n\\]\nwhich also clarifies where guidance gets fragile: **high dimension \\(d\\), low noise \\(\\sigma_t\\), and rare classes \\(P(y)\\).** They push through to sampler error bounds and a step complexity result that stays near-linear in dimension, which is reassuring if you’re budgeting compute.\n\n**Practitioner takeaway:** if you’re deploying guided generative models for inspection images or defect synthesis, don’t stop at “validation CE looks fine.” Add **gradient-focused diagnostics** (stability/Lipschitz proxies, smoothing/regularization, stress tests at low \\(\\sigma_t\\), and especially checks for rare-class guidance).\n\n---\n\n### Self-supervised ultrasound enhancement that acts like a reliability preprocessor (Khan et al.)\nUltrasound is a worst-case “measurement system”: speckle-like noise, PSF blur, and often no clean reference. The clever move here is **self-supervised training pairs from real frames** using a physics-guided degradation model—Gaussian PSF surrogate blur plus noise (either additive Gaussian or Fourier-domain complex perturbations)—and “clean-like” targets created via **non-local low-rank denoising**.\n\nThe restoration net is a Swin-Convolutional U-Net (local conv + shifted-window attention), and the reported gains are not just cosmetic: across datasets and blur levels they claim **+3.6 to +13.8 dB PSNR** and **+0.01 to +0.26 SSIM**, plus sharper edges (FWHM down, gradient metrics up). The most QE-relevant result: as a plug-in preprocessor it **improves downstream segmentation Dice** under severe noise—exactly where pipelines usually fall apart.\n\n**Where you might try it:** any imaging-driven decision where you can’t recalibrate the sensor (fielded systems, legacy probes, multi-site variability). Treat it like a **front-end robustness module** and measure impact on your actual CTQ (segmentation, detection, measurement repeatability), not just PSNR.\n\n---\n\n### DOE meets matching: randomize locally, not globally (Wang et al.)\nIf you’ve ever evaluated two matching policies (assignments, pairing, workforce-to-task) and felt that “just randomize which matching we use” is too blunt—you’re right. Switching wholesale between two matchings can have **non-vanishing variance** because match feasibility creates interference.\n\nThey exploit a beautiful graph fact: the *disagreement edges* between two one-to-one matchings decompose into disjoint alternating paths and even cycles. That decomposition localizes interference. Their **Alternating Path (AP) Design** randomizes within each component with a single parameter \\(p\\), keeping feasibility intact, and pairs with a Horvitz–Thompson estimator.\n\nUnder worst-case bounded outcomes, variance drops like **\\(O(1/N)\\)** (versus constant variance for the naive switch). Even better, the minimax-optimal \\(p\\) for long components converges to \\(\\sqrt2-1 \\approx 0.4142\\)—a rare “use this number on Monday” result. Simulations show AP variance shrinking with size while naive variance stays ~flat, and a finite-population CLT supports normal approximations for inference.\n\n**QE angle:** this is design-based causal inference for operational systems with constraints—exactly the kind of scenario we see in allocation, routing, pairing, and staffing.\n\n---\n\n### The connective tissue this week\nAcross all three: **we’re getting more honest about what our objectives actually control.** Cross-entropy doesn’t guarantee good guidance; PSNR doesn’t guarantee better segmentation; global randomization doesn’t guarantee good precision under interference. The win comes from targeting the quantity that drives the decision.\n\n**Question to ponder:** in your current pipeline, what’s the equivalent of “training the wrong loss”—the metric that looks reassuring but doesn’t control the failure mode you care about?",
+  "synthesis": "## QE ArXiv Watch Weekly — Week ending Feb 09, 2026 (7 papers)\n\nIf you’ve ever tried to *optimize* an experiment or a design and watched gradient ascent confidently march into a lousy local optimum… this week had a satisfying theme: people are getting serious about **reliability of the whole loop**—design → inference → decision → optimization—rather than just improving one model metric.\n\n### Designing experiments when the likelihood doesn’t exist (but the simulator does)\n\nKlein et al. tackle Bayesian optimal experimental design (BOED) in the modern setting: you can simulate, but you can’t write down a likelihood. Their key move is to align **expected information gain (EIG)** with the three big simulation-based inference (SBI) paradigms (NLE/NPE/NRE), and then actually make per-trajectory EIG maximization work in practice.\n\nThe practitioner-relevant bit isn’t just “neural density estimators are cool.” It’s their diagnosis that **per-trajectory gradient EIG optimization fails due to local optima**, and the fix is delightfully pragmatic: **multiple parallel restarts + online adaptation + a diversity penalty**. On classic benchmarks (source finding, PK timepoint selection, CES preference), the restart strategy is the difference between “works sometimes” and “reliably competitive,” including reported gains over policy-based BOED (RL-BOED/DAD) in several settings.\n\nIf you’re doing sequential test planning with differentiable simulators (or even approximate differentiability), the message is: don’t throw away per-trajectory optimization—**make it robust with restarts and adaptation**.\n\nWan et al. come at sequential design from a different angle: not “learn parameters well,” but “make **good downstream decisions**.” In predict-then-optimize settings, we often over-measure what improves RMSE while the actual scheduling/allocation decision barely changes. They propose sampling experiments based on **directional uncertainty**—how much plausible models disagree in the *direction* of the cost vector that drives a linear optimizer. The result is a sequential design algorithm that targets **SPO loss** (decision loss) and comes with finite-sample excess-risk bounds.\n\nThe useful mental model: if two models predict different numbers but lead to the same optimal decision, who cares? Their acquisition function tries to focus labels where disagreement would *flip or meaningfully perturb the decision*. That’s immediately relevant for inspection prioritization, dispatch rules, or any “estimate → optimize” pipeline.\n\n### Reliability isn’t just failure probability anymore: it’s explanation stability, surrogate trust, and calibration\n\nSengupta et al. ask an uncomfortable question: when an explainer changes, is it because the system changed—or because the explanation is basically noise? Their **Explanation Reliability Index (ERI)** formalizes stability under perturbations, redundancy, model updates, mild shift, and even time. The benchmark results are a reality check: common explainers can look fine on one axis and fall apart on another (redundant features and evolving checkpoints are especially punishing). For QE teams deploying models into changing processes, ERI-Bench reads like a missing piece of your model monitoring stack: not “is the model accurate,” but “are the explanations *stable enough to act on*?”\n\nOn the classical reliability side, Buckingham et al. go after a hard regime we all care about but rarely optimize well: **extremely rare failures (10⁻⁶ to 10⁻⁸)**. Their Bayesian optimization variants (KG-MR and TS-MR) explicitly optimize *reliability* using importance sampling + quasi-MC so you’re not wasting samples where failure probability is essentially zero. The big takeaway: acquisition functions that “look near the limit state surface” can be tuned to focus on what matters for the *best* nominal design, not an even exploration of the whole boundary.\n\nSong et al. address another reliability bottleneck: simulating nonlinear stochastic dynamics for first-passage failure can be brutally slow. Their probabilistic F2NARX surrogate chops trajectories into windows, compresses with PCA, learns window-to-window dynamics with GP/SGP, then propagates uncertainty with the unscented transform. The headline for practitioners is speed: **orders of magnitude** faster than FEM/MCS while still producing uncertainty envelopes—and they fold in active learning to concentrate new simulations where failure probability is most sensitive.\n\nTwo “adjacent but useful” papers round things out: Shiha et al. propose a new two-parameter lifetime distribution (a specific mixture construction) with flexible hazard shapes and closed-form stress–strength reliability; Wang et al. show how **conformal calibration** can turn quantile regression forests into VaR estimates with finite-sample marginal coverage—less QE, more a reminder that *calibration is a reliability tool*.\n\n### The thread to watch\n\nWe’re seeing a shift from “optimize the model” to **engineer the reliability of the decision pipeline**: robust design optimization (restarts), decision-aware data acquisition (directional uncertainty), calibrated uncertainty (conformal), and stability metrics for explanations (ERI). \n\nQuestion to chew on: in your org, if you had to pick one reliability guarantee to add this quarter—**coverage, decision regret, explanation stability, or rare-event failure probability**—which one would change behavior the most?",
   "papers": [
     {
-      "id": "2601.21856v1",
-      "title": "Blind Ultrasound Image Enhancement via Self-Supervised Physics-Guided Degradation Modeling",
-      "authors": "Shujaat Khan|Syed Muhammad Atif|Jaeyoung Huh|Syed Saad Azhar",
-      "submitted": "2026-01-29",
-      "track": "reliability",
-      "link": "https://arxiv.org/pdf/2601.21856v1"
-    },
-    {
-      "id": "2601.21200v1",
-      "title": "Provably Reliable Classifier Guidance through Cross-entropy Error Control",
-      "authors": "Sharan Sahu|Arisina Banerjee|Yuchen Wu",
-      "submitted": "2026-01-29",
-      "track": "reliability",
-      "link": "https://arxiv.org/pdf/2601.21200v1"
-    },
-    {
-      "id": "2601.21036v1",
-      "title": "Experimental Design for Matching",
-      "authors": "Chonghuan Wang",
-      "submitted": "2026-01-28",
+      "id": "2602.06900v1",
+      "title": "Supercharging Simulation-Based Inference for Bayesian Optimal Experimental Design",
+      "authors": "Samuel Klein|Willie Neiswanger|Daniel Ratner|Michael Kagan|Sean Gasiorowski",
+      "submitted": "2026-02-06",
       "track": "exp_design",
-      "link": "https://arxiv.org/pdf/2601.21036v1"
+      "link": "https://arxiv.org/pdf/2602.06900v1"
+    },
+    {
+      "id": "2602.05340v1",
+      "title": "Decision-Focused Sequential Experimental Design: A Directional Uncertainty-Guided Approach",
+      "authors": "Beichen Wan|Mo Liu|Paul Grigas|Zuo-Jun Max Shen",
+      "submitted": "2026-02-05",
+      "track": "exp_design",
+      "link": "https://arxiv.org/pdf/2602.05340v1"
+    },
+    {
+      "id": "2602.05082v1",
+      "title": "Reliable Explanations or Random Noise? A Reliability Metric for XAI",
+      "authors": "Poushali Sengupta|Sabita Maharjan|Frank Eliassen|Shashi Raj Pandey|Yan Zhang",
+      "submitted": "2026-02-04",
+      "track": "reliability",
+      "link": "https://arxiv.org/pdf/2602.05082v1"
+    },
+    {
+      "id": "2602.02875v1",
+      "title": "Shiha Distribution: Statistical Properties and Applications to Reliability Engineering and Environmental Data",
+      "authors": "F. A. Shiha",
+      "submitted": "2026-02-02",
+      "track": "reliability",
+      "link": "https://arxiv.org/pdf/2602.02875v1"
+    },
+    {
+      "id": "2602.02432v1",
+      "title": "Maximizing Reliability with Bayesian Optimization",
+      "authors": "Jack M. Buckingham|Ivo Couckuyt|Juergen Branke",
+      "submitted": "2026-02-02",
+      "track": "reliability",
+      "link": "https://arxiv.org/pdf/2602.02432v1"
+    },
+    {
+      "id": "2602.01929v1",
+      "title": "Probabilistic function-on-function nonlinear autoregressive model for emulation and reliability analysis of dynamical systems",
+      "authors": "Zhouzhou Song|Marcos A. Valdebenito|Styfen Schär|Stefano Marelli|Bruno Sudret|Matthias G. R. Faes",
+      "submitted": "2026-02-02",
+      "track": "reliability",
+      "link": "https://arxiv.org/pdf/2602.01929v1"
+    },
+    {
+      "id": "2602.01912v1",
+      "title": "Reliable Real-Time Value at Risk Estimation via Quantile Regression Forest with Conformal Calibration",
+      "authors": "Du-Yi Wang|Guo Liang|Kun Zhang|Qianwen Zhu",
+      "submitted": "2026-02-02",
+      "track": "reliability",
+      "link": "https://arxiv.org/pdf/2602.01912v1"
     }
   ]
 }
