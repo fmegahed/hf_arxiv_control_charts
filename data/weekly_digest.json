@@ -1,75 +1,59 @@
 {
   "metadata": {
-    "generated_at": "2026-02-09T12:15:02Z",
-    "week_start": "2026-02-02",
-    "week_end": "2026-02-09",
+    "generated_at": "2026-02-16T12:11:48Z",
+    "week_start": "2026-02-09",
+    "week_end": "2026-02-16",
     "version": "3.1.0"
   },
   "summary": {
-    "total_papers": 7,
+    "total_papers": 5,
     "papers_by_track": {
       "spc": 0,
-      "exp_design": 2,
-      "reliability": 5
+      "exp_design": 4,
+      "reliability": 1
     }
   },
-  "synthesis": "## QE ArXiv Watch Weekly — Week ending Feb 09, 2026 (7 papers)\n\nIf you’ve ever tried to *optimize* an experiment or a design and watched gradient ascent confidently march into a lousy local optimum… this week had a satisfying theme: people are getting serious about **reliability of the whole loop**—design → inference → decision → optimization—rather than just improving one model metric.\n\n### Designing experiments when the likelihood doesn’t exist (but the simulator does)\n\nKlein et al. tackle Bayesian optimal experimental design (BOED) in the modern setting: you can simulate, but you can’t write down a likelihood. Their key move is to align **expected information gain (EIG)** with the three big simulation-based inference (SBI) paradigms (NLE/NPE/NRE), and then actually make per-trajectory EIG maximization work in practice.\n\nThe practitioner-relevant bit isn’t just “neural density estimators are cool.” It’s their diagnosis that **per-trajectory gradient EIG optimization fails due to local optima**, and the fix is delightfully pragmatic: **multiple parallel restarts + online adaptation + a diversity penalty**. On classic benchmarks (source finding, PK timepoint selection, CES preference), the restart strategy is the difference between “works sometimes” and “reliably competitive,” including reported gains over policy-based BOED (RL-BOED/DAD) in several settings.\n\nIf you’re doing sequential test planning with differentiable simulators (or even approximate differentiability), the message is: don’t throw away per-trajectory optimization—**make it robust with restarts and adaptation**.\n\nWan et al. come at sequential design from a different angle: not “learn parameters well,” but “make **good downstream decisions**.” In predict-then-optimize settings, we often over-measure what improves RMSE while the actual scheduling/allocation decision barely changes. They propose sampling experiments based on **directional uncertainty**—how much plausible models disagree in the *direction* of the cost vector that drives a linear optimizer. The result is a sequential design algorithm that targets **SPO loss** (decision loss) and comes with finite-sample excess-risk bounds.\n\nThe useful mental model: if two models predict different numbers but lead to the same optimal decision, who cares? Their acquisition function tries to focus labels where disagreement would *flip or meaningfully perturb the decision*. That’s immediately relevant for inspection prioritization, dispatch rules, or any “estimate → optimize” pipeline.\n\n### Reliability isn’t just failure probability anymore: it’s explanation stability, surrogate trust, and calibration\n\nSengupta et al. ask an uncomfortable question: when an explainer changes, is it because the system changed—or because the explanation is basically noise? Their **Explanation Reliability Index (ERI)** formalizes stability under perturbations, redundancy, model updates, mild shift, and even time. The benchmark results are a reality check: common explainers can look fine on one axis and fall apart on another (redundant features and evolving checkpoints are especially punishing). For QE teams deploying models into changing processes, ERI-Bench reads like a missing piece of your model monitoring stack: not “is the model accurate,” but “are the explanations *stable enough to act on*?”\n\nOn the classical reliability side, Buckingham et al. go after a hard regime we all care about but rarely optimize well: **extremely rare failures (10⁻⁶ to 10⁻⁸)**. Their Bayesian optimization variants (KG-MR and TS-MR) explicitly optimize *reliability* using importance sampling + quasi-MC so you’re not wasting samples where failure probability is essentially zero. The big takeaway: acquisition functions that “look near the limit state surface” can be tuned to focus on what matters for the *best* nominal design, not an even exploration of the whole boundary.\n\nSong et al. address another reliability bottleneck: simulating nonlinear stochastic dynamics for first-passage failure can be brutally slow. Their probabilistic F2NARX surrogate chops trajectories into windows, compresses with PCA, learns window-to-window dynamics with GP/SGP, then propagates uncertainty with the unscented transform. The headline for practitioners is speed: **orders of magnitude** faster than FEM/MCS while still producing uncertainty envelopes—and they fold in active learning to concentrate new simulations where failure probability is most sensitive.\n\nTwo “adjacent but useful” papers round things out: Shiha et al. propose a new two-parameter lifetime distribution (a specific mixture construction) with flexible hazard shapes and closed-form stress–strength reliability; Wang et al. show how **conformal calibration** can turn quantile regression forests into VaR estimates with finite-sample marginal coverage—less QE, more a reminder that *calibration is a reliability tool*.\n\n### The thread to watch\n\nWe’re seeing a shift from “optimize the model” to **engineer the reliability of the decision pipeline**: robust design optimization (restarts), decision-aware data acquisition (directional uncertainty), calibrated uncertainty (conformal), and stability metrics for explanations (ERI). \n\nQuestion to chew on: in your org, if you had to pick one reliability guarantee to add this quarter—**coverage, decision regret, explanation stability, or rare-event failure probability**—which one would change behavior the most?",
+  "synthesis": "The quiet theme this week: *design is really about acknowledging correlation*. Whether we’re placing sensors in a PDE, choosing which network nodes to “poke,” or deciding if an LLM actually got worse, the most useful papers are the ones that stop pretending measurements are independent and start exploiting the paired structure we actually have.\n\n### Sensor placement, but make it infinite-dimensional (and batch-friendly)\n\nMäkinen et al. take Bayesian A-optimal design (minimize posterior variance) into the continuous domain where “candidate locations” aren’t a tidy list—they’re a continuum. The clever move is a convex relaxation: instead of picking \\(k\\) discrete sensors, we pick a *measure* over the domain with fixed total mass. That sounds abstract, but it buys you real math: they prove the relaxed expected A-optimal utility is **concave in the design measure**, so any local maximizer is global. For practitioners, that’s the difference between “hope your optimizer behaved” and “you can trust the hill you climbed is the hill.”\n\nThen they do the next practical thing: *batch constraints*. In the real world, we place multiple sensors at once, and we don’t want all particles collapsing onto the same spot. Their tensorized/product-measure formulation plus two regularizers—one to concentrate each ensemble to a point, and an MMD repulsion to keep ensembles distinct—feels like a principled version of “don’t give me four sensors all at \\(x=0.5\\).” If you’ve ever had a Bayesian design method hand you duplicates, you’ll recognize the pain.\n\nOne detail worth internalizing: representing a batch as an empirical measure \\(\\mu_B=(1/B)\\sum \\delta_{x_j}\\) corresponds to independent observations but with noise scaled by \\(\\sqrt{B}\\). That interpretation helps keep you honest about what your “relaxation” is really assuming when you translate it back to data.\n\n### Controllability scoring is secretly OED (and the invariance matters)\n\nSato et al. connect two communities that often talk past each other: network controllability scoring and optimal experimental design. Under a node-wise “virtual actuation” model, the finite-time controllability Gramian becomes an affine sum over nodes—structurally the same object as an OED information matrix. The mapping is clean: volumetric controllability score ↔ **D-optimality**, average-energy controllability score ↔ **A-optimality**.\n\nThe punchline is the invariance gap. The D-optimal analogue is invariant under nonsingular coordinate changes (good—physics doesn’t depend on your basis), while the A-optimal analogue generally isn’t. If you use AECS/A-optimal-like scores on a state that’s been scaled or transformed, you may literally be optimizing a different problem. That’s not a minor nuance; it’s a “check your units and coordinate choices before you ship a conclusion” warning.\n\nThey also point out something DOE folks will find interesting: approximate OED often has non-unique optimizers, whereas controllability-score optima are often unique (almost everywhere in horizon length). That uniqueness could be a feature if you need stable decisions, but it can also hide modeling assumptions that OED would force you to confront.\n\n### A real experiment designed to discriminate models (plasma heat conduction)\n\nVincent et al. are doing “DOE” in the original, physical sense: iterating a laser target/beam configuration until the resulting diagnostics can actually separate competing heat-conduction models in magnetized, weakly collisional plasma. The simulations suggest temperature evolution around 2.0–2.5 ns is highly discriminative (Spitzer vs suppressed vs off), while magnetic-field magnitudes are less so—useful guidance if you’re prioritizing diagnostic bandwidth.\n\nThe engineering takeaway: they don’t just simulate the physics; they simulate the *measurement process* (x-ray ratio thermometry, spectroscopy, proton radiography) to ask: “Will we be able to tell?” That mindset generalizes nicely to any expensive test campaign.\n\n### Reliability for model releases: paired tests, not wishful thinking\n\nKübler et al. bring a much-needed statistical spine to “did our optimized LLM degrade?” If baseline and optimized models are evaluated on the same benchmark items, the outcomes are *paired*, and naive independent-SE comparisons waste power and misstate uncertainty. Their answer is an exact one-sided McNemar/binomial test on disagreement counts, plus sensible aggregation across benchmarks (pooled, max-drop via Monte Carlo, Fisher). The result: they can flag degradations on the order of **0.3–0.8%** as significant—exactly the regime where product teams argue endlessly.\n\nOne practical gem: trimming “never-flip” items can nearly halve evaluation cost while *increasing* sensitivity, because you’re focusing on items near the decision boundary.\n\n### Forward look\n\nAcross domains, we’re seeing the same move: stop treating evaluation as IID and start designing around the dependencies (paired outcomes, shared priors, coupled sensors, coordinated batches). The question to sit with: in your current DOE/reliability workflow, where are you still paying an “independence tax” out of habit—and what would you gain by modeling the pairing explicitly?",
   "papers": [
     {
-      "id": "2602.06900v1",
-      "title": "Supercharging Simulation-Based Inference for Bayesian Optimal Experimental Design",
-      "authors": "Samuel Klein|Willie Neiswanger|Daniel Ratner|Michael Kagan|Sean Gasiorowski",
-      "submitted": "2026-02-06",
+      "id": "2602.12234v1",
+      "title": "Batch-based Bayesian Optimal Experimental Design in Linear Inverse Problems",
+      "authors": "Sofia Mäkinen|Andrew B. Duncan|Tapio Helin",
+      "submitted": "2026-02-12",
       "track": "exp_design",
-      "link": "https://arxiv.org/pdf/2602.06900v1"
+      "link": "https://arxiv.org/pdf/2602.12234v1"
     },
     {
-      "id": "2602.05340v1",
-      "title": "Decision-Focused Sequential Experimental Design: A Directional Uncertainty-Guided Approach",
-      "authors": "Beichen Wan|Mo Liu|Paul Grigas|Zuo-Jun Max Shen",
-      "submitted": "2026-02-05",
+      "id": "2602.11921v1",
+      "title": "Relationship Between Controllability Scoring and Optimal Experimental Design",
+      "authors": "Kazuhiro Sato",
+      "submitted": "2026-02-12",
       "track": "exp_design",
-      "link": "https://arxiv.org/pdf/2602.05340v1"
+      "link": "https://arxiv.org/pdf/2602.11921v1"
     },
     {
-      "id": "2602.05082v1",
-      "title": "Reliable Explanations or Random Noise? A Reliability Metric for XAI",
-      "authors": "Poushali Sengupta|Sabita Maharjan|Frank Eliassen|Shashi Raj Pandey|Yan Zhang",
-      "submitted": "2026-02-04",
-      "track": "reliability",
-      "link": "https://arxiv.org/pdf/2602.05082v1"
+      "id": "2602.10827v1",
+      "title": "The Effect of Design Thinking on Creative & Innovation Processes: An Empirical Study Across Different Design Experience Levels",
+      "authors": "Yuxin Zhang|Fan Zhang",
+      "submitted": "2026-02-11",
+      "track": "exp_design",
+      "link": "https://arxiv.org/pdf/2602.10827v1"
     },
     {
-      "id": "2602.02875v1",
-      "title": "Shiha Distribution: Statistical Properties and Applications to Reliability Engineering and Environmental Data",
-      "authors": "F. A. Shiha",
-      "submitted": "2026-02-02",
-      "track": "reliability",
-      "link": "https://arxiv.org/pdf/2602.02875v1"
+      "id": "2602.10041v1",
+      "title": "Design of experiments characterising heat conduction in magnetised, weakly collisional plasma",
+      "authors": "T. A. Vincent|P. Ariyathilaka|L. Creaser|C. Danson|D. Lamb|J. Meinecke|C. A. J. Palmer|S. Pitt|H. Poole|C. Spindloe|P. Thomas|E. Tubman|L. Wilson|W. J. Garbett|G. Gregori|P. Tzeferacos|T. Hodge|A. F. A. Bott",
+      "submitted": "2026-02-10",
+      "track": "exp_design",
+      "link": "https://arxiv.org/pdf/2602.10041v1"
     },
     {
-      "id": "2602.02432v1",
-      "title": "Maximizing Reliability with Bayesian Optimization",
-      "authors": "Jack M. Buckingham|Ivo Couckuyt|Juergen Branke",
-      "submitted": "2026-02-02",
+      "id": "2602.10144v1",
+      "title": "When LLMs get significantly worse: A statistical approach to detect model degradations",
+      "authors": "Jonas Kübler|Kailash Budhathoki|Matthäus Kleindessner|Xiong Zhou|Junming Yin|Ashish Khetan|George Karypis",
+      "submitted": "2026-02-09",
       "track": "reliability",
-      "link": "https://arxiv.org/pdf/2602.02432v1"
-    },
-    {
-      "id": "2602.01929v1",
-      "title": "Probabilistic function-on-function nonlinear autoregressive model for emulation and reliability analysis of dynamical systems",
-      "authors": "Zhouzhou Song|Marcos A. Valdebenito|Styfen Schär|Stefano Marelli|Bruno Sudret|Matthias G. R. Faes",
-      "submitted": "2026-02-02",
-      "track": "reliability",
-      "link": "https://arxiv.org/pdf/2602.01929v1"
-    },
-    {
-      "id": "2602.01912v1",
-      "title": "Reliable Real-Time Value at Risk Estimation via Quantile Regression Forest with Conformal Calibration",
-      "authors": "Du-Yi Wang|Guo Liang|Kun Zhang|Qianwen Zhu",
-      "submitted": "2026-02-02",
-      "track": "reliability",
-      "link": "https://arxiv.org/pdf/2602.01912v1"
+      "link": "https://arxiv.org/pdf/2602.10144v1"
     }
   ]
 }
