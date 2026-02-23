@@ -1,59 +1,27 @@
 {
   "metadata": {
-    "generated_at": "2026-02-16T12:11:48Z",
-    "week_start": "2026-02-09",
-    "week_end": "2026-02-16",
+    "generated_at": "2026-02-23T12:11:56Z",
+    "week_start": "2026-02-16",
+    "week_end": "2026-02-23",
     "version": "3.1.0"
   },
   "summary": {
-    "total_papers": 5,
+    "total_papers": 1,
     "papers_by_track": {
       "spc": 0,
-      "exp_design": 4,
+      "exp_design": 0,
       "reliability": 1
     }
   },
-  "synthesis": "The quiet theme this week: *design is really about acknowledging correlation*. Whether we’re placing sensors in a PDE, choosing which network nodes to “poke,” or deciding if an LLM actually got worse, the most useful papers are the ones that stop pretending measurements are independent and start exploiting the paired structure we actually have.\n\n### Sensor placement, but make it infinite-dimensional (and batch-friendly)\n\nMäkinen et al. take Bayesian A-optimal design (minimize posterior variance) into the continuous domain where “candidate locations” aren’t a tidy list—they’re a continuum. The clever move is a convex relaxation: instead of picking \\(k\\) discrete sensors, we pick a *measure* over the domain with fixed total mass. That sounds abstract, but it buys you real math: they prove the relaxed expected A-optimal utility is **concave in the design measure**, so any local maximizer is global. For practitioners, that’s the difference between “hope your optimizer behaved” and “you can trust the hill you climbed is the hill.”\n\nThen they do the next practical thing: *batch constraints*. In the real world, we place multiple sensors at once, and we don’t want all particles collapsing onto the same spot. Their tensorized/product-measure formulation plus two regularizers—one to concentrate each ensemble to a point, and an MMD repulsion to keep ensembles distinct—feels like a principled version of “don’t give me four sensors all at \\(x=0.5\\).” If you’ve ever had a Bayesian design method hand you duplicates, you’ll recognize the pain.\n\nOne detail worth internalizing: representing a batch as an empirical measure \\(\\mu_B=(1/B)\\sum \\delta_{x_j}\\) corresponds to independent observations but with noise scaled by \\(\\sqrt{B}\\). That interpretation helps keep you honest about what your “relaxation” is really assuming when you translate it back to data.\n\n### Controllability scoring is secretly OED (and the invariance matters)\n\nSato et al. connect two communities that often talk past each other: network controllability scoring and optimal experimental design. Under a node-wise “virtual actuation” model, the finite-time controllability Gramian becomes an affine sum over nodes—structurally the same object as an OED information matrix. The mapping is clean: volumetric controllability score ↔ **D-optimality**, average-energy controllability score ↔ **A-optimality**.\n\nThe punchline is the invariance gap. The D-optimal analogue is invariant under nonsingular coordinate changes (good—physics doesn’t depend on your basis), while the A-optimal analogue generally isn’t. If you use AECS/A-optimal-like scores on a state that’s been scaled or transformed, you may literally be optimizing a different problem. That’s not a minor nuance; it’s a “check your units and coordinate choices before you ship a conclusion” warning.\n\nThey also point out something DOE folks will find interesting: approximate OED often has non-unique optimizers, whereas controllability-score optima are often unique (almost everywhere in horizon length). That uniqueness could be a feature if you need stable decisions, but it can also hide modeling assumptions that OED would force you to confront.\n\n### A real experiment designed to discriminate models (plasma heat conduction)\n\nVincent et al. are doing “DOE” in the original, physical sense: iterating a laser target/beam configuration until the resulting diagnostics can actually separate competing heat-conduction models in magnetized, weakly collisional plasma. The simulations suggest temperature evolution around 2.0–2.5 ns is highly discriminative (Spitzer vs suppressed vs off), while magnetic-field magnitudes are less so—useful guidance if you’re prioritizing diagnostic bandwidth.\n\nThe engineering takeaway: they don’t just simulate the physics; they simulate the *measurement process* (x-ray ratio thermometry, spectroscopy, proton radiography) to ask: “Will we be able to tell?” That mindset generalizes nicely to any expensive test campaign.\n\n### Reliability for model releases: paired tests, not wishful thinking\n\nKübler et al. bring a much-needed statistical spine to “did our optimized LLM degrade?” If baseline and optimized models are evaluated on the same benchmark items, the outcomes are *paired*, and naive independent-SE comparisons waste power and misstate uncertainty. Their answer is an exact one-sided McNemar/binomial test on disagreement counts, plus sensible aggregation across benchmarks (pooled, max-drop via Monte Carlo, Fisher). The result: they can flag degradations on the order of **0.3–0.8%** as significant—exactly the regime where product teams argue endlessly.\n\nOne practical gem: trimming “never-flip” items can nearly halve evaluation cost while *increasing* sensitivity, because you’re focusing on items near the decision boundary.\n\n### Forward look\n\nAcross domains, we’re seeing the same move: stop treating evaluation as IID and start designing around the dependencies (paired outcomes, shared priors, coupled sensors, coordinated batches). The question to sit with: in your current DOE/reliability workflow, where are you still paying an “independence tax” out of habit—and what would you gain by modeling the pairing explicitly?",
+  "synthesis": "## QE ArXiv Watch Weekly (Week ending Feb 23, 2026)\n\nIf you’ve ever looked at a distance-based generative-model score (density/coverage variants, kNN-based fidelity, etc.) and thought, “That can’t be right…,” Salvy et al. give you a very plausible culprit: **hubness**. In high-dimensional embedding spaces, a few points become “universal nearest neighbors,” and once that happens, *every* metric that depends on nearest-neighbor relationships starts quietly lying to you.\n\nThink of it like a measurement system where a handful of gauges are sticky. You’re still collecting data, the dashboard still prints numbers, but the physics of “nearest” has drifted. The result: fidelity and coverage can look better (or worse) for reasons that have nothing to do with the generator and everything to do with geometry.\n\n### What problem are they really tackling (and why we should care)?\n\nA lot of reliability work in modern ML evaluation boils down to: “Can we trust the metric?” When we evaluate a generative model in an encoder embedding (DINOv2/v3, CLIP-like spaces, audio encoders, etc.), we’re assuming distance behaves sensibly.\n\nHubness breaks that assumption. The paper shows a particularly nasty failure mode: when real and generated supports are **truly disjoint** (so the “correct” overlap-type score should be 0), standard distance-based metrics can drift **away from 0 as dimension grows**. That’s the kind of dimension-induced bias that makes dashboards trend in the wrong direction while everyone argues about model quality.\n\n### The idea: a hubness-mitigation layer you can drop in\n\nTheir proposed fix is **GICDM** (Generative Iterative Contextual Dissimilarity Measure), an adaptation of ICDM that’s careful about a subtle but important evaluation property: **generated samples should be evaluated independently**, not in a way where one fake point’s presence changes another fake point’s score.\n\nWhat they do (at a high level):\n\n- First, they apply ICDM on the **real dataset** to “uniformize” local density—basically re-scaling neighborhoods so the real manifold doesn’t create artificial hubs just because some regions are dense or oddly shaped in the embedding.\n- Then, for each generated point, they compute an **out-of-sample scaling** based on its real neighbors, and they filter “inconsistent” points (with a multi-scale variant to avoid overcorrecting in boundary/crossover regimes).\n\nIf you’re thinking like a quality engineer: this is a **measurement-system correction layer**. It doesn’t replace the downstream metric; it tries to restore the metric’s intended operating conditions.\n\n### Evidence that it’s not just theory\n\nOn the Raisa et al. (2025) synthetic benchmark (a kind of unit-test suite for generative metrics), GICDM improves pass rates for already-robust metrics:\n\n- **Clipped Density** improves from **8/14 → 10/14** (Purpose) and **8/13 → 11/13** (Bounds).\n- **Clipped Coverage** improves from **8/14 → 10/14** and **9/13 → 11/13**.\n\nThe disjoint-support hypersphere test is the cleanest sanity check: as dimension increases, uncorrected distance-based metrics start reporting nonzero overlap; **GICDM keeps them pinned at 0**, which is exactly what you’d want.\n\nAnd importantly for practical validation: correlation with human error rates improves. For DINOv3 embeddings, Pearson correlations for Clipped Density move notably upward (e.g., CIFAR-10 **0.82 → 0.95**, ImageNet **0.67 → 0.82**).\n\nOne more nice touch: in a classifier-free guidance ablation (DiT-XL-2 on ImageNet), GICDM restores the expected tradeoff—**density up, coverage down**—instead of the confusing “everything improves” story you sometimes get from broken neighborhood geometry.\n\n### The trend to notice\n\nWe’re seeing evaluation move from “pick a metric” to “engineer the metric stack.” Encoders, distances, neighborhood corrections, filtering—this is starting to look like metrology: calibrate the instrument, then interpret the readout.\n\n### Question to take into next week\n\nIf hubness can flip overlap metrics in disjoint-support settings, what other “obvious” evaluation sanity checks should we standardize—especially for any metric that relies on nearest neighbors in learned embeddings?",
   "papers": [
     {
-      "id": "2602.12234v1",
-      "title": "Batch-based Bayesian Optimal Experimental Design in Linear Inverse Problems",
-      "authors": "Sofia Mäkinen|Andrew B. Duncan|Tapio Helin",
-      "submitted": "2026-02-12",
-      "track": "exp_design",
-      "link": "https://arxiv.org/pdf/2602.12234v1"
-    },
-    {
-      "id": "2602.11921v1",
-      "title": "Relationship Between Controllability Scoring and Optimal Experimental Design",
-      "authors": "Kazuhiro Sato",
-      "submitted": "2026-02-12",
-      "track": "exp_design",
-      "link": "https://arxiv.org/pdf/2602.11921v1"
-    },
-    {
-      "id": "2602.10827v1",
-      "title": "The Effect of Design Thinking on Creative & Innovation Processes: An Empirical Study Across Different Design Experience Levels",
-      "authors": "Yuxin Zhang|Fan Zhang",
-      "submitted": "2026-02-11",
-      "track": "exp_design",
-      "link": "https://arxiv.org/pdf/2602.10827v1"
-    },
-    {
-      "id": "2602.10041v1",
-      "title": "Design of experiments characterising heat conduction in magnetised, weakly collisional plasma",
-      "authors": "T. A. Vincent|P. Ariyathilaka|L. Creaser|C. Danson|D. Lamb|J. Meinecke|C. A. J. Palmer|S. Pitt|H. Poole|C. Spindloe|P. Thomas|E. Tubman|L. Wilson|W. J. Garbett|G. Gregori|P. Tzeferacos|T. Hodge|A. F. A. Bott",
-      "submitted": "2026-02-10",
-      "track": "exp_design",
-      "link": "https://arxiv.org/pdf/2602.10041v1"
-    },
-    {
-      "id": "2602.10144v1",
-      "title": "When LLMs get significantly worse: A statistical approach to detect model degradations",
-      "authors": "Jonas Kübler|Kailash Budhathoki|Matthäus Kleindessner|Xiong Zhou|Junming Yin|Ashish Khetan|George Karypis",
-      "submitted": "2026-02-09",
+      "id": "2602.16449v1",
+      "title": "GICDM: Mitigating Hubness for Reliable Distance-Based Generative Model Evaluation",
+      "authors": "Nicolas Salvy|Hugues Talbot|Bertrand Thirion",
+      "submitted": "2026-02-18",
       "track": "reliability",
-      "link": "https://arxiv.org/pdf/2602.10144v1"
+      "link": "https://arxiv.org/pdf/2602.16449v1"
     }
   ]
 }
