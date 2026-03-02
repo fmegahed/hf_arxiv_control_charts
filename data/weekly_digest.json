@@ -1,27 +1,51 @@
 {
   "metadata": {
-    "generated_at": "2026-02-23T12:11:56Z",
-    "week_start": "2026-02-16",
-    "week_end": "2026-02-23",
+    "generated_at": "2026-03-02T12:09:52Z",
+    "week_start": "2026-02-23",
+    "week_end": "2026-03-02",
     "version": "3.1.0"
   },
   "summary": {
-    "total_papers": 1,
+    "total_papers": 4,
     "papers_by_track": {
       "spc": 0,
-      "exp_design": 0,
-      "reliability": 1
+      "exp_design": 2,
+      "reliability": 2
     }
   },
-  "synthesis": "## QE ArXiv Watch Weekly (Week ending Feb 23, 2026)\n\nIf you’ve ever looked at a distance-based generative-model score (density/coverage variants, kNN-based fidelity, etc.) and thought, “That can’t be right…,” Salvy et al. give you a very plausible culprit: **hubness**. In high-dimensional embedding spaces, a few points become “universal nearest neighbors,” and once that happens, *every* metric that depends on nearest-neighbor relationships starts quietly lying to you.\n\nThink of it like a measurement system where a handful of gauges are sticky. You’re still collecting data, the dashboard still prints numbers, but the physics of “nearest” has drifted. The result: fidelity and coverage can look better (or worse) for reasons that have nothing to do with the generator and everything to do with geometry.\n\n### What problem are they really tackling (and why we should care)?\n\nA lot of reliability work in modern ML evaluation boils down to: “Can we trust the metric?” When we evaluate a generative model in an encoder embedding (DINOv2/v3, CLIP-like spaces, audio encoders, etc.), we’re assuming distance behaves sensibly.\n\nHubness breaks that assumption. The paper shows a particularly nasty failure mode: when real and generated supports are **truly disjoint** (so the “correct” overlap-type score should be 0), standard distance-based metrics can drift **away from 0 as dimension grows**. That’s the kind of dimension-induced bias that makes dashboards trend in the wrong direction while everyone argues about model quality.\n\n### The idea: a hubness-mitigation layer you can drop in\n\nTheir proposed fix is **GICDM** (Generative Iterative Contextual Dissimilarity Measure), an adaptation of ICDM that’s careful about a subtle but important evaluation property: **generated samples should be evaluated independently**, not in a way where one fake point’s presence changes another fake point’s score.\n\nWhat they do (at a high level):\n\n- First, they apply ICDM on the **real dataset** to “uniformize” local density—basically re-scaling neighborhoods so the real manifold doesn’t create artificial hubs just because some regions are dense or oddly shaped in the embedding.\n- Then, for each generated point, they compute an **out-of-sample scaling** based on its real neighbors, and they filter “inconsistent” points (with a multi-scale variant to avoid overcorrecting in boundary/crossover regimes).\n\nIf you’re thinking like a quality engineer: this is a **measurement-system correction layer**. It doesn’t replace the downstream metric; it tries to restore the metric’s intended operating conditions.\n\n### Evidence that it’s not just theory\n\nOn the Raisa et al. (2025) synthetic benchmark (a kind of unit-test suite for generative metrics), GICDM improves pass rates for already-robust metrics:\n\n- **Clipped Density** improves from **8/14 → 10/14** (Purpose) and **8/13 → 11/13** (Bounds).\n- **Clipped Coverage** improves from **8/14 → 10/14** and **9/13 → 11/13**.\n\nThe disjoint-support hypersphere test is the cleanest sanity check: as dimension increases, uncorrected distance-based metrics start reporting nonzero overlap; **GICDM keeps them pinned at 0**, which is exactly what you’d want.\n\nAnd importantly for practical validation: correlation with human error rates improves. For DINOv3 embeddings, Pearson correlations for Clipped Density move notably upward (e.g., CIFAR-10 **0.82 → 0.95**, ImageNet **0.67 → 0.82**).\n\nOne more nice touch: in a classifier-free guidance ablation (DiT-XL-2 on ImageNet), GICDM restores the expected tradeoff—**density up, coverage down**—instead of the confusing “everything improves” story you sometimes get from broken neighborhood geometry.\n\n### The trend to notice\n\nWe’re seeing evaluation move from “pick a metric” to “engineer the metric stack.” Encoders, distances, neighborhood corrections, filtering—this is starting to look like metrology: calibrate the instrument, then interpret the readout.\n\n### Question to take into next week\n\nIf hubness can flip overlap metrics in disjoint-support settings, what other “obvious” evaluation sanity checks should we standardize—especially for any metric that relies on nearest neighbors in learned embeddings?",
+  "synthesis": "The most useful through-line this week: we’re getting better at **designing for two goals at once**—*make good decisions now* and *learn something you can trust later*. That’s true whether “later” means a tighter estimate of an effect size, a defensible choice of model complexity, or an AI agent you can certify with an actual coverage guarantee.\n\n### Designing experiments when you care about action *and* inference\n\nIf you’ve ever run a sequential experiment in production, you know the tension: exploit the current best setting to reduce regret, but explore enough that you can *explain* what you learned (and quantify uncertainty). Xie et al. tackle that head-on in adaptive **combinatorial** designs (think selecting a bundle of factors/components each round), and they formalize the trade as a **Pareto frontier** between cumulative regret and “gap estimation error” (how well you can tell arm A from arm B).\n\nWhat’s nice here is the practical knob: an exploration-decay parameter \\(\\alpha\\) that visibly moves you along the frontier. Two algorithms match common feedback realities:\n\n- **Full-bandit feedback** (you only see the aggregate response): MixCombKL uses KL/mirror-descent flavored updates.\n- **Semi-bandit feedback** (you see per-item contributions): MixCombUCB uses UCB bounds plus randomized forced exploration.\n\nThe punchline for practitioners: **semi-bandit feedback buys you a meaningfully better frontier**, mostly because estimation error tightens a lot faster when you see item-level signals. If you’re designing data collection pipelines, this is another argument for instrumenting at the component level whenever you can.\n\n### Borrowing strength from prior studies… without pretending you knew the prior\n\nYou et al. bring empirical Bayes into *optimal experimental design* in a way that feels tailor-made for messy applied work: you have related prior studies, often only as point estimates and standard errors, and you’d like your next experiment’s allocation to reflect that evidence.\n\nThey learn an EB prior (either parametric Gaussian or a nonparametric Gaussian-mixture NPMLE), then plug it into a Lindley-style design objective. The part worth leaning in on: they don’t just do “estimation optimality.” They derive EB-optimal **treatment propensities** under three distinct objectives:\n\n- Minimize posterior estimation error (classic Bayes risk).\n- Maximize in-experiment welfare (often produces “bang-bang” allocations).\n- Maximize post-experiment policy value (an exploration–exploitation flavor via posterior dispersion).\n\nAnd they prove an oracle-style result: as the number of prior studies grows, the EB design’s regret goes to zero, with explicit rates. Translation: if your org has a library of similar past experiments, you can justify “informative” allocations without hand-wavy priors.\n\n### Reliability: choosing model size and certifying AI behavior\n\nMartino et al. propose an **effective number of variables (ENV)** index that reads the whole error-vs-complexity curve \\(V(k)\\) geometrically (area under the curve, normalized), rather than hunting for an elbow that moves around depending on how far you extend \\(k\\). If you’ve ever watched an “elbow” slide as you add more candidate features, you’ll appreciate the motivation.\n\nThey also add decision-support measures—cumulative importance/uncertainty and a reliability-of-decision indicator—so you can say not only “pick 13 variables,” but also “and this choice is stable.”\n\nMouzouni et al., meanwhile, give us a surprisingly clean recipe for **black-box reliability certification of AI agents**: sample the agent multiple times per query (self-consistency), rank answers by frequency (with canonicalization to merge equivalent outputs), then apply **split conformal calibration** to output a prediction set of size \\(M\\) with finite-sample marginal coverage. Bias doesn’t “break” validity; it just forces larger sets. Their “reliability level” is essentially: how confident can we be while still letting the **mode alone** achieve conformal coverage?\n\nFor QE teams deploying LLM agents, this is actionable: you can turn stochastic sampling + conformal into a dashboardable readiness metric, and their sequential stopping rule cuts sampling cost roughly in half.\n\n### Question to sit with\n\nAcross all four papers, the theme is *calibration under constraint*: regret vs estimation, welfare vs learning, simplicity vs overfitting, coverage vs cost. If we start treating these as explicit Pareto trade-offs (instead of hidden “defaults”), what would we change first—our instrumentation, our allocation rules, or our release gates?",
   "papers": [
     {
-      "id": "2602.16449v1",
-      "title": "GICDM: Mitigating Hubness for Reliable Distance-Based Generative Model Evaluation",
-      "authors": "Nicolas Salvy|Hugues Talbot|Bertrand Thirion",
-      "submitted": "2026-02-18",
+      "id": "2602.24231v1",
+      "title": "Adaptive Combinatorial Experimental Design: Pareto Optimality for Decision-Making and Inference",
+      "authors": "Hongrui Xie|Junyu Cao|Kan Xu",
+      "submitted": "2026-02-27",
+      "track": "exp_design",
+      "link": "https://arxiv.org/pdf/2602.24231v1"
+    },
+    {
+      "id": "2602.20581v1",
+      "title": "Using Prior Studies to Design Experiments: An Empirical Bayes Approach",
+      "authors": "Zhiheng You",
+      "submitted": "2026-02-24",
+      "track": "exp_design",
+      "link": "https://arxiv.org/pdf/2602.20581v1"
+    },
+    {
+      "id": "2602.21403v1",
+      "title": "An index of effective number of variables for uncertainty and reliability analysis in model selection problems",
+      "authors": "Luca Martino|Eduardo Morgado|Roberto San Millán-Castillo",
+      "submitted": "2026-02-24",
       "track": "reliability",
-      "link": "https://arxiv.org/pdf/2602.16449v1"
+      "link": "https://arxiv.org/pdf/2602.21403v1"
+    },
+    {
+      "id": "2602.21368v1",
+      "title": "Black-Box Reliability Certification for AI Agents via Self-Consistency Sampling and Conformal Calibration",
+      "authors": "Charafeddine Mouzouni",
+      "submitted": "2026-02-24",
+      "track": "reliability",
+      "link": "https://arxiv.org/pdf/2602.21368v1"
     }
   ]
 }
