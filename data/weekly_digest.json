@@ -1,51 +1,75 @@
 {
   "metadata": {
-    "generated_at": "2026-03-02T12:09:52Z",
-    "week_start": "2026-02-23",
-    "week_end": "2026-03-02",
+    "generated_at": "2026-03-09T12:10:30Z",
+    "week_start": "2026-03-02",
+    "week_end": "2026-03-09",
     "version": "3.1.0"
   },
   "summary": {
-    "total_papers": 4,
+    "total_papers": 7,
     "papers_by_track": {
-      "spc": 0,
-      "exp_design": 2,
+      "spc": 1,
+      "exp_design": 4,
       "reliability": 2
     }
   },
-  "synthesis": "The most useful through-line this week: we’re getting better at **designing for two goals at once**—*make good decisions now* and *learn something you can trust later*. That’s true whether “later” means a tighter estimate of an effect size, a defensible choice of model complexity, or an AI agent you can certify with an actual coverage guarantee.\n\n### Designing experiments when you care about action *and* inference\n\nIf you’ve ever run a sequential experiment in production, you know the tension: exploit the current best setting to reduce regret, but explore enough that you can *explain* what you learned (and quantify uncertainty). Xie et al. tackle that head-on in adaptive **combinatorial** designs (think selecting a bundle of factors/components each round), and they formalize the trade as a **Pareto frontier** between cumulative regret and “gap estimation error” (how well you can tell arm A from arm B).\n\nWhat’s nice here is the practical knob: an exploration-decay parameter \\(\\alpha\\) that visibly moves you along the frontier. Two algorithms match common feedback realities:\n\n- **Full-bandit feedback** (you only see the aggregate response): MixCombKL uses KL/mirror-descent flavored updates.\n- **Semi-bandit feedback** (you see per-item contributions): MixCombUCB uses UCB bounds plus randomized forced exploration.\n\nThe punchline for practitioners: **semi-bandit feedback buys you a meaningfully better frontier**, mostly because estimation error tightens a lot faster when you see item-level signals. If you’re designing data collection pipelines, this is another argument for instrumenting at the component level whenever you can.\n\n### Borrowing strength from prior studies… without pretending you knew the prior\n\nYou et al. bring empirical Bayes into *optimal experimental design* in a way that feels tailor-made for messy applied work: you have related prior studies, often only as point estimates and standard errors, and you’d like your next experiment’s allocation to reflect that evidence.\n\nThey learn an EB prior (either parametric Gaussian or a nonparametric Gaussian-mixture NPMLE), then plug it into a Lindley-style design objective. The part worth leaning in on: they don’t just do “estimation optimality.” They derive EB-optimal **treatment propensities** under three distinct objectives:\n\n- Minimize posterior estimation error (classic Bayes risk).\n- Maximize in-experiment welfare (often produces “bang-bang” allocations).\n- Maximize post-experiment policy value (an exploration–exploitation flavor via posterior dispersion).\n\nAnd they prove an oracle-style result: as the number of prior studies grows, the EB design’s regret goes to zero, with explicit rates. Translation: if your org has a library of similar past experiments, you can justify “informative” allocations without hand-wavy priors.\n\n### Reliability: choosing model size and certifying AI behavior\n\nMartino et al. propose an **effective number of variables (ENV)** index that reads the whole error-vs-complexity curve \\(V(k)\\) geometrically (area under the curve, normalized), rather than hunting for an elbow that moves around depending on how far you extend \\(k\\). If you’ve ever watched an “elbow” slide as you add more candidate features, you’ll appreciate the motivation.\n\nThey also add decision-support measures—cumulative importance/uncertainty and a reliability-of-decision indicator—so you can say not only “pick 13 variables,” but also “and this choice is stable.”\n\nMouzouni et al., meanwhile, give us a surprisingly clean recipe for **black-box reliability certification of AI agents**: sample the agent multiple times per query (self-consistency), rank answers by frequency (with canonicalization to merge equivalent outputs), then apply **split conformal calibration** to output a prediction set of size \\(M\\) with finite-sample marginal coverage. Bias doesn’t “break” validity; it just forces larger sets. Their “reliability level” is essentially: how confident can we be while still letting the **mode alone** achieve conformal coverage?\n\nFor QE teams deploying LLM agents, this is actionable: you can turn stochastic sampling + conformal into a dashboardable readiness metric, and their sequential stopping rule cuts sampling cost roughly in half.\n\n### Question to sit with\n\nAcross all four papers, the theme is *calibration under constraint*: regret vs estimation, welfare vs learning, simplicity vs overfitting, coverage vs cost. If we start treating these as explicit Pareto trade-offs (instead of hidden “defaults”), what would we change first—our instrumentation, our allocation rules, or our release gates?",
+  "synthesis": "If you’ve ever wished you could compare two adaptive policies *without* paying for two full experiments, or squeeze real signal out of “messy but huge” observational data, this week had a theme: **stop re-learning what you already know, and stop re-measuring what you can safely reuse.**\n\n### The big hook: “Replay” your experiment, cut your sample cost, and *still* get valid inference\n\nMeng et al. take aim at a very practical headache: comparing two multi-armed bandit policies (UCB vs Thompson, etc.) when each “run” is one dependent trajectory over users/time. The naïve design is brutal: run policy A for \\(T\\) users and policy B for \\(T\\) users, eat the full \\(2T\\) interactions, and then argue about variance and dependence.\n\nTheir **Artificial Replay (AR)** design is a neat hack with real statistical teeth. Run one policy first and log its action–reward history. When running the second policy, if it chooses an action you’ve already observed, you *replay* that reward instead of querying the environment again. Only “new” actions require real interactions.\n\nTwo practitioner-relevant takeaways:\n\n- **Cost drops toward \\(T\\), not \\(2T\\)** (roughly \\(T+O(\\log T)\\) when both policies have logarithmic regret). That’s not a constant-factor win; it’s basically cutting the second experiment down to “fill in the gaps.”\n- **Variance behaves dramatically better.** Under mild conditions, AR removes the leading linear-in-\\(T\\) variance term. Translation: confidence intervals stop ballooning the way they do in the naïve two-stream comparison.\n\nIf you’re doing online experimentation with expensive interactions (human evaluations, clinical outreach, physical tests), AR is the kind of design you can imagine piloting quickly—especially when you’re comparing policies that largely agree on the best arm most of the time.\n\n### A second, related move: use observational data as an “offset,” then spend your RCT budget only on debiasing\n\nGao et al. feel like they’re speaking directly to anyone who’s stared at a big observational dataset and thought: “There’s value here… but it’s biased, and my randomized budget is tiny.”\n\nTheir **Active Residual Learning / R-Design** approach decomposes the CATE into:\n\n1) an observational contrast (biased but informative), plus  \n2) a residual term that “fixes” the bias.\n\nThen the experiment is designed to learn **only the residual**, using an information-theoretic acquisition rule (R‑EPIG) that targets *what we actually care about* (CATE error / policy decisions) rather than wasting effort on nuisance uncertainty. Empirically they see consistent PEHE and policy gains on standard benchmarks.\n\nIf you’re running limited trials (process changes, field tests) and you’ve got a mountain of historical but confounded data, this is a strong blueprint: freeze a flexible observational model as a baseline and adaptively sample where the residual uncertainty matters most.\n\n### DOE is stretching beyond “objective response surfaces”\n\nParashar et al. push DOE into an area quality folks are increasingly forced into: **ethical/system-level testing where “good” includes stakeholder values**. SEED-SET uses two linked variational GPs—one for objective metrics from scenarios, one for subjective utility learned from pairwise preferences (even using LLMs as proxy judges). The acquisition function explicitly trades off exploration in scenario space with exploitation toward preferred/interesting cases.\n\nEven if you’re skeptical of LLM-evaluated preferences (healthy!), the structure is useful: separate “physics” from “values,” and adapt your test suite as values evolve.\n\nKuo et al., from neuroscience, still land a transferable point: they show how **information-gap landscapes** can tell you when your experimental design is fundamentally non-identifying (their example: single-context/uniform-prior datasets can’t distinguish two coding hypotheses). For us, that’s a reminder to ask early: *does our test design even contain the contrast needed to discriminate models?*\n\n### SPC highlight: covariance shifts finally getting the respect they deserve\n\nCapezza et al. tackle a real blind spot in profile monitoring: mean-focused charts can look “fine” while the *relationships* between channels drift. Their **MPC chart** models multichannel functional profiles via FPCA, then monitors changes in the **precision matrix** (conditional dependence graph) using MEWMC + a clever multi-sparsity GLRT and p-value combination. The payoff is lower out-of-control ARL, especially when only a few relationships change—exactly the kind of “silent failure” we worry about in sensor networks and multi-stream processes.\n\n### Reliability corner: from dams to the replication crisis\n\nGámiz et al. give a Markov framework for reservoir storage reliability/resilience with computable quantities (emptiness probabilities, mean time to emptiness, recovery behavior). Even if you’re not managing water, it’s a nice template for **capacity-with-inflow systems** with stochastic dynamics.\n\nPollanen et al. go meta with the “Certainty Bound”: with fixed \\(\\alpha\\), there’s a hard ceiling on the PPV of “significant” claims—even with infinite \\(n\\). The practitioner moral is blunt: if our decision pipeline collapses evidence into a binary gate, we bake in a reliability limit. Their “escape route” is essentially **multiplying leverage through preregistered replication pipelines**.\n\n### Question to take into next week\n\nAcross bandits, causal trials, ethical testing, and SPC, the same design instinct keeps showing up: **don’t spend budget re-observing what can be shared, and don’t spend power learning nuisance structure.**  \n\nWhere in your current test/monitoring workflow are you still paying “full price” for information you could reuse—or targeting uncertainty that doesn’t change the decision?",
   "papers": [
     {
-      "id": "2602.24231v1",
-      "title": "Adaptive Combinatorial Experimental Design: Pareto Optimality for Decision-Making and Inference",
-      "authors": "Hongrui Xie|Junyu Cao|Kan Xu",
-      "submitted": "2026-02-27",
+      "id": "2603.05919v1",
+      "title": "Design Experiments to Compare Multi-armed Bandit Algorithms",
+      "authors": "Huiling Meng|Ningyuan Chen|Xuefeng Gao",
+      "submitted": "2026-03-06",
       "track": "exp_design",
-      "link": "https://arxiv.org/pdf/2602.24231v1"
+      "link": "https://arxiv.org/pdf/2603.05919v1"
     },
     {
-      "id": "2602.20581v1",
-      "title": "Using Prior Studies to Design Experiments: An Empirical Bayes Approach",
-      "authors": "Zhiheng You",
-      "submitted": "2026-02-24",
+      "id": "2603.05274v1",
+      "title": "Monitoring Covariance in Multichannel Profiles via Functional Graphical Models",
+      "authors": "Christian Capezza|Davide Forcina|Antonio Lepore|Biagio Palumbo",
+      "submitted": "2026-03-05",
+      "track": "spc",
+      "link": "https://arxiv.org/pdf/2603.05274v1"
+    },
+    {
+      "id": "2603.03785v1",
+      "title": "Observationally Informed Adaptive Causal Experimental Design",
+      "authors": "Erdun Gao|Liang Zhang|Jake Fawkes|Aoqi Zuo|Wenqin Liu|Haoxuan Li|Mingming Gong|Dino Sejdinovic",
+      "submitted": "2026-03-04",
       "track": "exp_design",
-      "link": "https://arxiv.org/pdf/2602.20581v1"
+      "link": "https://arxiv.org/pdf/2603.03785v1"
     },
     {
-      "id": "2602.21403v1",
-      "title": "An index of effective number of variables for uncertainty and reliability analysis in model selection problems",
-      "authors": "Luca Martino|Eduardo Morgado|Roberto San Millán-Castillo",
-      "submitted": "2026-02-24",
+      "id": "2603.04278v1",
+      "title": "Markov-Based Modelling for Reservoir Management: Assessing Reliability and Resilience",
+      "authors": "M. L. Gámiz|N. Limnios|D. Montoro-Cazorla|M. C. Segovia-García",
+      "submitted": "2026-03-04",
       "track": "reliability",
-      "link": "https://arxiv.org/pdf/2602.21403v1"
+      "link": "https://arxiv.org/pdf/2603.04278v1"
     },
     {
-      "id": "2602.21368v1",
-      "title": "Black-Box Reliability Certification for AI Agents via Self-Consistency Sampling and Conformal Calibration",
-      "authors": "Charafeddine Mouzouni",
-      "submitted": "2026-02-24",
+      "id": "2603.03445v1",
+      "title": "The Certainty Bound: Structural Limits on Scientific Reliability",
+      "authors": "Marco Pollanen",
+      "submitted": "2026-03-03",
       "track": "reliability",
-      "link": "https://arxiv.org/pdf/2602.21368v1"
+      "link": "https://arxiv.org/pdf/2603.03445v1"
+    },
+    {
+      "id": "2603.01630v1",
+      "title": "SEED-SET: Scalable Evolving Experimental Design for System-level Ethical Testing",
+      "authors": "Anjali Parashar|Yingke Li|Eric Yang Yu|Fei Chen|James Neidhoefer|Devesh Upadhyay|Chuchu Fan",
+      "submitted": "2026-03-02",
+      "track": "exp_design",
+      "link": "https://arxiv.org/pdf/2603.01630v1"
+    },
+    {
+      "id": "2603.01387v2",
+      "title": "An Information-Theoretic Framework For Optimizing Experimental Design To Distinguish Probabilistic Neural Codes",
+      "authors": "Po-Chen Kuo|Edgar Y. Walker",
+      "submitted": "2026-03-02",
+      "track": "exp_design",
+      "link": "https://arxiv.org/pdf/2603.01387v2"
     }
   ]
 }

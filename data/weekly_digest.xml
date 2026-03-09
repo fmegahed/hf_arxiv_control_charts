@@ -7,7 +7,7 @@
     <language>en-us</language>
     <copyright>CC BY 4.0 - QE ArXiv Watch</copyright>
     <managingEditor>noreply@example.com (QE ArXiv Watch)</managingEditor>
-    <lastBuildDate>Mon, 02 Mar 2026 12:09:52 +0000</lastBuildDate>
+    <lastBuildDate>Mon, 09 Mar 2026 12:10:30 +0000</lastBuildDate>
     <ttl>10080</ttl>
     <image>
       <url>https://huggingface.co/spaces/fmegahed/arxiv_control_charts/resolve/main/www/favicon.svg</url>
@@ -16,53 +16,64 @@
     </image>
     <atom:link href="https://huggingface.co/spaces/fmegahed/arxiv_control_charts/resolve/main/data/weekly_digest.xml" rel="self" type="application/rss+xml"/>
     <item>
-      <title>QE ArXiv Watch: Week of February 23 - March 02, 2026</title>
+      <title>QE ArXiv Watch: Week of March 02 - March 09, 2026</title>
       <link>https://huggingface.co/spaces/fmegahed/arxiv_control_charts</link>
-      <guid isPermaLink="false">qe-weekly-2026-03-02</guid>
-      <pubDate>Mon, 02 Mar 2026 12:09:52 +0000</pubDate>
+      <guid isPermaLink="false">qe-weekly-2026-03-09</guid>
+      <pubDate>Mon, 09 Mar 2026 12:10:30 +0000</pubDate>
       <description><![CDATA[
-<p>The most useful through-line this week: we’re getting better at <strong>designing for two goals at once</strong>—<em>make good decisions now</em> and <em>learn something you can trust later</em>. That’s true whether “later” means a tighter estimate of an effect size, a defensible choice of model complexity, or an AI agent you can certify with an actual coverage guarantee.</p>
+<p>If you’ve ever wished you could compare two adaptive policies <em>without</em> paying for two full experiments, or squeeze real signal out of “messy but huge” observational data, this week had a theme: <strong>stop re-learning what you already know, and stop re-measuring what you can safely reuse.</strong></p>
 
-<h4>Designing experiments when you care about action <em>and</em> inference</h4>
+<h4>The big hook: “Replay” your experiment, cut your sample cost, and <em>still</em> get valid inference</h4>
 
-<p>If you’ve ever run a sequential experiment in production, you know the tension: exploit the current best setting to reduce regret, but explore enough that you can <em>explain</em> what you learned (and quantify uncertainty). Xie et al. tackle that head-on in adaptive <strong>combinatorial</strong> designs (think selecting a bundle of factors/components each round), and they formalize the trade as a <strong>Pareto frontier</strong> between cumulative regret and “gap estimation error” (how well you can tell arm A from arm B).</p>
+<p>Meng et al. take aim at a very practical headache: comparing two multi-armed bandit policies (UCB vs Thompson, etc.) when each “run” is one dependent trajectory over users/time. The naïve design is brutal: run policy A for <code>T</code> users and policy B for <code>T</code> users, eat the full <code>2T</code> interactions, and then argue about variance and dependence.</p>
 
-<p>What’s nice here is the practical knob: an exploration-decay parameter <code>α</code> that visibly moves you along the frontier. Two algorithms match common feedback realities:</p>
+<p>Their <strong>Artificial Replay (AR)</strong> design is a neat hack with real statistical teeth. Run one policy first and log its action–reward history. When running the second policy, if it chooses an action you’ve already observed, you <em>replay</em> that reward instead of querying the environment again. Only “new” actions require real interactions.</p>
 
-<ul>
-<li><strong>Full-bandit feedback</strong> (you only see the aggregate response): MixCombKL uses KL/mirror-descent flavored updates.</li>
-<li><strong>Semi-bandit feedback</strong> (you see per-item contributions): MixCombUCB uses UCB bounds plus randomized forced exploration.</li>
-
-<p></ul>
-The punchline for practitioners: <strong>semi-bandit feedback buys you a meaningfully better frontier</strong>, mostly because estimation error tightens a lot faster when you see item-level signals. If you’re designing data collection pipelines, this is another argument for instrumenting at the component level whenever you can.</p>
-
-<h4>Borrowing strength from prior studies… without pretending you knew the prior</h4>
-
-<p>You et al. bring empirical Bayes into <em>optimal experimental design</em> in a way that feels tailor-made for messy applied work: you have related prior studies, often only as point estimates and standard errors, and you’d like your next experiment’s allocation to reflect that evidence.</p>
-
-<p>They learn an EB prior (either parametric Gaussian or a nonparametric Gaussian-mixture NPMLE), then plug it into a Lindley-style design objective. The part worth leaning in on: they don’t just do “estimation optimality.” They derive EB-optimal <strong>treatment propensities</strong> under three distinct objectives:</p>
+<p>Two practitioner-relevant takeaways:</p>
 
 <ul>
-<li>Minimize posterior estimation error (classic Bayes risk).</li>
-<li>Maximize in-experiment welfare (often produces “bang-bang” allocations).</li>
-<li>Maximize post-experiment policy value (an exploration–exploitation flavor via posterior dispersion).</li>
+<li><strong>Cost drops toward <code>T</code>, not <code>2T</code></strong> (roughly <code>T+O(\log T)</code> when both policies have logarithmic regret). That’s not a constant-factor win; it’s basically cutting the second experiment down to “fill in the gaps.”</li>
+<li><strong>Variance behaves dramatically better.</strong> Under mild conditions, AR removes the leading linear-in-<code>T</code> variance term. Translation: confidence intervals stop ballooning the way they do in the naïve two-stream comparison.</li>
 
 <p></ul>
-And they prove an oracle-style result: as the number of prior studies grows, the EB design’s regret goes to zero, with explicit rates. Translation: if your org has a library of similar past experiments, you can justify “informative” allocations without hand-wavy priors.</p>
+If you’re doing online experimentation with expensive interactions (human evaluations, clinical outreach, physical tests), AR is the kind of design you can imagine piloting quickly—especially when you’re comparing policies that largely agree on the best arm most of the time.</p>
 
-<h4>Reliability: choosing model size and certifying AI behavior</h4>
+<h4>A second, related move: use observational data as an “offset,” then spend your RCT budget only on debiasing</h4>
 
-<p>Martino et al. propose an <strong>effective number of variables (ENV)</strong> index that reads the whole error-vs-complexity curve <code>V(k)</code> geometrically (area under the curve, normalized), rather than hunting for an elbow that moves around depending on how far you extend <code>k</code>. If you’ve ever watched an “elbow” slide as you add more candidate features, you’ll appreciate the motivation.</p>
+<p>Gao et al. feel like they’re speaking directly to anyone who’s stared at a big observational dataset and thought: “There’s value here… but it’s biased, and my randomized budget is tiny.”</p>
 
-<p>They also add decision-support measures—cumulative importance/uncertainty and a reliability-of-decision indicator—so you can say not only “pick 13 variables,” but also “and this choice is stable.”</p>
+<p>Their <strong>Active Residual Learning / R-Design</strong> approach decomposes the CATE into:</p>
 
-<p>Mouzouni et al., meanwhile, give us a surprisingly clean recipe for <strong>black-box reliability certification of AI agents</strong>: sample the agent multiple times per query (self-consistency), rank answers by frequency (with canonicalization to merge equivalent outputs), then apply <strong>split conformal calibration</strong> to output a prediction set of size <code>M</code> with finite-sample marginal coverage. Bias doesn’t “break” validity; it just forces larger sets. Their “reliability level” is essentially: how confident can we be while still letting the <strong>mode alone</strong> achieve conformal coverage?</p>
+<p>1) an observational contrast (biased but informative), plus  
+2) a residual term that “fixes” the bias.</p>
 
-<p>For QE teams deploying LLM agents, this is actionable: you can turn stochastic sampling + conformal into a dashboardable readiness metric, and their sequential stopping rule cuts sampling cost roughly in half.</p>
+<p>Then the experiment is designed to learn <strong>only the residual</strong>, using an information-theoretic acquisition rule (R‑EPIG) that targets <em>what we actually care about</em> (CATE error / policy decisions) rather than wasting effort on nuisance uncertainty. Empirically they see consistent PEHE and policy gains on standard benchmarks.</p>
 
-<h4>Question to sit with</h4>
+<p>If you’re running limited trials (process changes, field tests) and you’ve got a mountain of historical but confounded data, this is a strong blueprint: freeze a flexible observational model as a baseline and adaptively sample where the residual uncertainty matters most.</p>
 
-<p>Across all four papers, the theme is <em>calibration under constraint</em>: regret vs estimation, welfare vs learning, simplicity vs overfitting, coverage vs cost. If we start treating these as explicit Pareto trade-offs (instead of hidden “defaults”), what would we change first—our instrumentation, our allocation rules, or our release gates?</p><h4>Featured Papers This Week</h4><ul><li><strong>Xie et al.</strong>: <a href="https://arxiv.org/pdf/2602.24231v1">Adaptive Combinatorial Experimental Design: Pareto Optimality for Decision-Making and Inference</a> <em>(Experimental Design)</em></li><li><strong>You et al.</strong>: <a href="https://arxiv.org/pdf/2602.20581v1">Using Prior Studies to Design Experiments: An Empirical Bayes Approach</a> <em>(Experimental Design)</em></li><li><strong>Martino et al.</strong>: <a href="https://arxiv.org/pdf/2602.21403v1">An index of effective number of variables for uncertainty and reliability analysis in model selection problems</a> <em>(Reliability)</em></li><li><strong>Mouzouni et al.</strong>: <a href="https://arxiv.org/pdf/2602.21368v1">Black-Box Reliability Certification for AI Agents via Self-Consistency Sampling and Conformal Calibration</a> <em>(Reliability)</em></li></ul><hr/><p><strong>Explore More:</strong> Visit the <a href="https://huggingface.co/spaces/fmegahed/arxiv_control_charts">QE ArXiv Watch Dashboard</a> to browse all papers with AI summaries, interactive filtering, and paper chat.</p><p style="color: #666; font-size: 0.9em;">This digest is automatically generated every Monday. Questions or feedback? Open an issue on our <a href="https://github.com/fmegahed/arxiv_control_charts">GitHub repository</a>.</p>
+<h4>DOE is stretching beyond “objective response surfaces”</h4>
+
+<p>Parashar et al. push DOE into an area quality folks are increasingly forced into: <strong>ethical/system-level testing where “good” includes stakeholder values</strong>. SEED-SET uses two linked variational GPs—one for objective metrics from scenarios, one for subjective utility learned from pairwise preferences (even using LLMs as proxy judges). The acquisition function explicitly trades off exploration in scenario space with exploitation toward preferred/interesting cases.</p>
+
+<p>Even if you’re skeptical of LLM-evaluated preferences (healthy!), the structure is useful: separate “physics” from “values,” and adapt your test suite as values evolve.</p>
+
+<p>Kuo et al., from neuroscience, still land a transferable point: they show how <strong>information-gap landscapes</strong> can tell you when your experimental design is fundamentally non-identifying (their example: single-context/uniform-prior datasets can’t distinguish two coding hypotheses). For us, that’s a reminder to ask early: <em>does our test design even contain the contrast needed to discriminate models?</em></p>
+
+<h4>SPC highlight: covariance shifts finally getting the respect they deserve</h4>
+
+<p>Capezza et al. tackle a real blind spot in profile monitoring: mean-focused charts can look “fine” while the <em>relationships</em> between channels drift. Their <strong>MPC chart</strong> models multichannel functional profiles via FPCA, then monitors changes in the <strong>precision matrix</strong> (conditional dependence graph) using MEWMC + a clever multi-sparsity GLRT and p-value combination. The payoff is lower out-of-control ARL, especially when only a few relationships change—exactly the kind of “silent failure” we worry about in sensor networks and multi-stream processes.</p>
+
+<h4>Reliability corner: from dams to the replication crisis</h4>
+
+<p>Gámiz et al. give a Markov framework for reservoir storage reliability/resilience with computable quantities (emptiness probabilities, mean time to emptiness, recovery behavior). Even if you’re not managing water, it’s a nice template for <strong>capacity-with-inflow systems</strong> with stochastic dynamics.</p>
+
+<p>Pollanen et al. go meta with the “Certainty Bound”: with fixed <code>α</code>, there’s a hard ceiling on the PPV of “significant” claims—even with infinite <code>n</code>. The practitioner moral is blunt: if our decision pipeline collapses evidence into a binary gate, we bake in a reliability limit. Their “escape route” is essentially <strong>multiplying leverage through preregistered replication pipelines</strong>.</p>
+
+<h4>Question to take into next week</h4>
+
+<p>Across bandits, causal trials, ethical testing, and SPC, the same design instinct keeps showing up: <strong>don’t spend budget re-observing what can be shared, and don’t spend power learning nuisance structure.</strong></p>
+
+<p>Where in your current test/monitoring workflow are you still paying “full price” for information you could reuse—or targeting uncertainty that doesn’t change the decision?</p><h4>Featured Papers This Week</h4><ul><li><strong>Meng et al.</strong>: <a href="https://arxiv.org/pdf/2603.05919v1">Design Experiments to Compare Multi-armed Bandit Algorithms</a> <em>(Experimental Design)</em></li><li><strong>Capezza et al.</strong>: <a href="https://arxiv.org/pdf/2603.05274v1">Monitoring Covariance in Multichannel Profiles via Functional Graphical Models</a> <em>(Control Charts)</em></li><li><strong>Gao et al.</strong>: <a href="https://arxiv.org/pdf/2603.03785v1">Observationally Informed Adaptive Causal Experimental Design</a> <em>(Experimental Design)</em></li><li><strong>Gámiz et al.</strong>: <a href="https://arxiv.org/pdf/2603.04278v1">Markov-Based Modelling for Reservoir Management: Assessing Reliability and Resilience</a> <em>(Reliability)</em></li><li><strong>Pollanen et al.</strong>: <a href="https://arxiv.org/pdf/2603.03445v1">The Certainty Bound: Structural Limits on Scientific Reliability</a> <em>(Reliability)</em></li><li><strong>Parashar et al.</strong>: <a href="https://arxiv.org/pdf/2603.01630v1">SEED-SET: Scalable Evolving Experimental Design for System-level Ethical Testing</a> <em>(Experimental Design)</em></li><li><strong>Kuo et al.</strong>: <a href="https://arxiv.org/pdf/2603.01387v2">An Information-Theoretic Framework For Optimizing Experimental Design To Distinguish Probabilistic Neural Codes</a> <em>(Experimental Design)</em></li></ul><hr/><p><strong>Explore More:</strong> Visit the <a href="https://huggingface.co/spaces/fmegahed/arxiv_control_charts">QE ArXiv Watch Dashboard</a> to browse all papers with AI summaries, interactive filtering, and paper chat.</p><p style="color: #666; font-size: 0.9em;">This digest is automatically generated every Monday. Questions or feedback? Open an issue on our <a href="https://github.com/fmegahed/arxiv_control_charts">GitHub repository</a>.</p>
 ]]></description>
     </item>
   </channel>
