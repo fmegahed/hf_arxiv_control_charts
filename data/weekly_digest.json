@@ -1,75 +1,75 @@
 {
   "metadata": {
-    "generated_at": "2026-03-09T12:10:30Z",
-    "week_start": "2026-03-02",
-    "week_end": "2026-03-09",
+    "generated_at": "2026-03-16T12:15:53Z",
+    "week_start": "2026-03-09",
+    "week_end": "2026-03-16",
     "version": "3.1.0"
   },
   "summary": {
     "total_papers": 7,
     "papers_by_track": {
-      "spc": 1,
-      "exp_design": 4,
-      "reliability": 2
+      "spc": 0,
+      "exp_design": 2,
+      "reliability": 5
     }
   },
-  "synthesis": "If you’ve ever wished you could compare two adaptive policies *without* paying for two full experiments, or squeeze real signal out of “messy but huge” observational data, this week had a theme: **stop re-learning what you already know, and stop re-measuring what you can safely reuse.**\n\n### The big hook: “Replay” your experiment, cut your sample cost, and *still* get valid inference\n\nMeng et al. take aim at a very practical headache: comparing two multi-armed bandit policies (UCB vs Thompson, etc.) when each “run” is one dependent trajectory over users/time. The naïve design is brutal: run policy A for \\(T\\) users and policy B for \\(T\\) users, eat the full \\(2T\\) interactions, and then argue about variance and dependence.\n\nTheir **Artificial Replay (AR)** design is a neat hack with real statistical teeth. Run one policy first and log its action–reward history. When running the second policy, if it chooses an action you’ve already observed, you *replay* that reward instead of querying the environment again. Only “new” actions require real interactions.\n\nTwo practitioner-relevant takeaways:\n\n- **Cost drops toward \\(T\\), not \\(2T\\)** (roughly \\(T+O(\\log T)\\) when both policies have logarithmic regret). That’s not a constant-factor win; it’s basically cutting the second experiment down to “fill in the gaps.”\n- **Variance behaves dramatically better.** Under mild conditions, AR removes the leading linear-in-\\(T\\) variance term. Translation: confidence intervals stop ballooning the way they do in the naïve two-stream comparison.\n\nIf you’re doing online experimentation with expensive interactions (human evaluations, clinical outreach, physical tests), AR is the kind of design you can imagine piloting quickly—especially when you’re comparing policies that largely agree on the best arm most of the time.\n\n### A second, related move: use observational data as an “offset,” then spend your RCT budget only on debiasing\n\nGao et al. feel like they’re speaking directly to anyone who’s stared at a big observational dataset and thought: “There’s value here… but it’s biased, and my randomized budget is tiny.”\n\nTheir **Active Residual Learning / R-Design** approach decomposes the CATE into:\n\n1) an observational contrast (biased but informative), plus  \n2) a residual term that “fixes” the bias.\n\nThen the experiment is designed to learn **only the residual**, using an information-theoretic acquisition rule (R‑EPIG) that targets *what we actually care about* (CATE error / policy decisions) rather than wasting effort on nuisance uncertainty. Empirically they see consistent PEHE and policy gains on standard benchmarks.\n\nIf you’re running limited trials (process changes, field tests) and you’ve got a mountain of historical but confounded data, this is a strong blueprint: freeze a flexible observational model as a baseline and adaptively sample where the residual uncertainty matters most.\n\n### DOE is stretching beyond “objective response surfaces”\n\nParashar et al. push DOE into an area quality folks are increasingly forced into: **ethical/system-level testing where “good” includes stakeholder values**. SEED-SET uses two linked variational GPs—one for objective metrics from scenarios, one for subjective utility learned from pairwise preferences (even using LLMs as proxy judges). The acquisition function explicitly trades off exploration in scenario space with exploitation toward preferred/interesting cases.\n\nEven if you’re skeptical of LLM-evaluated preferences (healthy!), the structure is useful: separate “physics” from “values,” and adapt your test suite as values evolve.\n\nKuo et al., from neuroscience, still land a transferable point: they show how **information-gap landscapes** can tell you when your experimental design is fundamentally non-identifying (their example: single-context/uniform-prior datasets can’t distinguish two coding hypotheses). For us, that’s a reminder to ask early: *does our test design even contain the contrast needed to discriminate models?*\n\n### SPC highlight: covariance shifts finally getting the respect they deserve\n\nCapezza et al. tackle a real blind spot in profile monitoring: mean-focused charts can look “fine” while the *relationships* between channels drift. Their **MPC chart** models multichannel functional profiles via FPCA, then monitors changes in the **precision matrix** (conditional dependence graph) using MEWMC + a clever multi-sparsity GLRT and p-value combination. The payoff is lower out-of-control ARL, especially when only a few relationships change—exactly the kind of “silent failure” we worry about in sensor networks and multi-stream processes.\n\n### Reliability corner: from dams to the replication crisis\n\nGámiz et al. give a Markov framework for reservoir storage reliability/resilience with computable quantities (emptiness probabilities, mean time to emptiness, recovery behavior). Even if you’re not managing water, it’s a nice template for **capacity-with-inflow systems** with stochastic dynamics.\n\nPollanen et al. go meta with the “Certainty Bound”: with fixed \\(\\alpha\\), there’s a hard ceiling on the PPV of “significant” claims—even with infinite \\(n\\). The practitioner moral is blunt: if our decision pipeline collapses evidence into a binary gate, we bake in a reliability limit. Their “escape route” is essentially **multiplying leverage through preregistered replication pipelines**.\n\n### Question to take into next week\n\nAcross bandits, causal trials, ethical testing, and SPC, the same design instinct keeps showing up: **don’t spend budget re-observing what can be shared, and don’t spend power learning nuisance structure.**  \n\nWhere in your current test/monitoring workflow are you still paying “full price” for information you could reuse—or targeting uncertainty that doesn’t change the decision?",
+  "synthesis": "The most useful “gut check” idea this week: we’re getting better at *knowing when our procedures are lying to us*—whether that’s privacy noise quietly breaking your hypothesis test, a bandit policy inflating false positives, or an ML posterior that looks confident because it’s under-trained. A common theme across these papers is turning fuzzy reliability concerns into something you can actually measure: power curves, coverage, calibration error, disclosure-risk bounds.\n\n### Privacy that you can reason about like a test plan\n\nFondeville et al. give a surprisingly practical reframing of differential privacy: treat membership inference as a hypothesis test, then interpret your privacy parameters as controlling an adversary’s best ROC curve. The nice new knob is **relative disclosure risk**—how much an attacker can multiplicatively update their belief after seeing the DP output.\n\nTwo takeaways for practitioners:\n\nIf you’re using **pure ε-DP**, you automatically get bounded relative disclosure risk (ρ ≤ e^ε). That’s the cleanest “safety case” statement in the batch.\n\nMechanism choice matters in a way we don’t always say out loud: **Laplace noise gives bounded disclosure risk; Gaussian noise gives unbounded ρ** (yet still avoids “blatant disclosure”). In other words, Gaussian can fail “gracefully,” but the worst-case belief update can still be arbitrarily large.\n\nThey also do something QE folks will appreciate: translate privacy noise into **test power loss** (worked example: Z-test on a private mean). Under their illustrative settings, strong privacy doesn’t necessarily torch your power once n is moderately sized.\n\n### Adaptive experiments: stop trusting your p-values\n\nLi et al. tackle the nasty, common situation where we run a multi-armed bandit to learn faster… and then report a classical t-test/ANOVA as if the data were i.i.d. Spoiler: Type I error inflates.\n\nTheir fix—**Algorithm-Induced Test (AIT) correction**—is conceptually simple: simulate your *exact same bandit algorithm* under a null world, then calibrate the critical value of your usual test statistic from that Monte Carlo null distribution. You keep the familiar test (t, ANOVA, Tukey), but you stop pretending the sampling plan didn’t matter.\n\nThe practical punchline: naive fixed thresholds produced false positive rates as high as ~0.13 in their settings; AIT brought it back to ~0.05. Even better, when they optimize the bandit design using an “experiment extension cost” tradeoff, they find ε-Thompson variants that can beat both uniform randomization and vanilla TS for a given power/cost target.\n\nIf you run adaptive A/Bs in manufacturing ops, clinical-ish monitoring, or materials discovery: this is one of the more “ready to try” ideas this week.\n\n### Reliability isn’t accuracy: uncertainty methods that behave differently in the real world\n\nRuijs et al. compare **MC Dropout** (Bayesian-ish uncertainty) vs **Inductive Conformal Prediction (ICP)** on CNNs. The result feels familiar but useful to see quantified:\n\nA higher-accuracy model (their VGG16 variant) can still be *more overconfident* and poorly calibrated.\n\nMC Dropout improved calibration a lot for GoogLeNet (ECE roughly halved), barely at all for VGG16.\n\nICP hits ~95% empirical coverage for both models, but the *prediction set sizes* expose ambiguity (the “Shirt” class explodes into larger sets).\n\nIf you need “reliability envelopes” for vision models on the shop floor, ICP’s coverage guarantee (under exchangeability) is a compelling baseline—even when Bayesian approximations don’t calibrate.\n\n### Degradation + telemetry budgets: active learning for satellite electronics\n\nLi et al. bring a very QE-flavored contribution: a hierarchical Wiener degradation model with nonlinear time transformation and stress covariates, plus **spatial correlation between neighboring components**. The key is the **two-stage active learning**: choose *which units* to sample (space-filling) and *when* to sample (penalized D-optimality).\n\nThe headline is data-efficiency: they report comparable or better reliability prediction accuracy with far fewer measurements—and show how assuming independence can bias you badly even if you monitor *more* units.\n\n### Simulation-based inference: making posteriors earn your trust\n\nDelaunoy’s dissertation is a sober reminder: neural SBI can give posteriors that look crisp and are simply overconfident. The proposed diagnostics center on **expected coverage** (simulation-based calibration-style), and the methodological push is “balancing” regularization (BNRE) plus Bayesian neural nets with functional priors to represent approximation uncertainty in low-simulation regimes.\n\nNo silver bullets, but a clear operational message: if you’re using SBI for reliability physics models or rare-event simulators, **coverage checks should be part of your verification plan**, not an afterthought.\n\n### DOE trend: batch design is becoming “distributional” and scalable\n\nTwo BOED papers point in the same direction: batch experimental design is moving beyond greedy coordinate exchange.\n\nBhattacharya et al. show that approximating EIG via a Gaussian/D-optimal surrogate and learning a **surrogate Fisher information** can make high-dimensional (even image-based) designs tractable—and materially shrink credible intervals for hard-to-identify memory parameters.\n\nSharrock et al. take a more theoretical route: lift batch designs to **probability measures**, add entropic regularization, and optimize via **Wasserstein gradient flows** with particle methods. The benefit is better exploration of multimodal utilities—exactly where standard gradient ascent tends to get stuck.\n\n### Question to sit with this week\n\nWe’re increasingly good at *procedural guardrails*—coverage for SBI, calibrated tests for bandits, bounded disclosure risk for DP. What’s the analogous guardrail you wish you had for your own reliability pipeline: a single diagnostic that tells you when the whole workflow is quietly violating its assumptions?",
   "papers": [
     {
-      "id": "2603.05919v1",
-      "title": "Design Experiments to Compare Multi-armed Bandit Algorithms",
-      "authors": "Huiling Meng|Ningyuan Chen|Xuefeng Gao",
-      "submitted": "2026-03-06",
-      "track": "exp_design",
-      "link": "https://arxiv.org/pdf/2603.05919v1"
-    },
-    {
-      "id": "2603.05274v1",
-      "title": "Monitoring Covariance in Multichannel Profiles via Functional Graphical Models",
-      "authors": "Christian Capezza|Davide Forcina|Antonio Lepore|Biagio Palumbo",
-      "submitted": "2026-03-05",
-      "track": "spc",
-      "link": "https://arxiv.org/pdf/2603.05274v1"
-    },
-    {
-      "id": "2603.03785v1",
-      "title": "Observationally Informed Adaptive Causal Experimental Design",
-      "authors": "Erdun Gao|Liang Zhang|Jake Fawkes|Aoqi Zuo|Wenqin Liu|Haoxuan Li|Mingming Gong|Dino Sejdinovic",
-      "submitted": "2026-03-04",
-      "track": "exp_design",
-      "link": "https://arxiv.org/pdf/2603.03785v1"
-    },
-    {
-      "id": "2603.04278v1",
-      "title": "Markov-Based Modelling for Reservoir Management: Assessing Reliability and Resilience",
-      "authors": "M. L. Gámiz|N. Limnios|D. Montoro-Cazorla|M. C. Segovia-García",
-      "submitted": "2026-03-04",
+      "id": "2603.12753v1",
+      "title": "Balancing the privacy-utility trade-off: How to draw reliable conclusions from private data",
+      "authors": "Raphaël de Fondeville",
+      "submitted": "2026-03-13",
       "track": "reliability",
-      "link": "https://arxiv.org/pdf/2603.04278v1"
+      "link": "https://arxiv.org/pdf/2603.12753v1"
     },
     {
-      "id": "2603.03445v1",
-      "title": "The Certainty Bound: Structural Limits on Scientific Reliability",
-      "authors": "Marco Pollanen",
-      "submitted": "2026-03-03",
+      "id": "2603.12365v1",
+      "title": "Optimal Experimental Design for Reliable Learning of History-Dependent Constitutive Laws",
+      "authors": "Kaushik Bhattacharya|Lianghao Cao|Andrew Stuart",
+      "submitted": "2026-03-12",
+      "track": "exp_design",
+      "link": "https://arxiv.org/pdf/2603.12365v1"
+    },
+    {
+      "id": "2603.12102v1",
+      "title": "Wasserstein Gradient Flows for Batch Bayesian Optimal Experimental Design",
+      "authors": "Louis Sharrock",
+      "submitted": "2026-03-12",
+      "track": "exp_design",
+      "link": "https://arxiv.org/pdf/2603.12102v1"
+    },
+    {
+      "id": "2603.11267v1",
+      "title": "A Statistically Reliable Optimization Framework for Bandit Experiments in Scientific Discovery",
+      "authors": "Tong Li|Travis Mandel|Goldie Phillips|Anna Rafferty|Eric M. Schwartz|Dehan Kong|Joseph J. Williams",
+      "submitted": "2026-03-11",
       "track": "reliability",
-      "link": "https://arxiv.org/pdf/2603.03445v1"
+      "link": "https://arxiv.org/pdf/2603.11267v1"
     },
     {
-      "id": "2603.01630v1",
-      "title": "SEED-SET: Scalable Evolving Experimental Design for System-level Ethical Testing",
-      "authors": "Anjali Parashar|Yingke Li|Eric Yang Yu|Fei Chen|James Neidhoefer|Devesh Upadhyay|Chuchu Fan",
-      "submitted": "2026-03-02",
-      "track": "exp_design",
-      "link": "https://arxiv.org/pdf/2603.01630v1"
+      "id": "2603.10731v1",
+      "title": "Beyond Accuracy: Reliability and Uncertainty Estimation in Convolutional Neural Networks",
+      "authors": "Sanne Ruijs|Alina Kosiakova|Farrukh Javed",
+      "submitted": "2026-03-11",
+      "track": "reliability",
+      "link": "https://arxiv.org/pdf/2603.10731v1"
     },
     {
-      "id": "2603.01387v2",
-      "title": "An Information-Theoretic Framework For Optimizing Experimental Design To Distinguish Probabilistic Neural Codes",
-      "authors": "Po-Chen Kuo|Edgar Y. Walker",
-      "submitted": "2026-03-02",
-      "track": "exp_design",
-      "link": "https://arxiv.org/pdf/2603.01387v2"
+      "id": "2603.09058v1",
+      "title": "Adaptive Active Learning for Online Reliability Prediction of Satellite Electronics",
+      "authors": "Shixiang Li|Yubin Tian|Dianpeng Wang|Piao Chen|Mengying Ren",
+      "submitted": "2026-03-10",
+      "track": "reliability",
+      "link": "https://arxiv.org/pdf/2603.09058v1"
+    },
+    {
+      "id": "2603.08947v1",
+      "title": "Towards Reliable Simulation-based Inference",
+      "authors": "Arnaud Delaunoy",
+      "submitted": "2026-03-09",
+      "track": "reliability",
+      "link": "https://arxiv.org/pdf/2603.08947v1"
     }
   ]
 }
