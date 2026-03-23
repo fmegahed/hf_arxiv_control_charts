@@ -1,75 +1,51 @@
 {
   "metadata": {
-    "generated_at": "2026-03-16T12:15:53Z",
-    "week_start": "2026-03-09",
-    "week_end": "2026-03-16",
+    "generated_at": "2026-03-23T12:15:03Z",
+    "week_start": "2026-03-16",
+    "week_end": "2026-03-23",
     "version": "3.1.0"
   },
   "summary": {
-    "total_papers": 7,
+    "total_papers": 4,
     "papers_by_track": {
-      "spc": 0,
+      "spc": 1,
       "exp_design": 2,
-      "reliability": 5
+      "reliability": 1
     }
   },
-  "synthesis": "The most useful “gut check” idea this week: we’re getting better at *knowing when our procedures are lying to us*—whether that’s privacy noise quietly breaking your hypothesis test, a bandit policy inflating false positives, or an ML posterior that looks confident because it’s under-trained. A common theme across these papers is turning fuzzy reliability concerns into something you can actually measure: power curves, coverage, calibration error, disclosure-risk bounds.\n\n### Privacy that you can reason about like a test plan\n\nFondeville et al. give a surprisingly practical reframing of differential privacy: treat membership inference as a hypothesis test, then interpret your privacy parameters as controlling an adversary’s best ROC curve. The nice new knob is **relative disclosure risk**—how much an attacker can multiplicatively update their belief after seeing the DP output.\n\nTwo takeaways for practitioners:\n\nIf you’re using **pure ε-DP**, you automatically get bounded relative disclosure risk (ρ ≤ e^ε). That’s the cleanest “safety case” statement in the batch.\n\nMechanism choice matters in a way we don’t always say out loud: **Laplace noise gives bounded disclosure risk; Gaussian noise gives unbounded ρ** (yet still avoids “blatant disclosure”). In other words, Gaussian can fail “gracefully,” but the worst-case belief update can still be arbitrarily large.\n\nThey also do something QE folks will appreciate: translate privacy noise into **test power loss** (worked example: Z-test on a private mean). Under their illustrative settings, strong privacy doesn’t necessarily torch your power once n is moderately sized.\n\n### Adaptive experiments: stop trusting your p-values\n\nLi et al. tackle the nasty, common situation where we run a multi-armed bandit to learn faster… and then report a classical t-test/ANOVA as if the data were i.i.d. Spoiler: Type I error inflates.\n\nTheir fix—**Algorithm-Induced Test (AIT) correction**—is conceptually simple: simulate your *exact same bandit algorithm* under a null world, then calibrate the critical value of your usual test statistic from that Monte Carlo null distribution. You keep the familiar test (t, ANOVA, Tukey), but you stop pretending the sampling plan didn’t matter.\n\nThe practical punchline: naive fixed thresholds produced false positive rates as high as ~0.13 in their settings; AIT brought it back to ~0.05. Even better, when they optimize the bandit design using an “experiment extension cost” tradeoff, they find ε-Thompson variants that can beat both uniform randomization and vanilla TS for a given power/cost target.\n\nIf you run adaptive A/Bs in manufacturing ops, clinical-ish monitoring, or materials discovery: this is one of the more “ready to try” ideas this week.\n\n### Reliability isn’t accuracy: uncertainty methods that behave differently in the real world\n\nRuijs et al. compare **MC Dropout** (Bayesian-ish uncertainty) vs **Inductive Conformal Prediction (ICP)** on CNNs. The result feels familiar but useful to see quantified:\n\nA higher-accuracy model (their VGG16 variant) can still be *more overconfident* and poorly calibrated.\n\nMC Dropout improved calibration a lot for GoogLeNet (ECE roughly halved), barely at all for VGG16.\n\nICP hits ~95% empirical coverage for both models, but the *prediction set sizes* expose ambiguity (the “Shirt” class explodes into larger sets).\n\nIf you need “reliability envelopes” for vision models on the shop floor, ICP’s coverage guarantee (under exchangeability) is a compelling baseline—even when Bayesian approximations don’t calibrate.\n\n### Degradation + telemetry budgets: active learning for satellite electronics\n\nLi et al. bring a very QE-flavored contribution: a hierarchical Wiener degradation model with nonlinear time transformation and stress covariates, plus **spatial correlation between neighboring components**. The key is the **two-stage active learning**: choose *which units* to sample (space-filling) and *when* to sample (penalized D-optimality).\n\nThe headline is data-efficiency: they report comparable or better reliability prediction accuracy with far fewer measurements—and show how assuming independence can bias you badly even if you monitor *more* units.\n\n### Simulation-based inference: making posteriors earn your trust\n\nDelaunoy’s dissertation is a sober reminder: neural SBI can give posteriors that look crisp and are simply overconfident. The proposed diagnostics center on **expected coverage** (simulation-based calibration-style), and the methodological push is “balancing” regularization (BNRE) plus Bayesian neural nets with functional priors to represent approximation uncertainty in low-simulation regimes.\n\nNo silver bullets, but a clear operational message: if you’re using SBI for reliability physics models or rare-event simulators, **coverage checks should be part of your verification plan**, not an afterthought.\n\n### DOE trend: batch design is becoming “distributional” and scalable\n\nTwo BOED papers point in the same direction: batch experimental design is moving beyond greedy coordinate exchange.\n\nBhattacharya et al. show that approximating EIG via a Gaussian/D-optimal surrogate and learning a **surrogate Fisher information** can make high-dimensional (even image-based) designs tractable—and materially shrink credible intervals for hard-to-identify memory parameters.\n\nSharrock et al. take a more theoretical route: lift batch designs to **probability measures**, add entropic regularization, and optimize via **Wasserstein gradient flows** with particle methods. The benefit is better exploration of multimodal utilities—exactly where standard gradient ascent tends to get stuck.\n\n### Question to sit with this week\n\nWe’re increasingly good at *procedural guardrails*—coverage for SBI, calibrated tests for bandits, bounded disclosure risk for DP. What’s the analogous guardrail you wish you had for your own reliability pipeline: a single diagnostic that tells you when the whole workflow is quietly violating its assumptions?",
+  "synthesis": "## QE ArXiv Watch Weekly — Week ending Mar 23, 2026 (4 papers)\n\nIf you’ve ever looked at a control chart and thought, “Sure… but how sure are we about *the model behind the chart*?”, this week had a satisfying answer: treat your kernel hyperparameters like uncertain inputs, push that uncertainty all the way through KPCA, and let the chart admit what it doesn’t know.\n\n### Control charts that come with error bars (and that’s a good thing)\n\nDuma et al. take kernel MSPC and do the thing we’ve all hand-waved: lengthscales, variances, noise terms—those “tuned” kernel settings are *epistemic* uncertainty, not fixed truth. They start with a deterministic kernel calibration (supervised or unsupervised), then run Bayesian inference over kernel parameters (MCMC flavors like NUTS/HMC included), and propagate posterior draws through kernel PCA to get **probabilistic T² and SPE charts**.\n\nWhat you get is practical: not just a point estimate for a statistic, but **credible bands** on the chart and uncertainty-aware contribution plots. On the Tennessee Eastman benchmark, the posterior-mean charts for a vanilla squared-exponential kernel materially improve detection for several faults (mean CI 0.71 → 0.79; some faults jump a lot). The credible bands stay tight in-control and widen under faults—especially SPE—so you can literally watch “model certainty” degrade when the plant goes off-script.\n\nA nuance worth noting: with ARD-SE kernels, posterior uncertainty shrinks and performance looks almost deterministic. That’s reassuring (the Bayesian machinery doesn’t invent drama when the model is well-identified), but it also hints at a rule of thumb: **probabilistic MSPC pays off most when your kernel is underdetermined by the data** (short histories, regime changes, messy feature scales).\n\nIf you’re maintaining KPCA/KPLS monitoring in production, this is one of the more “ready to try” ideas this week: you can bolt uncertainty propagation onto an existing pipeline, then use band width as a diagnostic for “are we extrapolating?”\n\n### Design of experiments is getting more “online” (and more honest about compute)\n\nTwo DOE papers land on the same theme: *sequential design is great—until it’s too slow*. Both attack the speed problem, but from opposite directions.\n\nZhu et al. stay in classical Bayesian design land, but make it genuinely sequential for **physical experiments informed by computer models** using the Kennedy–O’Hagan calibration/discrepancy setup. Their main criterion is mutual information between a candidate field run and the eventual predictive outputs, fully marginalized over parameter uncertainty. The nice practitioner detail: a hybrid adds a **local “predictive complexity” term** (gradients + neighborhood slope variation) so you don’t keep sampling only where the GP is uncertain but the function is boring.\n\nThe compute story is the punchline: nested Monte Carlo MI estimates are expensive, so they compress mixtures (whitening + k-means + smart merging) and use fast covariance updates. Reported wall-clock drops are big (e.g., ~901s → ~142s in a toy case; ~2762s → ~435s in JAK–STAT5). If you’ve avoided MI-style design because it melts your laptop, this is a credible path back in.\n\nStrouwen et al. go the other way: **amortize** sequential Bayesian design into a neural policy (a transformer) trained offline with differentiable simulation through an ODE solver. At runtime, the policy is effectively instantaneous (tens of microseconds). The methodological hook is targeted information gain via an sPCE bound, extended to handle nuisance parameters by marginalization—exactly what we want in real systems where noise scales or subject-specific effects shouldn’t hijack the design. For the DC motor example, they beat an online adaptive Bayesian baseline while being fast enough for tight control loops.\n\nThe connection between these DOE papers is bigger than it looks: we’re watching a split between (1) **making MI/EIG estimators cheaper and more stable** and (2) **learning a design policy so you don’t estimate MI at runtime at all**. If you run repeated campaigns (bioreactors, pharma PK, accelerated tests), amortization starts to look like a serious engineering play.\n\n### Reliability lesson of the week: calibration can’t fix information you threw away\n\nCharpentier et al. give a clean decomposition of proper scoring-rule loss (log loss, Brier, etc.) into parts you can act on. The key identity: when you compress features \\(X\\) into a score \\(S=s(X)\\), your expected loss splits into:\n\n- miscalibration (reliability) at the score level,\n- **grouping / information-loss from compressing \\(X \\to S\\)**,\n- irreducible uncertainty given \\(X\\).\n\nWhy you should care: post-hoc recalibration can drive miscalibration down, but it **cannot recover grouping loss**. So a perfectly calibrated but overly-coarse risk score can still be predictively poor—and no amount of isotonic regression will save it.\n\nThey also explain a frustration many of us have seen: ensembles/stacking can break calibration in surprising ways. Empirically (German Credit split), recalibration helps a GLM a lot on log-loss but hurts a random forest; averaging/stacking can degrade after recalibration. The decomposition makes that feel less mysterious: you’re changing the sigma-algebra you’re living in, and some “fixes” only operate within that information level.\n\n### Forward look\n\nWe’re inching toward QE workflows where models admit uncertainty explicitly: charts with credible bands, designs that adapt in real time, and forecast evaluations that separate “bad calibration” from “you collapsed the signal.” The question to chew on: in your environment, where are we currently treating *epistemic* uncertainty as if it were *noise*—and what decisions would change if we stopped?",
   "papers": [
     {
-      "id": "2603.12753v1",
-      "title": "Balancing the privacy-utility trade-off: How to draw reliable conclusions from private data",
-      "authors": "Raphaël de Fondeville",
-      "submitted": "2026-03-13",
-      "track": "reliability",
-      "link": "https://arxiv.org/pdf/2603.12753v1"
+      "id": "2603.19055v1",
+      "title": "Probabilistic multivariate statistical process control via kernel parameter uncertainty propagation",
+      "authors": "Zina-Sabrina Duma|Victoria Jorry|Ayesha Safraz|Maria Paola di Crosta|Tuomas Sihvonen|Lassi Roininen|Satu-Pia Reinikainen",
+      "submitted": "2026-03-19",
+      "track": "spc",
+      "link": "https://arxiv.org/pdf/2603.19055v1"
     },
     {
-      "id": "2603.12365v1",
-      "title": "Optimal Experimental Design for Reliable Learning of History-Dependent Constitutive Laws",
-      "authors": "Kaushik Bhattacharya|Lianghao Cao|Andrew Stuart",
-      "submitted": "2026-03-12",
+      "id": "2603.16756v1",
+      "title": "Sequential Bayesian Experimental Design for Prediction in Physical Experiments Informed by Computer Models",
+      "authors": "Hao Zhu|Markus Hainy",
+      "submitted": "2026-03-17",
       "track": "exp_design",
-      "link": "https://arxiv.org/pdf/2603.12365v1"
+      "link": "https://arxiv.org/pdf/2603.16756v1"
     },
     {
-      "id": "2603.12102v1",
-      "title": "Wasserstein Gradient Flows for Batch Bayesian Optimal Experimental Design",
-      "authors": "Louis Sharrock",
-      "submitted": "2026-03-12",
+      "id": "2603.16146v1",
+      "title": "Deep Adaptive Model-Based Design of Experiments",
+      "authors": "Arno Strouwen|Sebastian Micluţa-Câmpeanu",
+      "submitted": "2026-03-17",
       "track": "exp_design",
-      "link": "https://arxiv.org/pdf/2603.12102v1"
+      "link": "https://arxiv.org/pdf/2603.16146v1"
     },
     {
-      "id": "2603.11267v1",
-      "title": "A Statistically Reliable Optimization Framework for Bandit Experiments in Scientific Discovery",
-      "authors": "Tong Li|Travis Mandel|Goldie Phillips|Anna Rafferty|Eric M. Schwartz|Dehan Kong|Joseph J. Williams",
-      "submitted": "2026-03-11",
+      "id": "2603.15232v1",
+      "title": "Decomposing Probabilistic Scores: Reliability, Information Loss and Uncertainty",
+      "authors": "Arthur Charpentier|Agathe Fernandes-Machado",
+      "submitted": "2026-03-16",
       "track": "reliability",
-      "link": "https://arxiv.org/pdf/2603.11267v1"
-    },
-    {
-      "id": "2603.10731v1",
-      "title": "Beyond Accuracy: Reliability and Uncertainty Estimation in Convolutional Neural Networks",
-      "authors": "Sanne Ruijs|Alina Kosiakova|Farrukh Javed",
-      "submitted": "2026-03-11",
-      "track": "reliability",
-      "link": "https://arxiv.org/pdf/2603.10731v1"
-    },
-    {
-      "id": "2603.09058v1",
-      "title": "Adaptive Active Learning for Online Reliability Prediction of Satellite Electronics",
-      "authors": "Shixiang Li|Yubin Tian|Dianpeng Wang|Piao Chen|Mengying Ren",
-      "submitted": "2026-03-10",
-      "track": "reliability",
-      "link": "https://arxiv.org/pdf/2603.09058v1"
-    },
-    {
-      "id": "2603.08947v1",
-      "title": "Towards Reliable Simulation-based Inference",
-      "authors": "Arnaud Delaunoy",
-      "submitted": "2026-03-09",
-      "track": "reliability",
-      "link": "https://arxiv.org/pdf/2603.08947v1"
+      "link": "https://arxiv.org/pdf/2603.15232v1"
     }
   ]
 }
