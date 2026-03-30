@@ -1,51 +1,59 @@
 {
   "metadata": {
-    "generated_at": "2026-03-23T12:15:03Z",
-    "week_start": "2026-03-16",
-    "week_end": "2026-03-23",
+    "generated_at": "2026-03-30T12:17:56Z",
+    "week_start": "2026-03-23",
+    "week_end": "2026-03-30",
     "version": "3.1.0"
   },
   "summary": {
-    "total_papers": 4,
+    "total_papers": 5,
     "papers_by_track": {
-      "spc": 1,
-      "exp_design": 2,
+      "spc": 0,
+      "exp_design": 4,
       "reliability": 1
     }
   },
-  "synthesis": "## QE ArXiv Watch Weekly — Week ending Mar 23, 2026 (4 papers)\n\nIf you’ve ever looked at a control chart and thought, “Sure… but how sure are we about *the model behind the chart*?”, this week had a satisfying answer: treat your kernel hyperparameters like uncertain inputs, push that uncertainty all the way through KPCA, and let the chart admit what it doesn’t know.\n\n### Control charts that come with error bars (and that’s a good thing)\n\nDuma et al. take kernel MSPC and do the thing we’ve all hand-waved: lengthscales, variances, noise terms—those “tuned” kernel settings are *epistemic* uncertainty, not fixed truth. They start with a deterministic kernel calibration (supervised or unsupervised), then run Bayesian inference over kernel parameters (MCMC flavors like NUTS/HMC included), and propagate posterior draws through kernel PCA to get **probabilistic T² and SPE charts**.\n\nWhat you get is practical: not just a point estimate for a statistic, but **credible bands** on the chart and uncertainty-aware contribution plots. On the Tennessee Eastman benchmark, the posterior-mean charts for a vanilla squared-exponential kernel materially improve detection for several faults (mean CI 0.71 → 0.79; some faults jump a lot). The credible bands stay tight in-control and widen under faults—especially SPE—so you can literally watch “model certainty” degrade when the plant goes off-script.\n\nA nuance worth noting: with ARD-SE kernels, posterior uncertainty shrinks and performance looks almost deterministic. That’s reassuring (the Bayesian machinery doesn’t invent drama when the model is well-identified), but it also hints at a rule of thumb: **probabilistic MSPC pays off most when your kernel is underdetermined by the data** (short histories, regime changes, messy feature scales).\n\nIf you’re maintaining KPCA/KPLS monitoring in production, this is one of the more “ready to try” ideas this week: you can bolt uncertainty propagation onto an existing pipeline, then use band width as a diagnostic for “are we extrapolating?”\n\n### Design of experiments is getting more “online” (and more honest about compute)\n\nTwo DOE papers land on the same theme: *sequential design is great—until it’s too slow*. Both attack the speed problem, but from opposite directions.\n\nZhu et al. stay in classical Bayesian design land, but make it genuinely sequential for **physical experiments informed by computer models** using the Kennedy–O’Hagan calibration/discrepancy setup. Their main criterion is mutual information between a candidate field run and the eventual predictive outputs, fully marginalized over parameter uncertainty. The nice practitioner detail: a hybrid adds a **local “predictive complexity” term** (gradients + neighborhood slope variation) so you don’t keep sampling only where the GP is uncertain but the function is boring.\n\nThe compute story is the punchline: nested Monte Carlo MI estimates are expensive, so they compress mixtures (whitening + k-means + smart merging) and use fast covariance updates. Reported wall-clock drops are big (e.g., ~901s → ~142s in a toy case; ~2762s → ~435s in JAK–STAT5). If you’ve avoided MI-style design because it melts your laptop, this is a credible path back in.\n\nStrouwen et al. go the other way: **amortize** sequential Bayesian design into a neural policy (a transformer) trained offline with differentiable simulation through an ODE solver. At runtime, the policy is effectively instantaneous (tens of microseconds). The methodological hook is targeted information gain via an sPCE bound, extended to handle nuisance parameters by marginalization—exactly what we want in real systems where noise scales or subject-specific effects shouldn’t hijack the design. For the DC motor example, they beat an online adaptive Bayesian baseline while being fast enough for tight control loops.\n\nThe connection between these DOE papers is bigger than it looks: we’re watching a split between (1) **making MI/EIG estimators cheaper and more stable** and (2) **learning a design policy so you don’t estimate MI at runtime at all**. If you run repeated campaigns (bioreactors, pharma PK, accelerated tests), amortization starts to look like a serious engineering play.\n\n### Reliability lesson of the week: calibration can’t fix information you threw away\n\nCharpentier et al. give a clean decomposition of proper scoring-rule loss (log loss, Brier, etc.) into parts you can act on. The key identity: when you compress features \\(X\\) into a score \\(S=s(X)\\), your expected loss splits into:\n\n- miscalibration (reliability) at the score level,\n- **grouping / information-loss from compressing \\(X \\to S\\)**,\n- irreducible uncertainty given \\(X\\).\n\nWhy you should care: post-hoc recalibration can drive miscalibration down, but it **cannot recover grouping loss**. So a perfectly calibrated but overly-coarse risk score can still be predictively poor—and no amount of isotonic regression will save it.\n\nThey also explain a frustration many of us have seen: ensembles/stacking can break calibration in surprising ways. Empirically (German Credit split), recalibration helps a GLM a lot on log-loss but hurts a random forest; averaging/stacking can degrade after recalibration. The decomposition makes that feel less mysterious: you’re changing the sigma-algebra you’re living in, and some “fixes” only operate within that information level.\n\n### Forward look\n\nWe’re inching toward QE workflows where models admit uncertainty explicitly: charts with credible bands, designs that adapt in real time, and forecast evaluations that separate “bad calibration” from “you collapsed the signal.” The question to chew on: in your environment, where are we currently treating *epistemic* uncertainty as if it were *noise*—and what decisions would change if we stopped?",
+  "synthesis": "### QE ArXiv Watch Weekly — Week ending Mar 30, 2026 (5 papers)\n\nIf you’ve ever wanted to *optimize a design over a continuous knob-space* (sensor settings, control profiles, sampling schedules) without paying the “re-run inference from scratch” tax every time you twist the knob—this week had a couple of genuinely practical ideas. The common thread: make the objective differentiable/cheap enough that design becomes something you can *search*, not something you do by hand-waving and a few grid points.\n\n#### Design when your likelihood is a simulator: amortize the Bayes factor\nLeeney et al. push a neat trick for discovery-style experiments: instead of estimating evidence/Bayes factors separately for each proposed design, they train a neural ratio estimator that *takes the design as an input* (Conditional Neural Bayes Ratio Estimation, cNBRE). After that, you can sweep a continuous design space quickly and optimize a decision utility like “probability the Bayes factor clears a 3σ threshold.”\n\nWhat’s compelling for practitioners isn’t the cosmology application—it’s the workflow: one amortized surrogate that supports global exploration, and potentially gradient-based optimization because the surrogate is differentiable. Their validation against nested sampling (1,600 matched simulations) is reassuring in the decision-relevant regime; the surrogate saturates only at very high log Bayes factors where, operationally, you already “won.”\n\nImagine doing this for “detect a weak degradation signal” with designs like sampling rate, test duration, sensor placement, filtering choices—anything continuous.\n\n#### OED for controlled dynamical systems: EIG without the pain (and adjoints that actually work)\nMontella et al. take on Bayesian optimal experimental design in ODE-driven systems where you choose both controls and when/where to measure under a budget. Exact expected information gain (EIG) is often too expensive, and a lot of approximations don’t play nicely with adjoint methods (so optimization becomes brittle).\n\nTheir move is to build *time-additive surrogate objectives* that are adjoint-compatible. Two flavors matter:\n\n- An “instantaneous/myopic” surrogate that’s easy but provably **upper-bounds** EIG (it double-counts information because it ignores redundancy between time points). Useful—if you remember it can over-focus measurements.\n- A “Gaussian-tilting” surrogate that reweights the prior using accumulated Fisher information; it’s **exact in linear–Gaussian** cases and empirically more robust under non-Gaussian or multimodal priors (with a multi-center extension).\n\nFor anyone doing system ID, accelerated life testing with controlled inputs, or adaptive diagnostics: this is the most “ready to try” design math this week—especially if you already have adjoints in your simulation stack.\n\n#### Cost-aware causal design: measure less, estimate better (front-door/back-door)\nMareis et al. bring experimental design thinking to a very QE problem: measurement is expensive, and you can’t always observe everything on everyone. They consider staged data collection (treatment for all, mediators for some, outcomes for some) with user-defined costs, and derive *optimal sampling propensities* that minimize asymptotic variance under a budget—grounded in semiparametric efficiency / influence functions.\n\nThe headline is not theoretical elegance (though it’s there); it’s the practical result: **~5% to ~32% variance reduction at matched cost** versus “measure everything” in several datasets, including an industrial assembly example (back-door case). The optimal policy often hits 0/1 boundaries—exactly what you’d expect when some units are high-leverage and worth the extra measurement.\n\nIf you’re designing observational studies, audits, or instrumentation plans with partial measurement, this is a strong template for “spend the budget where it moves the estimator.”\n\n#### Reliability: calibrated neural operators for time-dependent failure probability\nGarg et al. target time-dependent reliability for nonlinear dynamical systems under stochastic excitation—where brute-force Monte Carlo is punishing. They learn an operator from input load histories to full response trajectories (DeepONet-like), add Bayesian predictive uncertainty, then *conformalize* intervals to get finite-sample coverage guarantees.\n\nTwo things stand out for reliability folks:\n1) conformal calibration actually fixes the classic under-coverage problem (they report ≥95% coverage across time steps, while the uncalibrated model misses often), and  \n2) the “spiking” branch network is aimed at energy-efficient inference—interesting if you care about deployment at scale.\n\nIf you’re using surrogates to compute first-passage failure probabilities, the conformal layer is the most transferable idea: it’s a bolt-on sanity check for uncertainty.\n\n#### A quick detour: LLMs as DDD sparring partners (not architects)\nEisenreich et al. report an industrial case study using LLM prompting to assist Domain-Driven Design. The punchline is pragmatic: LLMs help a lot with early artifacts (glossaries, event flows, candidate bounded contexts), but errors compound and the downstream “aggregate design” and “map to architecture” steps become unreliable without heavy human steering.\n\nFor QE teams building internal platforms/tools: treat LLMs like a fast facilitator for eliciting assumptions—not a design authority.\n\n---\n\n**Question to take into next week:** We’re getting better at *designing* experiments under simulation, control, and cost constraints—but are we ready to standardize “calibration checks” (like conformal coverage) for design surrogates too, not just predictive models? That feels like the missing bridge between clever optimization and trustworthy decisions.",
   "papers": [
     {
-      "id": "2603.19055v1",
-      "title": "Probabilistic multivariate statistical process control via kernel parameter uncertainty propagation",
-      "authors": "Zina-Sabrina Duma|Victoria Jorry|Ayesha Safraz|Maria Paola di Crosta|Tuomas Sihvonen|Lassi Roininen|Satu-Pia Reinikainen",
-      "submitted": "2026-03-19",
-      "track": "spc",
-      "link": "https://arxiv.org/pdf/2603.19055v1"
-    },
-    {
-      "id": "2603.16756v1",
-      "title": "Sequential Bayesian Experimental Design for Prediction in Physical Experiments Informed by Computer Models",
-      "authors": "Hao Zhu|Markus Hainy",
-      "submitted": "2026-03-17",
+      "id": "2603.26489v1",
+      "title": "Conditional Neural Bayes Ratio Estimation for Experimental Design Optimisation",
+      "authors": "S. A. K. Leeney|T. Gessey-Jones|W. J. Handley|E. de Lera Acedo|H. T. J. Bevins|J. L. Tutt",
+      "submitted": "2026-03-27",
       "track": "exp_design",
-      "link": "https://arxiv.org/pdf/2603.16756v1"
+      "link": "https://arxiv.org/pdf/2603.26489v1"
     },
     {
-      "id": "2603.16146v1",
-      "title": "Deep Adaptive Model-Based Design of Experiments",
-      "authors": "Arno Strouwen|Sebastian Micluţa-Câmpeanu",
-      "submitted": "2026-03-17",
+      "id": "2603.26431v1",
+      "title": "Adjoint-Compatible Surrogates of the Expected Information Gain for Optimal Experimental Design in Controlled Dynamical Systems",
+      "authors": "Luc de Montella|Sebastian Sager",
+      "submitted": "2026-03-27",
       "track": "exp_design",
-      "link": "https://arxiv.org/pdf/2603.16146v1"
+      "link": "https://arxiv.org/pdf/2603.26431v1"
     },
     {
-      "id": "2603.15232v1",
-      "title": "Decomposing Probabilistic Scores: Reliability, Information Loss and Uncertainty",
-      "authors": "Arthur Charpentier|Agathe Fernandes-Machado",
-      "submitted": "2026-03-16",
+      "id": "2603.26244v1",
+      "title": "Automating Domain-Driven Design: Experience with a Prompting Framework",
+      "authors": "Tobias Eisenreich|Husein Jusic|Stefan Wagner",
+      "submitted": "2026-03-27",
+      "track": "exp_design",
+      "link": "https://arxiv.org/pdf/2603.26244v1"
+    },
+    {
+      "id": "2603.22024v1",
+      "title": "Cost-Aware Optimized Front-Door Experimental Design",
+      "authors": "Leopold Mareis|Mathias Drton",
+      "submitted": "2026-03-23",
+      "track": "exp_design",
+      "link": "https://arxiv.org/pdf/2603.22024v1"
+    },
+    {
+      "id": "2603.21678v1",
+      "title": "CoNBONet: Conformalized Neuroscience-inspired Bayesian Operator Network for Reliability Analysis",
+      "authors": "Shailesh Garg|Souvik Chakraborty",
+      "submitted": "2026-03-23",
       "track": "reliability",
-      "link": "https://arxiv.org/pdf/2603.15232v1"
+      "link": "https://arxiv.org/pdf/2603.21678v1"
     }
   ]
 }
