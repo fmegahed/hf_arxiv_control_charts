@@ -7,7 +7,7 @@
     <language>en-us</language>
     <copyright>CC BY 4.0 - QE ArXiv Watch</copyright>
     <managingEditor>noreply@example.com (QE ArXiv Watch)</managingEditor>
-    <lastBuildDate>Mon, 06 Apr 2026 12:16:15 +0000</lastBuildDate>
+    <lastBuildDate>Mon, 13 Apr 2026 12:22:10 +0000</lastBuildDate>
     <ttl>10080</ttl>
     <image>
       <url>https://huggingface.co/spaces/fmegahed/arxiv_control_charts/resolve/main/www/favicon.svg</url>
@@ -16,60 +16,45 @@
     </image>
     <atom:link href="https://huggingface.co/spaces/fmegahed/arxiv_control_charts/resolve/main/data/weekly_digest.xml" rel="self" type="application/rss+xml"/>
     <item>
-      <title>QE ArXiv Watch: Week of March 30 - April 06, 2026</title>
+      <title>QE ArXiv Watch: Week of April 06 - April 13, 2026</title>
       <link>https://huggingface.co/spaces/fmegahed/arxiv_control_charts</link>
-      <guid isPermaLink="false">qe-weekly-2026-04-06</guid>
-      <pubDate>Mon, 06 Apr 2026 12:16:15 +0000</pubDate>
+      <guid isPermaLink="false">qe-weekly-2026-04-13</guid>
+      <pubDate>Mon, 13 Apr 2026 12:22:10 +0000</pubDate>
       <description><![CDATA[
-<h3>QE ArXiv Watch Weekly (week ending Apr 06, 2026)  </h3>
-<em>3 papers — DOE (1), SPC/monitoring & dynamics (2)</em>
+<p>The most striking theme this week: we’re getting <em>serious</em> about moving “Bayesian optimal” ideas out of the toy-problem corner and into places where the matrices are huge, the constraints are real, and you still need an answer before the next shift starts.</p>
 
-<p>The coolest thread this week is <strong>“geometry-aware correction”</strong>: whether you’re updating an optimizer with only a few pricey high‑fidelity runs, or trying to monitor a structure whose sensors won’t stop drifting with temperature, the winning move is the same—<strong>separate the signal you care about from the confounders, then spend your limited budget where it actually reduces uncertainty</strong>.</p>
+<h4>When D-optimal design meets “national lab scale”</h4>
+Venkat et al. take Bayesian D-optimal sensor placement—maximize expected information gain—and do the unglamorous but crucial work: making it computable when your parameter field has <strong>>10⁹ DOF</strong> and your candidate set is hundreds of sensors.
 
-<h4>When high-fidelity runs cost a fortune: update the optimizer <em>and</em> learn the discrepancy  </h4>
-Madhavan et al. give a very practitioner-friendly answer to a painful situation: you’ve got a <strong>cheap low‑fidelity model</strong> (fast but biased) and a <strong>high‑fidelity model</strong> (slow/expensive). You want the high‑fidelity optimum, but you can only afford a handful of high‑fi evaluations.
+<p>The key move is a classic QE-friendly trick: stop thinking in parameter space and rewrite the objective in <strong>data space</strong>. Using determinant identities plus a Sherman–Morrison–Woodbury-style Hessian, the design criterion collapses to maximizing a <strong>log det of a dense submatrix</strong> (for isotropic noise, log det<code>K_S</code>). You still have an NP-hard subset selection problem, but now the expensive part is linear algebra you can actually optimize.</p>
 
-<p>The trick is to treat the low‑fi optimum as a starting point, then <strong>update the solution using sensitivity information</strong>, <em>while simultaneously learning the low→high discrepancy</em> in the neighborhood that matters: near your current “best guess” optimizer.</p>
+<p>Their distributed greedy solver is basically “Cholesky updates done right”: block updates + Schur complements so you don’t refactor from scratch every time you add a sensor. Reported scaling shifts from ~O(k³) to ~O(k²) per candidate (k = sensors already selected), and the HPC numbers are wild—near-ideal scaling out to hundreds of GPUs. Practically: in a Cascadia Subduction Zone digital twin, they pick <strong>175 sensors out of 600</strong> and beat random designs decisively on the D-opt objective.</p>
 
-<p>Two pieces make this click:</p>
+<p>If you’ve ever wanted to use Bayesian OED for real monitoring networks (structural health, process sensors, environmental sensing) but got stuck at “nice theory, impossible compute,” this is a playbook worth stealing: (1) rewrite the criterion into a tractable matrix form, (2) exploit incremental factorization updates, (3) parallelize the life out of it.</p>
 
-<ul>
-<li><strong>Pseudo-time continuation (predictor–corrector)</strong>: instead of one big linearized jump (which can stagnate when the linearization is too wrong), you take a few smaller continuation steps. Their experiments show objective error drops monotonically with more continuation steps, and <strong>~3–4 steps</strong> is often enough before other numerical errors dominate.</li>
+<h4>Bayesian design, but for a scanner schedule you can actually run</h4>
+Dai et al. are doing Bayesian experimental design too, but with a very different constraint set: a clinical 3T MRI scanner, fixed scan-time structure, and a protocol space that’s discrete and messy (pulse types, timings, b-values across 13 measurements).
 
-<li><strong>Sequential Bayesian OED for where to run high‑fi next</strong>: you don’t just sample discrepancy points randomly. You choose the next high‑fidelity evaluation to <strong>minimize expected posterior variance of the discrepancy</strong> <em>in a neighborhood around the updated solution</em>. There’s an adaptive “radius” that balances exploration vs. exploitation as you home in.</li>
+<p>They maximize <strong>Expected Information Gain</strong> and use <strong>Gaussian-process Bayesian optimization</strong> to search protocol space. The punchline is pleasantly pragmatic: the optimized protocol often <em>drops</em> a commonly used measurement type (OGSEn2) at typical SNRs and reallocates effort toward <strong>higher b-values</strong> and jointly tuned timing. Across simulated SNR 5–40, they improve both classification (random forest separability of microstructure classes) and parameter estimation RMSE without increasing scan time; the in-vivo canine tumor example shows smoother maps with fewer outliers.</p>
 
-<p></ul>
-The payoff is the kind of thing a QE lead actually cares about: in a contaminant source ID problem, they report roughly <strong>two orders of magnitude reduction in the high‑fidelity objective</strong> with <strong>≤5 high‑fi evaluations</strong>, improving each step (~42% average improvement per added point).</p>
+<p>For DOE practitioners: this is a reminder that EIG isn’t just for elegant plots—it can directly translate into “same budget, more signal,” especially when paired with Bayesian optimization to handle ugly design spaces.</p>
 
-<p>If you do simulation-based optimization (digital twins, expensive FEA, PDE-constrained design), this is close to “ready to try”: it’s a disciplined recipe for <strong>turning 2–5 gold-plated simulations into real movement on the true objective</strong>, instead of spending them on points that don’t change decisions.</p>
+<h4>Reliability optimization without the double-loop pain</h4>
+Moustapha et al. tackle a perennial RBDO bottleneck: evaluating failure probabilities inside an optimizer usually means a <em>nested</em> simulation loop. Their workaround is conceptually simple and kind of brilliant: “stochasticize” the limit state by absorbing the random inputs into a latent variable simulator, leaving the emulator to live purely in <strong>design space</strong>.
 
-<h4>Monitoring under changing environments: stop “temperature PCA hacks” and adjust the covariance too  </h4>
-Neumann et al. take aim at a classic SHM/SPC failure mode: your control chart is “detecting weather,” not damage. Mean-centering by temperature helps a bit, but the real killer is that <strong>variance and correlation structures change with temperature</strong> too.
+<p>Then they fit a stochastic emulator of the <em>conditional distribution</em> of the limit state given design—either (i) a generalized lambda distribution with design-dependent parameters (GLaM) or (ii) a latent-variable stochastic PCE (SPCE). With that, probabilistic constraints become smooth deterministic functions (often semi-analytic), and you can run gradient-based optimization without inner Monte Carlo. The reported speedups—<strong>2–3 orders of magnitude</strong>—are exactly what you’d hope for when scaling to <strong>100+ uncertainty dimensions</strong>, where Kriging starts to wobble or bias.</p>
 
-<p>Their method does something subtle but powerful:</p>
+<p>If you’re doing reliability-constrained design with high-dimensional uncertainty (spatial corrosion, loads modeled as fields, many random effects), this “emulate the distribution, not just the mean” framing feels like a genuinely usable direction.</p>
 
-<p>1. Estimate a <strong>temperature-conditional covariance</strong> via kernel smoothing.  
-2. Do <strong>conditional PCA</strong> to get scores standardized <em>given temperature</em>.  
-3. <strong>Reconstruct features back on the original physical scale</strong>, but with confounder effects removed from both mean and covariance.  
-4. Monitor with <strong>MEWMA</strong>, calibrating control limits to a target ARL using <strong>block bootstrap</strong> (acknowledging temporal dependence).</p>
+<h4>Post-hoc uncertainty when your errors aren’t symmetric</h4>
+Bandy et al. extend ACCRUE for deterministic predictors by letting the predictive error be <strong>asymmetric</strong>: two-piece Gaussian or asymmetric Laplace, with a NN mapping inputs to distribution parameters. The training objective balances sharpness (CRPS) and calibration (PIT-based reliability), with a practical (if slightly brute-force) grid search for the tradeoff weight.
 
-<p>On a bridge load-test dataset with “added mass” damage scenarios, the headline is brutal for the baselines: <strong>0% probability of detection</strong> for (i) unsupervised PCA omission and (ii) mean-only (partial) adjustment—while the conditional method lands <strong>~64% to 100% POD</strong> across smoothing settings, <em>with fewer false alarms</em> (as low as 0.11%–0.39%).</p>
+<p>The interesting takeaway isn’t that it beats everything on CRPS—it’s that you can learn <em>input-dependent skew</em> in the residuals, which is common in reliability contexts (think underprediction penalties, saturation, one-sided physics). They also show the limits: under misspecification (gamma errors), 50% intervals look fine while 95% can under-cover—useful humility for anyone selling “calibrated UQ” on messy data.</p>
 
-<p>If you’re doing condition monitoring with strong environmental/operational variability (temperature, humidity, load regime), the message is: <strong>don’t just deconfound the mean—deconfound the covariance</strong>, or your multivariate chart is still flying blind.</p>
+<h4>The connecting thread</h4>
+Across all four: we’re seeing a shift from “Bayesian/uncertainty-aware methods exist” to “here’s how you make them run under real constraints”—GPU memory limits, scan-time protocols, 105-D uncertainty, asymmetric cost of error.
 
-<h4>A “control chart” that’s literally geometry: alignment as a dial for irreversibility  </h4>
-Aghion et al. are more theory-forward, but there’s a concept worth stealing: they define an instantaneous correlation <code>r(t)</code> between <strong>external driving force</strong> and an <strong>entropic/information force</strong> in overdamped stochastic systems. Entropy production depends not just on force magnitudes, but on <strong>their alignment</strong>.
-
-<p>For a driven harmonic trap they get a clean, measurable expression:
-<pre><code>
-r(t)=-\frac{σ(t)}{√(\Delta^2(t)+σ^2(t))}
-</code></pre>
-So the “irreversibility regime” is basically governed by the ratio of lag to fluctuations. They even draw “geometric control charts” mapping operating regimes (constant velocity vs sinusoidal driving) by where you sit in that alignment space.</p>
-
-<p>Why should a QE/SPC person care? Because it’s a reminder that sometimes the right monitoring statistic isn’t another residual—it’s an interpretable <strong>geometry-of-forces</strong> summary that tells you whether you’re in a high-dissipation regime even when mean behavior looks “stalled.”</p>
-
-<h4>What I’m pondering for next week  </h4>
-Across all three: we keep inching toward monitoring and optimization workflows that are <strong>explicitly conditional</strong>—conditional on environment, conditional on model discrepancy, conditional on operating regime. The question is: in your plant or lab, what’s the biggest “hidden conditional” you’re still treating as noise—and what would change if you modeled it instead?<h4>Featured Papers This Week</h4><ul><li><strong>Madhavan et al.</strong>: <a href="https://arxiv.org/pdf/2604.02253v1">Hyper-differential sensitivity analysis with respect to model discrepancy: Sequential optimal experimental design</a> <em>(Experimental Design)</em></li><li><strong>Neumann et al.</strong>: <a href="https://arxiv.org/pdf/2604.00662v1">Feature Reconstruction and Monitoring of Load Test Data under Varying Environmental Conditions</a> <em>(Control Charts)</em></li><li><strong>Aghion et al.</strong>: <a href="https://arxiv.org/pdf/2603.29416v1">Force Geometry and Irreversibility in Nonequilibrium Dynamics</a> <em>(Control Charts)</em></li></ul><hr/><p><strong>Explore More:</strong> Visit the <a href="https://huggingface.co/spaces/fmegahed/arxiv_control_charts">QE ArXiv Watch Dashboard</a> to browse all papers with AI summaries, interactive filtering, and paper chat.</p><p style="color: #666; font-size: 0.9em;">This digest is automatically generated every Monday. Questions or feedback? Open an issue on our <a href="https://github.com/fmegahed/arxiv_control_charts">GitHub repository</a>.</p>
+<p>Worth pondering for next week: where in our QE workflows are we still treating uncertainty as an afterthought because the <em>computational form</em> is inconvenient—and what would it look like to do the Venkat/Moustapha move and reformulate the problem until it becomes something we can optimize incrementally and at scale?</p><h4>Featured Papers This Week</h4><ul><li><strong>Venkat et al.</strong>: <a href="https://arxiv.org/pdf/2604.08812v1">Sensor Placement for Tsunami Early Warning via Large-Scale Bayesian Optimal Experimental Design</a> <em>(Experimental Design)</em></li><li><strong>Bandy et al.</strong>: <a href="https://arxiv.org/pdf/2604.08755v1">Accurate and Reliable Uncertainty Estimates for Deterministic Predictions Extensions to Under and Overpredictions</a> <em>(Reliability)</em></li><li><strong>Dai et al.</strong>: <a href="https://arxiv.org/pdf/2604.06020v1">Optimizing IMPULSED Acquisition Protocols for Clinical 3T Scanners Through Bayesian Experimental Design</a> <em>(Experimental Design)</em></li><li><strong>Moustapha et al.</strong>: <a href="https://arxiv.org/pdf/2604.05759v1">High-dimensional reliability-based design optimization using stochastic emulators</a> <em>(Reliability)</em></li></ul><hr/><p><strong>Explore More:</strong> Visit the <a href="https://huggingface.co/spaces/fmegahed/arxiv_control_charts">QE ArXiv Watch Dashboard</a> to browse all papers with AI summaries, interactive filtering, and paper chat.</p><p style="color: #666; font-size: 0.9em;">This digest is automatically generated every Monday. Questions or feedback? Open an issue on our <a href="https://github.com/fmegahed/arxiv_control_charts">GitHub repository</a>.</p>
 ]]></description>
     </item>
   </channel>
