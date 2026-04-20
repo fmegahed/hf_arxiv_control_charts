@@ -7,7 +7,7 @@
     <language>en-us</language>
     <copyright>CC BY 4.0 - QE ArXiv Watch</copyright>
     <managingEditor>noreply@example.com (QE ArXiv Watch)</managingEditor>
-    <lastBuildDate>Mon, 13 Apr 2026 12:22:10 +0000</lastBuildDate>
+    <lastBuildDate>Mon, 20 Apr 2026 12:23:55 +0000</lastBuildDate>
     <ttl>10080</ttl>
     <image>
       <url>https://huggingface.co/spaces/fmegahed/arxiv_control_charts/resolve/main/www/favicon.svg</url>
@@ -16,45 +16,48 @@
     </image>
     <atom:link href="https://huggingface.co/spaces/fmegahed/arxiv_control_charts/resolve/main/data/weekly_digest.xml" rel="self" type="application/rss+xml"/>
     <item>
-      <title>QE ArXiv Watch: Week of April 06 - April 13, 2026</title>
+      <title>QE ArXiv Watch: Week of April 13 - April 20, 2026</title>
       <link>https://huggingface.co/spaces/fmegahed/arxiv_control_charts</link>
-      <guid isPermaLink="false">qe-weekly-2026-04-13</guid>
-      <pubDate>Mon, 13 Apr 2026 12:22:10 +0000</pubDate>
+      <guid isPermaLink="false">qe-weekly-2026-04-20</guid>
+      <pubDate>Mon, 20 Apr 2026 12:23:55 +0000</pubDate>
       <description><![CDATA[
-<p>The most striking theme this week: we’re getting <em>serious</em> about moving “Bayesian optimal” ideas out of the toy-problem corner and into places where the matrices are huge, the constraints are real, and you still need an answer before the next shift starts.</p>
+<p>The theme I couldn’t shake this week: <strong>we’re finally designing and monitoring systems the way they actually fail</strong>—sensors drop out, proxies lie in subgroups, and early-run control limits aren’t “asymptotic enough” to pretend otherwise.</p>
 
-<h4>When D-optimal design meets “national lab scale”</h4>
-Venkat et al. take Bayesian D-optimal sensor placement—maximize expected information gain—and do the unglamorous but crucial work: making it computable when your parameter field has <strong>>10⁹ DOF</strong> and your candidate set is hundreds of sensors.
+<h4>Design that assumes the accelerometer will betray you  </h4>
+White et al. go after a problem anyone who’s instrumented a big structure recognizes: you plan a beautiful vibration test… and then a sensor clips, drops, or quietly dies.
 
-<p>The key move is a classic QE-friendly trick: stop thinking in parameter space and rewrite the objective in <strong>data space</strong>. Using determinant identities plus a Sherman–Morrison–Woodbury-style Hessian, the design criterion collapses to maximizing a <strong>log det of a dense submatrix</strong> (for isotropic noise, log det<code>K_S</code>). You still have an NP-hard subset selection problem, but now the expensive part is linear algebra you can actually optimize.</p>
+<p>What’s nice here is the <em>practical</em> robustness framing. Instead of designing for a single “ideal” Fisher information matrix, they design to do well <strong>on average across failure scenarios</strong> (including clipping treated as dropout), or via <strong>explicit per-sensor failure probabilities</strong>. And they make it computationally workable for a 267-candidate sensor set by relaxing binary “pick/not pick” decisions into continuous weights—then pushing those weights back toward 0/1 during optimization with a <strong>double-well penalty</strong> (so you don’t have to do crude rounding at the end).</p>
 
-<p>Their distributed greedy solver is basically “Cholesky updates done right”: block updates + Schur complements so you don’t refactor from scratch every time you add a sensor. Reported scaling shifts from ~O(k³) to ~O(k²) per candidate (k = sensors already selected), and the HPC numbers are wild—near-ideal scaling out to hundreds of GPUs. Practically: in a Cascadia Subduction Zone digital twin, they pick <strong>175 sensors out of 600</strong> and beat random designs decisively on the D-opt objective.</p>
+<p>Two things to take to practice:
+<ul>
+<li>If you can estimate dropout probabilities by location/environment, the probability-weighted robust objective changes the chosen sensors and improves average parameter/prediction MSE under many simulated failures.</li>
+<li>If you <em>can’t</em> estimate probabilities, scenario-averaging is a clean alternative—and it naturally accommodates clipping scenarios.</li></p>
 
-<p>If you’ve ever wanted to use Bayesian OED for real monitoring networks (structural health, process sensors, environmental sensing) but got stuck at “nice theory, impossible compute,” this is a playbook worth stealing: (1) rewrite the criterion into a tractable matrix form, (2) exploit incremental factorization updates, (3) parallelize the life out of it.</p>
+<p></ul>
+Also worth a skeptical nod: in one “one-sensor-failure” setting, the robust and classical <em>binary</em> D-optimal designs coincided. Translation: sometimes D-optimality is already pretty robust. But the fractional solutions showed meaningful gains in worst/average loss when a “critical” sensor fails—exactly the kind of brittleness we see in the field.</p>
 
-<h4>Bayesian design, but for a scanner schedule you can actually run</h4>
-Dai et al. are doing Bayesian experimental design too, but with a very different constraint set: a clinical 3T MRI scanner, fixed scan-time structure, and a protocol space that’s discrete and messy (pulse types, timings, b-values across 13 measurements).
+<h4>Proxy metrics: stop asking “is it correlated?” and start asking “will it make the same decision?”  </h4>
+Amudala et al. (PROXIMA) is aimed at online experiments, but the idea generalizes: when the real outcome is slow, we ship based on a proxy. The proposal is a composite reliability score built from:
+<ul>
+<li>correlation of treatment effects (experiment-level),</li>
+<li>directional accuracy (did the proxy get the sign right?),</li>
+<li>and a <strong>fragility rate</strong> that flags segment-level sign reversals (Simpson’s paradox vibes).</li>
 
-<p>They maximize <strong>Expected Information Gain</strong> and use <strong>Gaussian-process Bayesian optimization</strong> to search protocol space. The punchline is pleasantly pragmatic: the optimized protocol often <em>drops</em> a commonly used measurement type (OGSEn2) at typical SNRs and reallocates effort toward <strong>higher b-values</strong> and jointly tuned timing. Across simulated SNR 5–40, they improve both classification (random forest separability of microstructure classes) and parameter estimation RMSE without increasing scan time; the in-vivo canine tumor example shows smoother maps with fewer outliers.</p>
+<p></ul>
+The punchline is the fragility term. Two proxies can look “fine” in aggregate, yet one is a landmine in segments. In their sims, Criteo proxies look solid (low fragility), while KuaiRec shows huge fragility (segment sign flips are common) even when overall decision agreement is high. If you’ve ever had a metric that’s “good on average” but hurts a key cohort, you know why this belongs in a pre-ship checklist.</p>
 
-<p>For DOE practitioners: this is a reminder that EIG isn’t just for elegant plots—it can directly translate into “same budget, more signal,” especially when paired with Bayesian optimization to handle ugly design spaces.</p>
+<h4>Reliability inference: dependent stress–strength and censored Weibull, with less hand-waving  </h4>
+Two more classical reliability contributions landed:
 
-<h4>Reliability optimization without the double-loop pain</h4>
-Moustapha et al. tackle a perennial RBDO bottleneck: evaluating failure probabilities inside an optimizer usually means a <em>nested</em> simulation loop. Their workaround is conceptually simple and kind of brilliant: “stochasticize” the limit state by absorbing the random inputs into a latent variable simulator, leaving the emulator to live purely in <strong>design space</strong>.
+<p>Kızılaslan et al. tackle <strong>dependent stress–strength</strong> <code>R=P(X>Y)</code> using modified Weibulls tied together with a <strong>Clayton copula</strong> (lower-tail dependence). It’s parameter-heavy, and <code>R</code> needs numerical integration, but the comparison of estimators is useful: ML (and often MPS) tends to win on MSE, while bootstrap intervals are safer than asymptotic ones when the delta-method math gets gnarly.</p>
 
-<p>Then they fit a stochastic emulator of the <em>conditional distribution</em> of the limit state given design—either (i) a generalized lambda distribution with design-dependent parameters (GLaM) or (ii) a latent-variable stochastic PCE (SPCE). With that, probabilistic constraints become smooth deterministic functions (often semi-analytic), and you can run gradient-based optimization without inner Monte Carlo. The reported speedups—<strong>2–3 orders of magnitude</strong>—are exactly what you’d hope for when scaling to <strong>100+ uncertainty dimensions</strong>, where Kriging starts to wobble or bias.</p>
+<p>Liu et al. focus on <strong>Type-I censored Weibull</strong> data and build <em>exact generalized inference</em> by transforming to a Gumbel location–scale model and constructing generalized pivotal quantities. Their intervals land in the “Goldilocks zone”: WLMA is too conservative (comically high coverage, wide intervals), bootstrap under-covers, and this GPQ approach is closer to nominal with shorter intervals. If you live in censoring-heavy life tests, that’s immediately relevant.</p>
 
-<p>If you’re doing reliability-constrained design with high-dimensional uncertainty (spatial corrosion, loads modeled as fields, many random effects), this “emulate the distribution, not just the mean” framing feels like a genuinely usable direction.</p>
+<h4>SPC: adaptive limits that behave on day 1  </h4>
+Muritala et al. offer a nonparametric, multi-stream EWMA for <strong>binary monitoring</strong> by thresholding against the in-control median. The key engineering detail: they derive the <em>exact time-varying variance</em> of the EWMA statistic, so the control limits are <strong>valid from the first sample</strong>, not “eventually correct.” Detection looks strong for moderate shifts, and robustness across distributions is a real selling point when you’re tired of arguing about Normality.
 
-<h4>Post-hoc uncertainty when your errors aren’t symmetric</h4>
-Bandy et al. extend ACCRUE for deterministic predictors by letting the predictive error be <strong>asymmetric</strong>: two-piece Gaussian or asymmetric Laplace, with a NN mapping inputs to distribution parameters. The training objective balances sharpness (CRPS) and calibration (PIT-based reliability), with a practical (if slightly brute-force) grid search for the tradeoff weight.
-
-<p>The interesting takeaway isn’t that it beats everything on CRPS—it’s that you can learn <em>input-dependent skew</em> in the residuals, which is common in reliability contexts (think underprediction penalties, saturation, one-sided physics). They also show the limits: under misspecification (gamma errors), 50% intervals look fine while 95% can under-cover—useful humility for anyone selling “calibrated UQ” on messy data.</p>
-
-<h4>The connecting thread</h4>
-Across all four: we’re seeing a shift from “Bayesian/uncertainty-aware methods exist” to “here’s how you make them run under real constraints”—GPU memory limits, scan-time protocols, 105-D uncertainty, asymmetric cost of error.
-
-<p>Worth pondering for next week: where in our QE workflows are we still treating uncertainty as an afterthought because the <em>computational form</em> is inconvenient—and what would it look like to do the Venkat/Moustapha move and reformulate the problem until it becomes something we can optimize incrementally and at scale?</p><h4>Featured Papers This Week</h4><ul><li><strong>Venkat et al.</strong>: <a href="https://arxiv.org/pdf/2604.08812v1">Sensor Placement for Tsunami Early Warning via Large-Scale Bayesian Optimal Experimental Design</a> <em>(Experimental Design)</em></li><li><strong>Bandy et al.</strong>: <a href="https://arxiv.org/pdf/2604.08755v1">Accurate and Reliable Uncertainty Estimates for Deterministic Predictions Extensions to Under and Overpredictions</a> <em>(Reliability)</em></li><li><strong>Dai et al.</strong>: <a href="https://arxiv.org/pdf/2604.06020v1">Optimizing IMPULSED Acquisition Protocols for Clinical 3T Scanners Through Bayesian Experimental Design</a> <em>(Experimental Design)</em></li><li><strong>Moustapha et al.</strong>: <a href="https://arxiv.org/pdf/2604.05759v1">High-dimensional reliability-based design optimization using stochastic emulators</a> <em>(Reliability)</em></li></ul><hr/><p><strong>Explore More:</strong> Visit the <a href="https://huggingface.co/spaces/fmegahed/arxiv_control_charts">QE ArXiv Watch Dashboard</a> to browse all papers with AI summaries, interactive filtering, and paper chat.</p><p style="color: #666; font-size: 0.9em;">This digest is automatically generated every Monday. Questions or feedback? Open an issue on our <a href="https://github.com/fmegahed/arxiv_control_charts">GitHub repository</a>.</p>
+<h4>One question to take into next week  </h4>
+Where else are we still designing “as if nothing breaks”? Sensors, proxies, censoring, early-run limits—these papers all treat failure modes as first-class citizens. If we did that consistently in our quality systems, which of our current “optimal” solutions would suddenly look fragile?<h4>Featured Papers This Week</h4><ul><li><strong>White et al.</strong>: <a href="https://arxiv.org/pdf/2604.14497v1">Robust Optimal Experimental Design Accounting for Sensor Failure</a> <em>(Experimental Design)</em></li><li><strong>Amudala et al.</strong>: <a href="https://arxiv.org/pdf/2604.14352v1">PROXIMA: A Reliability Scoring Framework for Proxy Metrics in Online Controlled Experiments</a> <em>(Reliability)</em></li><li><strong>Muritala et al.</strong>: <a href="https://arxiv.org/pdf/2604.12095v1">A Nonparametric Adaptive EWMA Control Chart for Binary Monitoring of Multiple Stream Processes</a> <em>(Control Charts)</em></li><li><strong>Kızılaslan et al.</strong>: <a href="https://arxiv.org/pdf/2604.12130v1">Reliability estimation in dependent stress-strength model with Clayton copula and modified Weibull margins</a> <em>(Reliability)</em></li><li><strong>Liu et al.</strong>: <a href="https://arxiv.org/pdf/2604.12011v1">Inference on Survival Reliability with Type-I Censored Weibull data</a> <em>(Reliability)</em></li></ul><hr/><p><strong>Explore More:</strong> Visit the <a href="https://huggingface.co/spaces/fmegahed/arxiv_control_charts">QE ArXiv Watch Dashboard</a> to browse all papers with AI summaries, interactive filtering, and paper chat.</p><p style="color: #666; font-size: 0.9em;">This digest is automatically generated every Monday. Questions or feedback? Open an issue on our <a href="https://github.com/fmegahed/arxiv_control_charts">GitHub repository</a>.</p>
 ]]></description>
     </item>
   </channel>
