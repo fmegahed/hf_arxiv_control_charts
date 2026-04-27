@@ -7,7 +7,7 @@
     <language>en-us</language>
     <copyright>CC BY 4.0 - QE ArXiv Watch</copyright>
     <managingEditor>noreply@example.com (QE ArXiv Watch)</managingEditor>
-    <lastBuildDate>Mon, 20 Apr 2026 12:23:55 +0000</lastBuildDate>
+    <lastBuildDate>Mon, 27 Apr 2026 12:30:52 +0000</lastBuildDate>
     <ttl>10080</ttl>
     <image>
       <url>https://huggingface.co/spaces/fmegahed/arxiv_control_charts/resolve/main/www/favicon.svg</url>
@@ -16,48 +16,49 @@
     </image>
     <atom:link href="https://huggingface.co/spaces/fmegahed/arxiv_control_charts/resolve/main/data/weekly_digest.xml" rel="self" type="application/rss+xml"/>
     <item>
-      <title>QE ArXiv Watch: Week of April 13 - April 20, 2026</title>
+      <title>QE ArXiv Watch: Week of April 20 - April 27, 2026</title>
       <link>https://huggingface.co/spaces/fmegahed/arxiv_control_charts</link>
-      <guid isPermaLink="false">qe-weekly-2026-04-20</guid>
-      <pubDate>Mon, 20 Apr 2026 12:23:55 +0000</pubDate>
+      <guid isPermaLink="false">qe-weekly-2026-04-27</guid>
+      <pubDate>Mon, 27 Apr 2026 12:30:52 +0000</pubDate>
       <description><![CDATA[
-<p>The theme I couldn’t shake this week: <strong>we’re finally designing and monitoring systems the way they actually fail</strong>—sensors drop out, proxies lie in subgroups, and early-run control limits aren’t “asymptotic enough” to pretend otherwise.</p>
+<p>The most useful idea this week is a quiet shift in how we score “good experiments.” Instead of asking “which design maximizes expected KL information gain?” (and then suffering through brittle density ratios and noisy nested Monte Carlo), Wu et al. argue we can often do better by asking a simpler geometric question: “how far does the posterior move from the prior?” Measure that distance with an Integral Probability Metric (IPM)—and suddenly the objective gets more stable, cheaper, and (practically) more forgiving.</p>
 
-<h4>Design that assumes the accelerometer will betray you  </h4>
-White et al. go after a problem anyone who’s instrumented a big structure recognizes: you plan a beautiful vibration test… and then a sensor clips, drops, or quietly dies.
+<h4>BOED is growing up: from KL to geometry, and from fragile to stable</h4>
 
-<p>What’s nice here is the <em>practical</em> robustness framing. Instead of designing for a single “ideal” Fisher information matrix, they design to do well <strong>on average across failure scenarios</strong> (including clipping treated as dropout), or via <strong>explicit per-sensor failure probabilities</strong>. And they make it computationally workable for a 267-candidate sensor set by relaxing binary “pick/not pick” decisions into continuous weights—then pushing those weights back toward 0/1 during optimization with a <strong>double-well penalty</strong> (so you don’t have to do crude rounding at the end).</p>
+<p>Wu et al. replace KL/EIG with IPMs like Wasserstein-1, MMD, and Energy Distance. For practitioners, the win isn’t philosophical—it’s operational. IPM utilities can be estimated from samples without density-ratio estimation, which is where a lot of BOED pain hides.</p>
 
-<p>Two things to take to practice:
+<p>Two things stood out:</p>
+
 <ul>
-<li>If you can estimate dropout probabilities by location/environment, the probability-weighted robust objective changes the chosen sensors and improves average parameter/prediction MSE under many simulated failures.</li>
-<li>If you <em>can’t</em> estimate probabilities, scenario-averaging is a clean alternative—and it naturally accommodates clipping scenarios.</li></p>
+<li><strong>Stability theory that actually matches our day job.</strong> They prove perturbation bounds when your likelihood is approximate (surrogates) or your prior is a bit wrong. Bounded-kernel MMD gets especially strong “unconditional” stability; Wasserstein and Energy Distance need tail/moment conditions (read: mind your heavy tails).</li>
+<li><strong>Robustness in the “design search” loop.</strong> In a preference-learning grid search, KL essentially declares only a couple grid points “near-optimal,” while IPMs yield a broader plateau. That’s a feature when your candidate set is coarse, constrained, or you’re doing sequential design with limited exploration. Also: runtime per design was ~0.3s (W1) vs ~14s (KL) in their setup—night-and-day if you’re evaluating dozens or hundreds of candidates.</li>
 
 <p></ul>
-Also worth a skeptical nod: in one “one-sensor-failure” setting, the robust and classical <em>binary</em> D-optimal designs coincided. Translation: sometimes D-optimality is already pretty robust. But the fractional solutions showed meaningful gains in worst/average loss when a “critical” sensor fails—exactly the kind of brittleness we see in the field.</p>
+They also do something I expect we’ll see more of: <strong>plug-and-play learned estimators for hard metrics.</strong> Their OT-ICNN estimator for <code>W_2^2</code> behaves well in high dimensions where nested-MC EIG collapses, and it fixes mis-ranking failures of Gaussian variational EIG in a bimodal benchmark. Imagine using this in expensive calibration settings where you only get a handful of forward solves per iteration.</p>
 
-<h4>Proxy metrics: stop asking “is it correlated?” and start asking “will it make the same decision?”  </h4>
-Amudala et al. (PROXIMA) is aimed at online experiments, but the idea generalizes: when the real outcome is slow, we ship based on a proxy. The proposal is a composite reliability score built from:
-<ul>
-<li>correlation of treatment effects (experiment-level),</li>
-<li>directional accuracy (did the proxy get the sign right?),</li>
-<li>and a <strong>fragility rate</strong> that flags segment-level sign reversals (Simpson’s paradox vibes).</li>
+<p>If you’ve been BOED-curious but bounced off the numerical fragility of EIG, this is a strong “try again” moment.</p>
 
-<p></ul>
-The punchline is the fragility term. Two proxies can look “fine” in aggregate, yet one is a landmine in segments. In their sims, Criteo proxies look solid (low fragility), while KuaiRec shows huge fragility (segment sign flips are common) even when overall decision agreement is high. If you’ve ever had a metric that’s “good on average” but hurts a key cohort, you know why this belongs in a pre-ship checklist.</p>
+<h4>Constrained optimal design, without drowning in candidate sets</h4>
 
-<h4>Reliability inference: dependent stress–strength and censored Weibull, with less hand-waving  </h4>
-Two more classical reliability contributions landed:
+<p>Schmid et al. tackle locally optimal design with <em>constraints</em> (convex inequalities + affine equalities) and an adaptive discretization strategy: solve on a finite set, then add points where an ε-optimality condition is violated (via a Lagrangian sensitivity function).</p>
 
-<p>Kızılaslan et al. tackle <strong>dependent stress–strength</strong> <code>R=P(X>Y)</code> using modified Weibulls tied together with a <strong>Clayton copula</strong> (lower-tail dependence). It’s parameter-heavy, and <code>R</code> needs numerical integration, but the comparison of estimators is useful: ML (and often MPS) tends to win on MSE, while bootstrap intervals are safer than asymptotic ones when the delta-method math gets gnarly.</p>
+<p>The practical angle: you can start with a tiny candidate set and let the algorithm “discover” support points. In their examples, it terminates in just a handful of iterations—even on a ~2 million–point grid. For anyone doing constrained D-optimal sensor placement, time-windowed sampling plans, or “we must include at least X% of runs at safe settings” types of rules, this looks like a serious tool.</p>
 
-<p>Liu et al. focus on <strong>Type-I censored Weibull</strong> data and build <em>exact generalized inference</em> by transforming to a Gumbel location–scale model and constructing generalized pivotal quantities. Their intervals land in the “Goldilocks zone”: WLMA is too conservative (comically high coverage, wide intervals), bootstrap under-covers, and this GPQ approach is closer to nominal with shorter intervals. If you live in censoring-heavy life tests, that’s immediately relevant.</p>
+<h4>Multivariate responses: ASCA as the missing link between DOE and “omics reality”</h4>
 
-<h4>SPC: adaptive limits that behave on day 1  </h4>
-Muritala et al. offer a nonparametric, multi-stream EWMA for <strong>binary monitoring</strong> by thresholding against the in-control median. The key engineering detail: they derive the <em>exact time-varying variance</em> of the EWMA statistic, so the control limits are <strong>valid from the first sample</strong>, not “eventually correct.” Detection looks strong for moderate shifts, and robustness across distributions is a real selling point when you’re tired of arguing about Normality.
+<p>Camacho et al. deliver a tutorial that quality engineers working with spectra, images, or high-dimensional metrology should bookmark. ASCA (ANOVA + PCA-ish decomposition) gives you factor effects <em>and</em> interpretable multivariate structure, while permutation tests keep inference honest when normality is fantasy.</p>
 
-<h4>One question to take into next week  </h4>
-Where else are we still designing “as if nothing breaks”? Sensors, proxies, censoring, early-run limits—these papers all treat failure modes as first-class citizens. If we did that consistently in our quality systems, which of our current “optimal” solutions would suddenly look fragile?<h4>Featured Papers This Week</h4><ul><li><strong>White et al.</strong>: <a href="https://arxiv.org/pdf/2604.14497v1">Robust Optimal Experimental Design Accounting for Sensor Failure</a> <em>(Experimental Design)</em></li><li><strong>Amudala et al.</strong>: <a href="https://arxiv.org/pdf/2604.14352v1">PROXIMA: A Reliability Scoring Framework for Proxy Metrics in Online Controlled Experiments</a> <em>(Reliability)</em></li><li><strong>Muritala et al.</strong>: <a href="https://arxiv.org/pdf/2604.12095v1">A Nonparametric Adaptive EWMA Control Chart for Binary Monitoring of Multiple Stream Processes</a> <em>(Control Charts)</em></li><li><strong>Kızılaslan et al.</strong>: <a href="https://arxiv.org/pdf/2604.12130v1">Reliability estimation in dependent stress-strength model with Clayton copula and modified Weibull margins</a> <em>(Reliability)</em></li><li><strong>Liu et al.</strong>: <a href="https://arxiv.org/pdf/2604.12011v1">Inference on Survival Reliability with Type-I Censored Weibull data</a> <em>(Reliability)</em></li></ul><hr/><p><strong>Explore More:</strong> Visit the <a href="https://huggingface.co/spaces/fmegahed/arxiv_control_charts">QE ArXiv Watch Dashboard</a> to browse all papers with AI summaries, interactive filtering, and paper chat.</p><p style="color: #666; font-size: 0.9em;">This digest is automatically generated every Monday. Questions or feedback? Open an issue on our <a href="https://github.com/fmegahed/arxiv_control_charts">GitHub repository</a>.</p>
+<p>Their repeated-measures example is also a good reminder: in high-dimensional data, <strong>random/nested subject effects can dominate</strong> (their “Patient” term explained ~43.5% SS). If you’re running experiments on lots, operators, wafers, or patients, the design structure matters as much as the modeling.</p>
+
+<h4>Reliability/forecasting reality check: when “tipping time” is an extrapolation mirage</h4>
+
+<p>Morr et al. is a reliability-engineering story in climate clothing: <strong>don’t trust a failure-time forecast built on a misspecified degradation model plus optimistic uncertainty quantification.</strong> They show that a fold-bifurcation SDE fit can “predict” a mid-century collapse even when the data were generated by a non-tipping mechanism, and that nominal 95% CIs can have catastrophic under-coverage (even ~0% in some settings).</p>
+
+<p>Translate that to our world: if your lifetime model class is wrong, bootstrapping the MLE doesn’t save you—your interval can be confidently wrong.</p>
+
+<h4>Forward look</h4>
+
+<p>We’re seeing two themes converge: (1) <em>geometry- and sample-based</em> objectives that behave better than KL, and (2) <em>algorithmic humility</em> about uncertainty when models are misspecified. The question worth holding: in your next design or reliability analysis, where are you still relying on an objective or CI that’s “standard” mainly because it’s traditional—not because it’s stable?</p><h4>Featured Papers This Week</h4><ul><li><strong>Wu et al.</strong>: <a href="https://arxiv.org/pdf/2604.21849v1">Beyond Expected Information Gain: Stable Bayesian Optimal Experimental Design with Integral Probability Metrics and Plug-and-Play Extensions</a> <em>(Experimental Design)</em></li><li><strong>Morr et al.</strong>: <a href="https://arxiv.org/pdf/2604.20341v1">Extrapolation from historical data cannot reliably predict the time of a potential AMOC collapse</a> <em>(Reliability)</em></li><li><strong>Camacho et al.</strong>: <a href="https://arxiv.org/pdf/2604.19265v1">From design of experiments to analysis of variance of multivariate data: a tutorial review on ANOVA simultaneous component analysis</a> <em>(Experimental Design)</em></li><li><strong>Schmid et al.</strong>: <a href="https://arxiv.org/pdf/2604.18511v1">An adaptive discretization algorithm for locally optimal experimental design with constraints</a> <em>(Experimental Design)</em></li><li><strong>Yang et al.</strong>: <a href="https://arxiv.org/pdf/2604.18505v1">Bayesian experimental design: grouped geometric pooled posterior via ensemble Kalman methods</a> <em>(Experimental Design)</em></li></ul><hr/><p><strong>Explore More:</strong> Visit the <a href="https://huggingface.co/spaces/fmegahed/arxiv_control_charts">QE ArXiv Watch Dashboard</a> to browse all papers with AI summaries, interactive filtering, and paper chat.</p><p style="color: #666; font-size: 0.9em;">This digest is automatically generated every Monday. Questions or feedback? Open an issue on our <a href="https://github.com/fmegahed/arxiv_control_charts">GitHub repository</a>.</p>
 ]]></description>
     </item>
   </channel>
