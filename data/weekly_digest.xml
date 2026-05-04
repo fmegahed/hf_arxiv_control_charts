@@ -7,7 +7,7 @@
     <language>en-us</language>
     <copyright>CC BY 4.0 - QE ArXiv Watch</copyright>
     <managingEditor>noreply@example.com (QE ArXiv Watch)</managingEditor>
-    <lastBuildDate>Mon, 27 Apr 2026 12:30:52 +0000</lastBuildDate>
+    <lastBuildDate>Mon, 04 May 2026 12:32:22 +0000</lastBuildDate>
     <ttl>10080</ttl>
     <image>
       <url>https://huggingface.co/spaces/fmegahed/arxiv_control_charts/resolve/main/www/favicon.svg</url>
@@ -16,49 +16,16 @@
     </image>
     <atom:link href="https://huggingface.co/spaces/fmegahed/arxiv_control_charts/resolve/main/data/weekly_digest.xml" rel="self" type="application/rss+xml"/>
     <item>
-      <title>QE ArXiv Watch: Week of April 20 - April 27, 2026</title>
+      <title>QE ArXiv Watch: Week of April 27 - May 04, 2026</title>
       <link>https://huggingface.co/spaces/fmegahed/arxiv_control_charts</link>
-      <guid isPermaLink="false">qe-weekly-2026-04-27</guid>
-      <pubDate>Mon, 27 Apr 2026 12:30:52 +0000</pubDate>
+      <guid isPermaLink="false">qe-weekly-2026-05-04</guid>
+      <pubDate>Mon, 04 May 2026 12:32:22 +0000</pubDate>
       <description><![CDATA[
-<p>The most useful idea this week is a quiet shift in how we score “good experiments.” Instead of asking “which design maximizes expected KL information gain?” (and then suffering through brittle density ratios and noisy nested Monte Carlo), Wu et al. argue we can often do better by asking a simpler geometric question: “how far does the posterior move from the prior?” Measure that distance with an Integral Probability Metric (IPM)—and suddenly the objective gets more stable, cheaper, and (practically) more forgiving.</p>
+<h3>This Week in Quality Engineering</h3>
 
-<h4>BOED is growing up: from KL to geometry, and from fragile to stable</h4>
+<p>This was a quiet week on arXiv for quality engineering research, with no new submissions in our monitored tracks. This occasionally happens, particularly around academic holidays or conference deadlines.</p>
 
-<p>Wu et al. replace KL/EIG with IPMs like Wasserstein-1, MMD, and Energy Distance. For practitioners, the win isn’t philosophical—it’s operational. IPM utilities can be estimated from samples without density-ratio estimation, which is where a lot of BOED pain hides.</p>
-
-<p>Two things stood out:</p>
-
-<ul>
-<li><strong>Stability theory that actually matches our day job.</strong> They prove perturbation bounds when your likelihood is approximate (surrogates) or your prior is a bit wrong. Bounded-kernel MMD gets especially strong “unconditional” stability; Wasserstein and Energy Distance need tail/moment conditions (read: mind your heavy tails).</li>
-<li><strong>Robustness in the “design search” loop.</strong> In a preference-learning grid search, KL essentially declares only a couple grid points “near-optimal,” while IPMs yield a broader plateau. That’s a feature when your candidate set is coarse, constrained, or you’re doing sequential design with limited exploration. Also: runtime per design was ~0.3s (W1) vs ~14s (KL) in their setup—night-and-day if you’re evaluating dozens or hundreds of candidates.</li>
-
-<p></ul>
-They also do something I expect we’ll see more of: <strong>plug-and-play learned estimators for hard metrics.</strong> Their OT-ICNN estimator for <code>W_2^2</code> behaves well in high dimensions where nested-MC EIG collapses, and it fixes mis-ranking failures of Gaussian variational EIG in a bimodal benchmark. Imagine using this in expensive calibration settings where you only get a handful of forward solves per iteration.</p>
-
-<p>If you’ve been BOED-curious but bounced off the numerical fragility of EIG, this is a strong “try again” moment.</p>
-
-<h4>Constrained optimal design, without drowning in candidate sets</h4>
-
-<p>Schmid et al. tackle locally optimal design with <em>constraints</em> (convex inequalities + affine equalities) and an adaptive discretization strategy: solve on a finite set, then add points where an ε-optimality condition is violated (via a Lagrangian sensitivity function).</p>
-
-<p>The practical angle: you can start with a tiny candidate set and let the algorithm “discover” support points. In their examples, it terminates in just a handful of iterations—even on a ~2 million–point grid. For anyone doing constrained D-optimal sensor placement, time-windowed sampling plans, or “we must include at least X% of runs at safe settings” types of rules, this looks like a serious tool.</p>
-
-<h4>Multivariate responses: ASCA as the missing link between DOE and “omics reality”</h4>
-
-<p>Camacho et al. deliver a tutorial that quality engineers working with spectra, images, or high-dimensional metrology should bookmark. ASCA (ANOVA + PCA-ish decomposition) gives you factor effects <em>and</em> interpretable multivariate structure, while permutation tests keep inference honest when normality is fantasy.</p>
-
-<p>Their repeated-measures example is also a good reminder: in high-dimensional data, <strong>random/nested subject effects can dominate</strong> (their “Patient” term explained ~43.5% SS). If you’re running experiments on lots, operators, wafers, or patients, the design structure matters as much as the modeling.</p>
-
-<h4>Reliability/forecasting reality check: when “tipping time” is an extrapolation mirage</h4>
-
-<p>Morr et al. is a reliability-engineering story in climate clothing: <strong>don’t trust a failure-time forecast built on a misspecified degradation model plus optimistic uncertainty quantification.</strong> They show that a fold-bifurcation SDE fit can “predict” a mid-century collapse even when the data were generated by a non-tipping mechanism, and that nominal 95% CIs can have catastrophic under-coverage (even ~0% in some settings).</p>
-
-<p>Translate that to our world: if your lifetime model class is wrong, bootstrapping the MLE doesn’t save you—your interval can be confidently wrong.</p>
-
-<h4>Forward look</h4>
-
-<p>We’re seeing two themes converge: (1) <em>geometry- and sample-based</em> objectives that behave better than KL, and (2) <em>algorithmic humility</em> about uncertainty when models are misspecified. The question worth holding: in your next design or reliability analysis, where are you still relying on an objective or CI that’s “standard” mainly because it’s traditional—not because it’s stable?</p><h4>Featured Papers This Week</h4><ul><li><strong>Wu et al.</strong>: <a href="https://arxiv.org/pdf/2604.21849v1">Beyond Expected Information Gain: Stable Bayesian Optimal Experimental Design with Integral Probability Metrics and Plug-and-Play Extensions</a> <em>(Experimental Design)</em></li><li><strong>Morr et al.</strong>: <a href="https://arxiv.org/pdf/2604.20341v1">Extrapolation from historical data cannot reliably predict the time of a potential AMOC collapse</a> <em>(Reliability)</em></li><li><strong>Camacho et al.</strong>: <a href="https://arxiv.org/pdf/2604.19265v1">From design of experiments to analysis of variance of multivariate data: a tutorial review on ANOVA simultaneous component analysis</a> <em>(Experimental Design)</em></li><li><strong>Schmid et al.</strong>: <a href="https://arxiv.org/pdf/2604.18511v1">An adaptive discretization algorithm for locally optimal experimental design with constraints</a> <em>(Experimental Design)</em></li><li><strong>Yang et al.</strong>: <a href="https://arxiv.org/pdf/2604.18505v1">Bayesian experimental design: grouped geometric pooled posterior via ensemble Kalman methods</a> <em>(Experimental Design)</em></li></ul><hr/><p><strong>Explore More:</strong> Visit the <a href="https://huggingface.co/spaces/fmegahed/arxiv_control_charts">QE ArXiv Watch Dashboard</a> to browse all papers with AI summaries, interactive filtering, and paper chat.</p><p style="color: #666; font-size: 0.9em;">This digest is automatically generated every Monday. Questions or feedback? Open an issue on our <a href="https://github.com/fmegahed/arxiv_control_charts">GitHub repository</a>.</p>
+<p><strong>Looking Ahead:</strong> We encourage you to explore our archives in the <a href="https://huggingface.co/spaces/fmegahed/arxiv_control_charts">QE ArXiv Watch dashboard</a> where you can browse over 1,000 papers across Control Charts, Experimental Design, and Reliability Engineering.</p><hr/><p><strong>Explore More:</strong> Visit the <a href="https://huggingface.co/spaces/fmegahed/arxiv_control_charts">QE ArXiv Watch Dashboard</a> to browse all papers with AI summaries, interactive filtering, and paper chat.</p><p style="color: #666; font-size: 0.9em;">This digest is automatically generated every Monday. Questions or feedback? Open an issue on our <a href="https://github.com/fmegahed/arxiv_control_charts">GitHub repository</a>.</p>
 ]]></description>
     </item>
   </channel>
