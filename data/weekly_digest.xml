@@ -7,7 +7,7 @@
     <language>en-us</language>
     <copyright>CC BY 4.0 - QE ArXiv Watch</copyright>
     <managingEditor>noreply@example.com (QE ArXiv Watch)</managingEditor>
-    <lastBuildDate>Mon, 04 May 2026 12:32:22 +0000</lastBuildDate>
+    <lastBuildDate>Mon, 11 May 2026 12:57:13 +0000</lastBuildDate>
     <ttl>10080</ttl>
     <image>
       <url>https://huggingface.co/spaces/fmegahed/arxiv_control_charts/resolve/main/www/favicon.svg</url>
@@ -16,16 +16,57 @@
     </image>
     <atom:link href="https://huggingface.co/spaces/fmegahed/arxiv_control_charts/resolve/main/data/weekly_digest.xml" rel="self" type="application/rss+xml"/>
     <item>
-      <title>QE ArXiv Watch: Week of April 27 - May 04, 2026</title>
+      <title>QE ArXiv Watch: Week of May 04 - May 11, 2026</title>
       <link>https://huggingface.co/spaces/fmegahed/arxiv_control_charts</link>
-      <guid isPermaLink="false">qe-weekly-2026-05-04</guid>
-      <pubDate>Mon, 04 May 2026 12:32:22 +0000</pubDate>
+      <guid isPermaLink="false">qe-weekly-2026-05-11</guid>
+      <pubDate>Mon, 11 May 2026 12:57:13 +0000</pubDate>
       <description><![CDATA[
-<h3>This Week in Quality Engineering</h3>
+<p>The most practical reliability idea this week doesn’t come from a failure model or a new prior — it comes from treating an LLM’s reasoning trace like a process you can <em>poke</em> and see if it settles back into the same outcome.</p>
 
-<p>This was a quiet week on arXiv for quality engineering research, with no new submissions in our monitored tracks. This occasionally happens, particularly around academic holidays or conference deadlines.</p>
+<p>Imagine you stop a “chain-of-thought” midstream, restart it, and ask: <em>do we land on the same final answer again?</em> That restart stability turns out to be a surprisingly strong signal of correctness — and it’s cheap enough to matter.</p>
 
-<p><strong>Looking Ahead:</strong> We encourage you to explore our archives in the <a href="https://huggingface.co/spaces/fmegahed/arxiv_control_charts">QE ArXiv Watch dashboard</a> where you can browse over 1,000 papers across Control Charts, Experimental Design, and Reliability Engineering.</p><hr/><p><strong>Explore More:</strong> Visit the <a href="https://huggingface.co/spaces/fmegahed/arxiv_control_charts">QE ArXiv Watch Dashboard</a> to browse all papers with AI summaries, interactive filtering, and paper chat.</p><p style="color: #666; font-size: 0.9em;">This digest is automatically generated every Monday. Questions or feedback? Open an issue on our <a href="https://github.com/fmegahed/arxiv_control_charts">GitHub repository</a>.</p>
+<h3>What researchers are tackling (and why we should care)</h3>
+
+<p>A theme across three reliability papers: our usual “global” guarantees (a single accuracy number, a single coverage target, a single benchmark score) keep failing us exactly where quality engineers care most — at the decision boundary, in subgroups, and after we’ve tuned the system.</p>
+
+<h4>1) LLM inference-time reliability: “prefix consistency” as a test-time check</h4>
+Iwase et al. propose <strong>prefix consistency</strong>: sample multiple reasoning traces; truncate each at some fraction τ; regenerate continuations; then weight answers by how often they reproduce.
+
+<p>Why it matters: it’s an <em>operational</em> reliability signal. No token log-probs. No “rate your confidence” prompts. Just: “does this process re-converge to the same output when perturbed?”</p>
+
+<p>What’s compelling:
+<ul>
+<li>Correct traces reproduce much more than wrong ones (e.g., ~66% vs ~22% on a hard benchmark/model combo).</li>
+<li>As a correctness predictor, AUROC often lands in the <strong>0.63–0.80</strong> range.</li>
+<li>In cost-equivalent settings, their <strong>prefix-consistency-weighted majority vote</strong> hits standard majority-vote accuracy using a <strong>median ~4.6× fewer tokens</strong> (and sometimes far more).</li></p>
+
+<p></ul>
+If you’re deploying LLM reasoning in a workflow, this is basically a <strong>shake-test</strong> for answers: perturb the internal path, see if the output is structurally stable.</p>
+
+<h4>2) LLM evaluation reliability: correcting adaptive “winner’s curse”</h4>
+Xu et al. go after a problem anyone doing prompt/program search should feel in their bones: you tune on a benchmark pool, pick the best-looking candidate, and your reported score is… optimistic. Sometimes enough to flip “should we deploy the tuned version?” decisions.
+
+<p>Their protocol, <strong>SIREN</strong>, is a post-search reporting scheme:
+<ul>
+<li>Freeze a shortlist after tuning.</li>
+<li>Repeatedly split an <em>independent</em> eval pool into a “scoring” subset (to set selection weights) and a held-out subset (for evaluation).</li>
+<li>Use a selection-aware bootstrap for uncertainty.</li></p>
+
+<p></ul>
+The practitioner takeaway: if you’re doing adaptive benchmarking, you need reporting that respects selection. They show naive winner reporting often biases scores by <strong>+1 to +4 points</strong>, while SIREN’s error vs a Monte Carlo target is near zero (on the order of a few tenths of a point).</p>
+
+<h4>3) Conformal prediction + survey data: marginal validity isn’t subgroup reliability</h4>
+Rafe et al. deliver a sober message: even when split conformal hits <strong>~90% marginal coverage</strong>, subgroup performance can be way off — <strong>~13 percentage points</strong> of weighted subgroup coverage gap across intersectional race×education groups in their Pew survey setting.
+
+<p>Even more interesting (and annoying): <strong>Mondrian (group-conditional) conformal can make it worse</strong> when calibration cells are thin. It increased both subgroup gap and set size for their best predictor (XGBoost). A regularized Mondrian helps stability but doesn’t magically fix fairness–efficiency trade-offs.</p>
+
+<p>If you work with weighted survey or panel data, this is a reminder: “valid on average” is not the same as “reliable for the people we care about.”</p>
+
+<h3>One DOE paper, but it’s really about automated design under messy physics</h3>
+Ruiz-Gonzalez et al. treat quantum photonics experiment construction like an optimization problem over both discrete topology (operator ordering) and continuous parameters — explicitly modeling higher-order emissions (not the usual low-gain simplifications). The cool parallel to industrial DOE: <strong>the “nuisance” higher-order terms sometimes become usable signal</strong> when ancillas are available.
+
+<h3>The thread worth pondering</h3>
+We’re watching reliability move from single-number reporting to <strong>stress-testing procedures</strong>: perturb the reasoning, account for selection, and audit the subpopulations. Where are we still relying on “marginal” guarantees because they’re convenient — and what would it look like to operationalize <em>stability checks</em> in our own pipelines?<h4>Featured Papers This Week</h4><ul><li><strong>Iwase et al.</strong>: <a href="https://arxiv.org/pdf/2605.07654v1">Reliable Chain-of-Thought via Prefix Consistency</a> <em>(Reliability)</em></li><li><strong>Xu et al.</strong>: <a href="https://arxiv.org/pdf/2605.05973v1">Towards Reliable LLM Evaluation: Correcting the Winner&apos;s Curse in Adaptive Benchmarking</a> <em>(Reliability)</em></li><li><strong>Rafe et al.</strong>: <a href="https://arxiv.org/pdf/2605.05562v1">Socio-Conformal Calibration in Complex Survey Data: Marginal Validity Is Not Enough for Subgroup Reliability</a> <em>(Reliability)</em></li><li><strong>Ruiz-Gonzalez et al.</strong>: <a href="https://arxiv.org/pdf/2605.02721v1">Automated experimental design for high-probability entanglement generation</a> <em>(Experimental Design)</em></li></ul><hr/><p><strong>Explore More:</strong> Visit the <a href="https://huggingface.co/spaces/fmegahed/arxiv_control_charts">QE ArXiv Watch Dashboard</a> to browse all papers with AI summaries, interactive filtering, and paper chat.</p><p style="color: #666; font-size: 0.9em;">This digest is automatically generated every Monday. Questions or feedback? Open an issue on our <a href="https://github.com/fmegahed/arxiv_control_charts">GitHub repository</a>.</p>
 ]]></description>
     </item>
   </channel>

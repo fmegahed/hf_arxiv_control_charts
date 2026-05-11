@@ -1,18 +1,51 @@
 {
   "metadata": {
-    "generated_at": "2026-05-04T12:32:22Z",
-    "week_start": "2026-04-27",
-    "week_end": "2026-05-04",
+    "generated_at": "2026-05-11T12:57:13Z",
+    "week_start": "2026-05-04",
+    "week_end": "2026-05-11",
     "version": "3.1.0"
   },
   "summary": {
-    "total_papers": 0,
+    "total_papers": 4,
     "papers_by_track": {
       "spc": 0,
-      "exp_design": 0,
-      "reliability": 0
+      "exp_design": 1,
+      "reliability": 3
     }
   },
-  "synthesis": "## This Week in Quality Engineering\n\nThis was a quiet week on arXiv for quality engineering research, with no new submissions in our monitored tracks. This occasionally happens, particularly around academic holidays or conference deadlines.\n\n**Looking Ahead:** We encourage you to explore our archives in the [QE ArXiv Watch dashboard](https://huggingface.co/spaces/fmegahed/arxiv_control_charts) where you can browse over 1,000 papers across Control Charts, Experimental Design, and Reliability Engineering.",
-  "papers": []
+  "synthesis": "The most practical reliability idea this week doesn’t come from a failure model or a new prior — it comes from treating an LLM’s reasoning trace like a process you can *poke* and see if it settles back into the same outcome.\n\nImagine you stop a “chain-of-thought” midstream, restart it, and ask: *do we land on the same final answer again?* That restart stability turns out to be a surprisingly strong signal of correctness — and it’s cheap enough to matter.\n\n## What researchers are tackling (and why we should care)\n\nA theme across three reliability papers: our usual “global” guarantees (a single accuracy number, a single coverage target, a single benchmark score) keep failing us exactly where quality engineers care most — at the decision boundary, in subgroups, and after we’ve tuned the system.\n\n### 1) LLM inference-time reliability: “prefix consistency” as a test-time check\nIwase et al. propose **prefix consistency**: sample multiple reasoning traces; truncate each at some fraction τ; regenerate continuations; then weight answers by how often they reproduce.\n\nWhy it matters: it’s an *operational* reliability signal. No token log-probs. No “rate your confidence” prompts. Just: “does this process re-converge to the same output when perturbed?”\n\nWhat’s compelling:\n- Correct traces reproduce much more than wrong ones (e.g., ~66% vs ~22% on a hard benchmark/model combo).\n- As a correctness predictor, AUROC often lands in the **0.63–0.80** range.\n- In cost-equivalent settings, their **prefix-consistency-weighted majority vote** hits standard majority-vote accuracy using a **median ~4.6× fewer tokens** (and sometimes far more).\n\nIf you’re deploying LLM reasoning in a workflow, this is basically a **shake-test** for answers: perturb the internal path, see if the output is structurally stable.\n\n### 2) LLM evaluation reliability: correcting adaptive “winner’s curse”\nXu et al. go after a problem anyone doing prompt/program search should feel in their bones: you tune on a benchmark pool, pick the best-looking candidate, and your reported score is… optimistic. Sometimes enough to flip “should we deploy the tuned version?” decisions.\n\nTheir protocol, **SIREN**, is a post-search reporting scheme:\n- Freeze a shortlist after tuning.\n- Repeatedly split an *independent* eval pool into a “scoring” subset (to set selection weights) and a held-out subset (for evaluation).\n- Use a selection-aware bootstrap for uncertainty.\n\nThe practitioner takeaway: if you’re doing adaptive benchmarking, you need reporting that respects selection. They show naive winner reporting often biases scores by **+1 to +4 points**, while SIREN’s error vs a Monte Carlo target is near zero (on the order of a few tenths of a point).\n\n### 3) Conformal prediction + survey data: marginal validity isn’t subgroup reliability\nRafe et al. deliver a sober message: even when split conformal hits **~90% marginal coverage**, subgroup performance can be way off — **~13 percentage points** of weighted subgroup coverage gap across intersectional race×education groups in their Pew survey setting.\n\nEven more interesting (and annoying): **Mondrian (group-conditional) conformal can make it worse** when calibration cells are thin. It increased both subgroup gap and set size for their best predictor (XGBoost). A regularized Mondrian helps stability but doesn’t magically fix fairness–efficiency trade-offs.\n\nIf you work with weighted survey or panel data, this is a reminder: “valid on average” is not the same as “reliable for the people we care about.”\n\n## One DOE paper, but it’s really about automated design under messy physics\nRuiz-Gonzalez et al. treat quantum photonics experiment construction like an optimization problem over both discrete topology (operator ordering) and continuous parameters — explicitly modeling higher-order emissions (not the usual low-gain simplifications). The cool parallel to industrial DOE: **the “nuisance” higher-order terms sometimes become usable signal** when ancillas are available.\n\n## The thread worth pondering\nWe’re watching reliability move from single-number reporting to **stress-testing procedures**: perturb the reasoning, account for selection, and audit the subpopulations. Where are we still relying on “marginal” guarantees because they’re convenient — and what would it look like to operationalize *stability checks* in our own pipelines?",
+  "papers": [
+    {
+      "id": "2605.07654v1",
+      "title": "Reliable Chain-of-Thought via Prefix Consistency",
+      "authors": "Naoto Iwase|Yuki Ichihara|Mohammad Atif Quamar|Junpei Komiyama",
+      "submitted": "2026-05-08",
+      "track": "reliability",
+      "link": "https://arxiv.org/pdf/2605.07654v1"
+    },
+    {
+      "id": "2605.05973v1",
+      "title": "Towards Reliable LLM Evaluation: Correcting the Winner's Curse in Adaptive Benchmarking",
+      "authors": "Yang Xu|Jiefu Zhang|Haixiang Sun|Zihan Zhou|Tianyu Cao|Vaneet Aggarwal",
+      "submitted": "2026-05-07",
+      "track": "reliability",
+      "link": "https://arxiv.org/pdf/2605.05973v1"
+    },
+    {
+      "id": "2605.05562v1",
+      "title": "Socio-Conformal Calibration in Complex Survey Data: Marginal Validity Is Not Enough for Subgroup Reliability",
+      "authors": "Amir Rafe|Subasish Das",
+      "submitted": "2026-05-07",
+      "track": "reliability",
+      "link": "https://arxiv.org/pdf/2605.05562v1"
+    },
+    {
+      "id": "2605.02721v1",
+      "title": "Automated experimental design for high-probability entanglement generation",
+      "authors": "Carlos Ruiz-Gonzalez|Mario Krenn|Xuemei Gu",
+      "submitted": "2026-05-04",
+      "track": "exp_design",
+      "link": "https://arxiv.org/pdf/2605.02721v1"
+    }
+  ]
 }
