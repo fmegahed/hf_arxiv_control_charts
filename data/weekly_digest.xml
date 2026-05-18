@@ -7,7 +7,7 @@
     <language>en-us</language>
     <copyright>CC BY 4.0 - QE ArXiv Watch</copyright>
     <managingEditor>noreply@example.com (QE ArXiv Watch)</managingEditor>
-    <lastBuildDate>Mon, 11 May 2026 12:57:13 +0000</lastBuildDate>
+    <lastBuildDate>Mon, 18 May 2026 13:10:43 +0000</lastBuildDate>
     <ttl>10080</ttl>
     <image>
       <url>https://huggingface.co/spaces/fmegahed/arxiv_control_charts/resolve/main/www/favicon.svg</url>
@@ -16,57 +16,57 @@
     </image>
     <atom:link href="https://huggingface.co/spaces/fmegahed/arxiv_control_charts/resolve/main/data/weekly_digest.xml" rel="self" type="application/rss+xml"/>
     <item>
-      <title>QE ArXiv Watch: Week of May 04 - May 11, 2026</title>
+      <title>QE ArXiv Watch: Week of May 11 - May 18, 2026</title>
       <link>https://huggingface.co/spaces/fmegahed/arxiv_control_charts</link>
-      <guid isPermaLink="false">qe-weekly-2026-05-11</guid>
-      <pubDate>Mon, 11 May 2026 12:57:13 +0000</pubDate>
+      <guid isPermaLink="false">qe-weekly-2026-05-18</guid>
+      <pubDate>Mon, 18 May 2026 13:10:43 +0000</pubDate>
       <description><![CDATA[
-<p>The most practical reliability idea this week doesn’t come from a failure model or a new prior — it comes from treating an LLM’s reasoning trace like a process you can <em>poke</em> and see if it settles back into the same outcome.</p>
+<p>The most useful theme this week: <strong>we’re getting better at adapting in real time—A/B tests, control charts, Bayesian priors—but the bill always comes due somewhere</strong>. Adapt too aggressively and you can miss slow failures. Lean too hard on a model (or an AI) and bias sneaks in unless you actively correct it.</p>
 
-<p>Imagine you stop a “chain-of-thought” midstream, restart it, and ask: <em>do we land on the same final answer again?</em> That restart stability turns out to be a surprisingly strong signal of correctness — and it’s cheap enough to matter.</p>
+<h4>Sequential A/B tests that don’t panic when the model is wrong</h4>
 
-<h3>What researchers are tackling (and why we should care)</h3>
+<p>Wen et al. tackle a very practical pain point: we want <strong>sequential designs that learn fast</strong> (small samples, covariates drifting, limited horizon) but don’t fall apart when our outcome model is misspecified—which, let’s be honest, it usually is.</p>
 
-<p>A theme across three reliability papers: our usual “global” guarantees (a single accuracy number, a single coverage target, a single benchmark score) keep failing us exactly where quality engineers care most — at the decision boundary, in subgroups, and after we’ve tuned the system.</p>
+<p>Their move is to <strong>design assignments by minimizing a worst-case MSE bound</strong> for an ATE estimator built on a <em>linear working model</em>, while controlling misspecification via an orthogonalization trick with sieve basis functions. In the contextual bandit case, the robust objective collapses into <strong>low-dimensional “imbalance summaries,”</strong> which is what makes dynamic programming feasible; they approximate the DP value function with a neural net trained on rollouts. For carryover settings (think switchbacks with memory), they go hierarchical: across-day DP + within-day RL.</p>
 
-<h4>1) LLM inference-time reliability: “prefix consistency” as a test-time check</h4>
-Iwase et al. propose <strong>prefix consistency</strong>: sample multiple reasoning traces; truncate each at some fraction τ; regenerate continuations; then weight answers by how often they reproduce.
+<p>Why you should care: they show <strong>meaningful MSE reductions vs. randomization, switchbacks, and biased-coin/Neyman balancing</strong>, especially when you’re sample-starved. The part I like most is the “no regret when you’re right”: when the linear model is actually correct, robustness costs basically nothing (relative efficiency ~0.97–0.99 vs the non-robust DP baseline).</p>
 
-<p>Why it matters: it’s an <em>operational</em> reliability signal. No token log-probs. No “rate your confidence” prompts. Just: “does this process re-converge to the same output when perturbed?”</p>
+<p>If you run experiments on platforms with covariate shift or operational constraints, this is a real “try it” candidate—assuming you can stomach the engineering (DP + learned value functions).</p>
 
-<p>What’s compelling:
+<p>---</p>
+
+<h4>Reliability: surrogates grow up (and start respecting time)</h4>
+
+<p>Marelli et al. push time-variant reliability beyond “static surrogate + hope.” For dynamical systems under stochastic excitation, the expensive object is the <strong>first-passage / cumulative failure probability</strong>. They build <strong>time-dependent surrogates using NARX-style causality</strong>, but with two clever upgrades:</p>
+
 <ul>
-<li>Correct traces reproduce much more than wrong ones (e.g., ~66% vs ~22% on a hard benchmark/model combo).</li>
-<li>As a correctness predictor, AUROC often lands in the <strong>0.63–0.80</strong> range.</li>
-<li>In cost-equivalent settings, their <strong>prefix-consistency-weighted majority vote</strong> hits standard majority-vote accuracy using a <strong>median ~4.6× fewer tokens</strong> (and sometimes far more).</li></p>
+<li><strong>mNARX</strong>: augment with auxiliary state variables so the model lives on a physically informed manifold.</li>
+<li><strong>F-NARX</strong>: replace discrete lag selection with <strong>features from continuous windows</strong> (PCA on time segments), which is a nice way to handle long memory without exploding dimension.</li>
 
 <p></ul>
-If you’re deploying LLM reasoning in a workflow, this is basically a <strong>shake-test</strong> for answers: perturb the internal path, see if the output is structurally stable.</p>
+The underappreciated practical ingredient: <strong>biased experimental design</strong> that oversamples extreme excitations. With as few as <em>10</em> full simulations they report ~5% accuracy for a reference first-passage reliability index around β=3 on the quarter-car benchmark, and they stay credible down to Pf ≈ 1e−3 on Bouc–Wen with ~50 biased samples.</p>
 
-<h4>2) LLM evaluation reliability: correcting adaptive “winner’s curse”</h4>
-Xu et al. go after a problem anyone doing prompt/program search should feel in their bones: you tune on a benchmark pool, pick the best-looking candidate, and your reported score is… optimistic. Sometimes enough to flip “should we deploy the tuned version?” decisions.
+<p>Takeaway for practitioners: if you’re still training surrogates on “representative” loads and wondering why tail estimates are mush, this is a concrete recipe—<strong>tail-focused sampling + causal/time-aware surrogate</strong>.</p>
 
-<p>Their protocol, <strong>SIREN</strong>, is a post-search reporting scheme:
-<ul>
-<li>Freeze a shortlist after tuning.</li>
-<li>Repeatedly split an <em>independent</em> eval pool into a “scoring” subset (to set selection weights) and a held-out subset (for evaluation).</li>
-<li>Use a selection-aware bootstrap for uncertainty.</li></p>
+<p>---</p>
 
-<p></ul>
-The practitioner takeaway: if you’re doing adaptive benchmarking, you need reporting that respects selection. They show naive winner reporting often biases scores by <strong>+1 to +4 points</strong>, while SIREN’s error vs a Monte Carlo target is near zero (on the order of a few tenths of a point).</p>
+<h4>“Reliable AI” shows up twice—once for priors, once for people</h4>
 
-<h4>3) Conformal prediction + survey data: marginal validity isn’t subgroup reliability</h4>
-Rafe et al. deliver a sober message: even when split conformal hits <strong>~90% marginal coverage</strong>, subgroup performance can be way off — <strong>~13 percentage points</strong> of weighted subgroup coverage gap across intersectional race×education groups in their Pew survey setting.
+<p>Choi et al. propose something quality engineers will recognize immediately: <strong>calibration before deployment</strong>, but for Bayesian priors built from AI-generated synthetic data. Their “rectified AI-informed prior” takes the AI-induced law, <strong>rectifies it using labeled calibration data</strong>, then centers a Dirichlet process prior there. Empirically it rescues credible-interval coverage that can otherwise collapse to ~0, and it’s much less sensitive to prior strength γ. If you’re mixing small labeled datasets with big AI-generated guesses, this is a principled way to keep uncertainty honest.</p>
 
-<p>Even more interesting (and annoying): <strong>Mondrian (group-conditional) conformal can make it worse</strong> when calibration cells are thin. It increased both subgroup gap and set size for their best predictor (XGBoost). A regularized Mondrian helps stability but doesn’t magically fix fairness–efficiency trade-offs.</p>
+<p>Jia et al., meanwhile, test whether LLM “digital personas” can stand in for humans in survey findings using a same-person temporal holdout on the LISS panel. The punchline is refreshingly sober: <strong>personas help at the aggregate distribution level</strong> (JSD and MMD improve a lot with retrieval augmentation), but <strong>individual-level fidelity and multivariate structure are weak</strong> (clustering agreement near zero). Translation: good for <strong>instrument pre-testing / what-if distribution checks</strong>, not good as “synthetic respondents.”</p>
 
-<p>If you work with weighted survey or panel data, this is a reminder: “valid on average” is not the same as “reliable for the people we care about.”</p>
+<p>---</p>
 
-<h3>One DOE paper, but it’s really about automated design under messy physics</h3>
-Ruiz-Gonzalez et al. treat quantum photonics experiment construction like an optimization problem over both discrete topology (operator ordering) and continuous parameters — explicitly modeling higher-order emissions (not the usual low-gain simplifications). The cool parallel to industrial DOE: <strong>the “nuisance” higher-order terms sometimes become usable signal</strong> when ancillas are available.
+<h4>SPC for multi-agent systems: adaptivity buys peace… and creates blind spots</h4>
 
-<h3>The thread worth pondering</h3>
-We’re watching reliability move from single-number reporting to <strong>stress-testing procedures</strong>: perturb the reasoning, account for selection, and audit the subpopulations. Where are we still relying on “marginal” guarantees because they’re convenient — and what would it look like to operationalize <em>stability checks</em> in our own pipelines?<h4>Featured Papers This Week</h4><ul><li><strong>Iwase et al.</strong>: <a href="https://arxiv.org/pdf/2605.07654v1">Reliable Chain-of-Thought via Prefix Consistency</a> <em>(Reliability)</em></li><li><strong>Xu et al.</strong>: <a href="https://arxiv.org/pdf/2605.05973v1">Towards Reliable LLM Evaluation: Correcting the Winner&apos;s Curse in Adaptive Benchmarking</a> <em>(Reliability)</em></li><li><strong>Rafe et al.</strong>: <a href="https://arxiv.org/pdf/2605.05562v1">Socio-Conformal Calibration in Complex Survey Data: Marginal Validity Is Not Enough for Subgroup Reliability</a> <em>(Reliability)</em></li><li><strong>Ruiz-Gonzalez et al.</strong>: <a href="https://arxiv.org/pdf/2605.02721v1">Automated experimental design for high-probability entanglement generation</a> <em>(Experimental Design)</em></li></ul><hr/><p><strong>Explore More:</strong> Visit the <a href="https://huggingface.co/spaces/fmegahed/arxiv_control_charts">QE ArXiv Watch Dashboard</a> to browse all papers with AI summaries, interactive filtering, and paper chat.</p><p style="color: #666; font-size: 0.9em;">This digest is automatically generated every Monday. Questions or feedback? Open an issue on our <a href="https://github.com/fmegahed/arxiv_control_charts">GitHub repository</a>.</p>
+<p>Helm et al. extend control-chart ideas to multi-agent trajectories via TDKPS/iso-mirror embeddings. Fixed limits blow up under natural drift (false alarms), so adaptive sliding-window limits are essential. But they prove the uncomfortable part: <strong>slow “sleeper agent” drift gets absorbed by the adaptive baseline</strong>, and after roughly one window length the alarm rate returns to in-control—meaning you can accumulate arbitrarily large undetected shift in small increments.</p>
+
+<p>If you monitor drifting systems (models in production, fleets of agents, even human-in-the-loop ops), the message is clear: <strong>adaptive Shewhart-like charts need a partner</strong>—CUSUM/EWMA-style cumulative detectors or explicit change-point logic—if you care about slow-burn failures.</p>
+
+<p>---</p>
+
+<p>The question to sit with this week: <strong>Where are we implicitly “adapting away” the very signal we’re supposed to catch—misspecification in experiments, tail risk in reliability, bias in AI priors, or adversarial drift in monitoring?</strong></p><h4>Featured Papers This Week</h4><ul><li><strong>Wen et al.</strong>: <a href="https://arxiv.org/pdf/2605.12899v1">Robust Sequential Experimental Design for A/B Testing</a> <em>(Experimental Design)</em></li><li><strong>Marelli et al.</strong>: <a href="https://arxiv.org/pdf/2605.12248v1">Time-variant reliability using time-dependent surrogate models</a> <em>(Reliability)</em></li><li><strong>Helm et al.</strong>: <a href="https://arxiv.org/pdf/2605.11135v1">Control Charts for Multi-agent Systems</a> <em>(Control Charts)</em></li><li><strong>Jia et al.</strong>: <a href="https://arxiv.org/pdf/2605.10659v1">When Can Digital Personas Reliably Approximate Human Survey Findings?</a> <em>(Reliability)</em></li><li><strong>Choi et al.</strong>: <a href="https://arxiv.org/pdf/2605.09834v1">Supercharging Bayesian Inference with Reliable AI-Informed Priors</a> <em>(Reliability)</em></li></ul><hr/><p><strong>Explore More:</strong> Visit the <a href="https://huggingface.co/spaces/fmegahed/arxiv_control_charts">QE ArXiv Watch Dashboard</a> to browse all papers with AI summaries, interactive filtering, and paper chat.</p><p style="color: #666; font-size: 0.9em;">This digest is automatically generated every Monday. Questions or feedback? Open an issue on our <a href="https://github.com/fmegahed/arxiv_control_charts">GitHub repository</a>.</p>
 ]]></description>
     </item>
   </channel>
