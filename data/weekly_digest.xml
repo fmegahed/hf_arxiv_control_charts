@@ -7,7 +7,7 @@
     <language>en-us</language>
     <copyright>CC BY 4.0 - QE ArXiv Watch</copyright>
     <managingEditor>noreply@example.com (QE ArXiv Watch)</managingEditor>
-    <lastBuildDate>Mon, 18 May 2026 13:10:43 +0000</lastBuildDate>
+    <lastBuildDate>Mon, 25 May 2026 13:07:07 +0000</lastBuildDate>
     <ttl>10080</ttl>
     <image>
       <url>https://huggingface.co/spaces/fmegahed/arxiv_control_charts/resolve/main/www/favicon.svg</url>
@@ -16,57 +16,62 @@
     </image>
     <atom:link href="https://huggingface.co/spaces/fmegahed/arxiv_control_charts/resolve/main/data/weekly_digest.xml" rel="self" type="application/rss+xml"/>
     <item>
-      <title>QE ArXiv Watch: Week of May 11 - May 18, 2026</title>
+      <title>QE ArXiv Watch: Week of May 18 - May 25, 2026</title>
       <link>https://huggingface.co/spaces/fmegahed/arxiv_control_charts</link>
-      <guid isPermaLink="false">qe-weekly-2026-05-18</guid>
-      <pubDate>Mon, 18 May 2026 13:10:43 +0000</pubDate>
+      <guid isPermaLink="false">qe-weekly-2026-05-25</guid>
+      <pubDate>Mon, 25 May 2026 13:07:07 +0000</pubDate>
       <description><![CDATA[
-<p>The most useful theme this week: <strong>we’re getting better at adapting in real time—A/B tests, control charts, Bayesian priors—but the bill always comes due somewhere</strong>. Adapt too aggressively and you can miss slow failures. Lean too hard on a model (or an AI) and bias sneaks in unless you actively correct it.</p>
+<p>The most useful trick I saw this week: an A/B test that can tell you whether “the treatment worked” because your <em>creative</em> changed minds or because the <em>algorithm</em> quietly changed who even saw it.</p>
 
-<h4>Sequential A/B tests that don’t panic when the model is wrong</h4>
-
-<p>Wen et al. tackle a very practical pain point: we want <strong>sequential designs that learn fast</strong> (small samples, covariates drifting, limited horizon) but don’t fall apart when our outcome model is misspecified—which, let’s be honest, it usually is.</p>
-
-<p>Their move is to <strong>design assignments by minimizing a worst-case MSE bound</strong> for an ATE estimator built on a <em>linear working model</em>, while controlling misspecification via an orthogonalization trick with sieve basis functions. In the contextual bandit case, the robust objective collapses into <strong>low-dimensional “imbalance summaries,”</strong> which is what makes dynamic programming feasible; they approximate the DP value function with a neural net trained on rollouts. For carryover settings (think switchbacks with memory), they go hierarchical: across-day DP + within-day RL.</p>
-
-<p>Why you should care: they show <strong>meaningful MSE reductions vs. randomization, switchbacks, and biased-coin/Neyman balancing</strong>, especially when you’re sample-starved. The part I like most is the “no regret when you’re right”: when the linear model is actually correct, robustness costs basically nothing (relative efficiency ~0.97–0.99 vs the non-robust DP baseline).</p>
-
-<p>If you run experiments on platforms with covariate shift or operational constraints, this is a real “try it” candidate—assuming you can stomach the engineering (DP + learned value functions).</p>
+<p>If you’ve ever tried to debug a platform experiment and felt like you were measuring a mixture of “targeting effects” and “message effects,” Pal et al. basically hand you a wrench.</p>
 
 <p>---</p>
 
-<h4>Reliability: surrogates grow up (and start respecting time)</h4>
+<h3>When A/B tests lie (and how to make them confess)</h3>
 
-<p>Marelli et al. push time-variant reliability beyond “static surrogate + hope.” For dynamical systems under stochastic excitation, the expensive object is the <strong>first-passage / cumulative failure probability</strong>. They build <strong>time-dependent surrogates using NARX-style causality</strong>, but with two clever upgrades:</p>
+<p>Pal et al. introduce a three-arm design for ad-platform experiments where delivery is mediated by an auction/targeting algorithm. The key move is a “metadata-only treatment” arm: the platform’s optimizer is told the ad is treated (via metadata), but the user-facing creative stays the control.</p>
+
+<p>So we get three groups:</p>
 
 <ul>
-<li><strong>mNARX</strong>: augment with auxiliary state variables so the model lives on a physically informed manifold.</li>
-<li><strong>F-NARX</strong>: replace discrete lag selection with <strong>features from continuous windows</strong> (PCA on time segments), which is a nice way to handle long memory without exploding dimension.</li>
+<li>Control: control metadata + control creative  </li>
+<li>Full treatment: treated metadata + treated creative  </li>
+<li>Metadata-only: treated metadata + <strong>control</strong> creative  </li>
 
 <p></ul>
-The underappreciated practical ingredient: <strong>biased experimental design</strong> that oversamples extreme excitations. With as few as <em>10</em> full simulations they report ~5% accuracy for a reference first-passage reliability index around β=3 on the quarter-car benchmark, and they stay credible down to Pf ≈ 1e−3 on Bouc–Wen with ~50 biased samples.</p>
+With randomization plus an exclusion assumption (“metadata-only doesn’t directly affect users because they don’t see it”), they can identify a population-average <strong>natural indirect effect</strong> (algorithmic reallocation) and <strong>natural direct effect</strong> (creative impact) <em>without</em> the usual sequential ignorability headache that kills most mediation in observational settings.</p>
 
-<p>Takeaway for practitioners: if you’re still training surrogates on “representative” loads and wondering why tail estimates are mush, this is a concrete recipe—<strong>tail-focused sampling + causal/time-aware surrogate</strong>.</p>
+<p>The practical punchline from their Meta field test: at high bids, the algorithmic channel pushed female impression share up about <strong>+2.07 pp</strong>, while the visible creative channel nudged it <strong>down −0.68 pp</strong>. Net effect looks small (+1.39 pp) and non-significant in the pilot—but the decomposition tells you the platform was doing the heavy lifting, and the creative partly counteracted it. A conventional two-arm test would have blurred that into one muddy “meh.”</p>
 
-<p>---</p>
-
-<h4>“Reliable AI” shows up twice—once for priors, once for people</h4>
-
-<p>Choi et al. propose something quality engineers will recognize immediately: <strong>calibration before deployment</strong>, but for Bayesian priors built from AI-generated synthetic data. Their “rectified AI-informed prior” takes the AI-induced law, <strong>rectifies it using labeled calibration data</strong>, then centers a Dirichlet process prior there. Empirically it rescues credible-interval coverage that can otherwise collapse to ~0, and it’s much less sensitive to prior strength γ. If you’re mixing small labeled datasets with big AI-generated guesses, this is a principled way to keep uncertainty honest.</p>
-
-<p>Jia et al., meanwhile, test whether LLM “digital personas” can stand in for humans in survey findings using a same-person temporal holdout on the LISS panel. The punchline is refreshingly sober: <strong>personas help at the aggregate distribution level</strong> (JSD and MMD improve a lot with retrieval augmentation), but <strong>individual-level fidelity and multivariate structure are weak</strong> (clustering agreement near zero). Translation: good for <strong>instrument pre-testing / what-if distribution checks</strong>, not good as “synthetic respondents.”</p>
+<p>For QE folks, this is a design pattern: if your system has an optimizer in the loop, consider experimental arms that “tickle the optimizer” separately from what the end user experiences.</p>
 
 <p>---</p>
 
-<h4>SPC for multi-agent systems: adaptivity buys peace… and creates blind spots</h4>
+<h3>Reliability isn’t just about prediction—it’s about <em>knowing when to trust it</em></h3>
 
-<p>Helm et al. extend control-chart ideas to multi-agent trajectories via TDKPS/iso-mirror embeddings. Fixed limits blow up under natural drift (false alarms), so adaptive sliding-window limits are essential. But they prove the uncomfortable part: <strong>slow “sleeper agent” drift gets absorbed by the adaptive baseline</strong>, and after roughly one window length the alarm rate returns to in-control—meaning you can accumulate arbitrarily large undetected shift in small increments.</p>
+<p>Three reliability-flavored papers circle the same theme: confidence signals fail exactly where we need them most (near boundaries, under non-identifiability, under domain shift). But each offers a usable fix.</p>
 
-<p>If you monitor drifting systems (models in production, fleets of agents, even human-in-the-loop ops), the message is clear: <strong>adaptive Shewhart-like charts need a partner</strong>—CUSUM/EWMA-style cumulative detectors or explicit change-point logic—if you care about slow-burn failures.</p>
+<h4>Random forests: use the tree’s <em>decision path</em> as a per-sample reliability cue  </h4>
+Park et al. propose weighting trees in a Random Forest based on the “flip pattern” of majority-class labels along the root-to-leaf path—an intuitive proxy for “did this tree wander through contradictory regions before landing here?”
+
+<p>They learn weights via cross-validation in a carefully <strong>class-conditioned</strong> way (critical: naïve weighting quietly crushes minority recall due to confounding). The average accuracy gain is small (<strong>~+0.0011</strong>), but statistically consistent across 30 datasets, with essentially no majority-recall regressions. This feels like a safe, incremental bolt-on when you’re already using RFs and care about stability near the decision boundary.</p>
+
+<h4>Model selection under non-identifiability: stop trusting BIC and Laplace when posteriors have ridges  </h4>
+Foo et al. show why evidence approximations that assume “posterior ≈ ellipse” can badly undercount models with practical non-identifiability (ridge/funnel geometries). Their robust adaptive multiple importance sampling (AMIS) uses Pathfinder-based mixture proposals and then optimizes mixture weights to reduce variance.
+
+<p>In a 64-model ODE simulation, their approach gets model posteriors close to bridge sampling: total variation distance around <strong>0.013</strong> vs <strong>0.11</strong> for standard AMIS, and vastly better than BIC/Laplace. If you do reliability modeling with dynamical systems (degradation, growth/decay, epidemiology-style hazard models), this is a quiet warning: “cheap” evidence can be systematically biased toward identifiable models—not necessarily the right ones.</p>
+
+<h4>Uncertainty under domain shift: ID calibration is a mirage  </h4>
+Moulaeifard et al. benchmark cuffless BP estimation from PPG across in-distribution and multiple OOD datasets. The headline is familiar but worth repeating: uncertainty quality degrades hard under shift, and you only learn that by testing externally.
+
+<p>Deep ensembles improve OOD accuracy; Gaussian NLL training gives better native uncertainty than MSE; and post-hoc recalibration (conformal prediction, temperature scaling, isotonic) can rescue otherwise-useless MSE uncertainty intervals. Translation: if you’re deploying probabilistic regressors, treat recalibration as part of release, not an academic afterthought.</p>
 
 <p>---</p>
 
-<p>The question to sit with this week: <strong>Where are we implicitly “adapting away” the very signal we’re supposed to catch—misspecification in experiments, tail risk in reliability, bias in AI priors, or adversarial drift in monitoring?</strong></p><h4>Featured Papers This Week</h4><ul><li><strong>Wen et al.</strong>: <a href="https://arxiv.org/pdf/2605.12899v1">Robust Sequential Experimental Design for A/B Testing</a> <em>(Experimental Design)</em></li><li><strong>Marelli et al.</strong>: <a href="https://arxiv.org/pdf/2605.12248v1">Time-variant reliability using time-dependent surrogate models</a> <em>(Reliability)</em></li><li><strong>Helm et al.</strong>: <a href="https://arxiv.org/pdf/2605.11135v1">Control Charts for Multi-agent Systems</a> <em>(Control Charts)</em></li><li><strong>Jia et al.</strong>: <a href="https://arxiv.org/pdf/2605.10659v1">When Can Digital Personas Reliably Approximate Human Survey Findings?</a> <em>(Reliability)</em></li><li><strong>Choi et al.</strong>: <a href="https://arxiv.org/pdf/2605.09834v1">Supercharging Bayesian Inference with Reliable AI-Informed Priors</a> <em>(Reliability)</em></li></ul><hr/><p><strong>Explore More:</strong> Visit the <a href="https://huggingface.co/spaces/fmegahed/arxiv_control_charts">QE ArXiv Watch Dashboard</a> to browse all papers with AI summaries, interactive filtering, and paper chat.</p><p style="color: #666; font-size: 0.9em;">This digest is automatically generated every Monday. Questions or feedback? Open an issue on our <a href="https://github.com/fmegahed/arxiv_control_charts">GitHub repository</a>.</p>
+<h3>The thread to pull next week  </h3>
+We’re watching a broader convergence: <strong>designing experiments and inference pipelines that separate mechanism from measurement</strong>—algorithm vs creative, boundary vs interior, identifiable vs sloppy, ID vs OOD.
+
+<p>Worth pondering: where in your current workflow are you still reporting a single number (lift, accuracy, “model probability”) when the system is really a mixture of channels that deserve to be teased apart?</p><h4>Featured Papers This Week</h4><ul><li><strong>Pal et al.</strong>: <a href="https://arxiv.org/pdf/2605.23706v1">Algorithm or Creative? A Three-Arm Experimental Design for Decomposing Algorithmic Bias in Platform A/B Tests</a> <em>(Experimental Design)</em></li><li><strong>Park et al.</strong>: <a href="https://arxiv.org/pdf/2605.20716v2">Decision-Path Patterns as Tree Reliability Signals: Path-based Adaptive Weighting for Random Forest Classification</a> <em>(Reliability)</em></li><li><strong>Foo et al.</strong>: <a href="https://arxiv.org/pdf/2605.19807v1">Reliable model selection in the presence of parameter non-identifiability</a> <em>(Reliability)</em></li><li><strong>Moulaeifard et al.</strong>: <a href="https://arxiv.org/pdf/2605.18008v1">Uncertainty Reliability Under Domain Shift: An Investigation for Data-Driven Blood Pressure Estimation in Photoplethysmography</a> <em>(Reliability)</em></li></ul><hr/><p><strong>Explore More:</strong> Visit the <a href="https://huggingface.co/spaces/fmegahed/arxiv_control_charts">QE ArXiv Watch Dashboard</a> to browse all papers with AI summaries, interactive filtering, and paper chat.</p><p style="color: #666; font-size: 0.9em;">This digest is automatically generated every Monday. Questions or feedback? Open an issue on our <a href="https://github.com/fmegahed/arxiv_control_charts">GitHub repository</a>.</p>
 ]]></description>
     </item>
   </channel>
