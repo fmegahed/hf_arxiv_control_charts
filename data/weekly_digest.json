@@ -1,51 +1,43 @@
 {
   "metadata": {
-    "generated_at": "2026-05-25T13:07:07Z",
-    "week_start": "2026-05-18",
-    "week_end": "2026-05-25",
+    "generated_at": "2026-06-01T13:59:36Z",
+    "week_start": "2026-05-25",
+    "week_end": "2026-06-01",
     "version": "3.1.0"
   },
   "summary": {
-    "total_papers": 4,
+    "total_papers": 3,
     "papers_by_track": {
-      "spc": 0,
-      "exp_design": 1,
-      "reliability": 3
+      "spc": 1,
+      "exp_design": 2,
+      "reliability": 0
     }
   },
-  "synthesis": "The most useful trick I saw this week: an A/B test that can tell you whether “the treatment worked” because your *creative* changed minds or because the *algorithm* quietly changed who even saw it.\n\nIf you’ve ever tried to debug a platform experiment and felt like you were measuring a mixture of “targeting effects” and “message effects,” Pal et al. basically hand you a wrench.\n\n---\n\n## When A/B tests lie (and how to make them confess)\n\nPal et al. introduce a three-arm design for ad-platform experiments where delivery is mediated by an auction/targeting algorithm. The key move is a “metadata-only treatment” arm: the platform’s optimizer is told the ad is treated (via metadata), but the user-facing creative stays the control.\n\nSo we get three groups:\n\n- Control: control metadata + control creative  \n- Full treatment: treated metadata + treated creative  \n- Metadata-only: treated metadata + **control** creative  \n\nWith randomization plus an exclusion assumption (“metadata-only doesn’t directly affect users because they don’t see it”), they can identify a population-average **natural indirect effect** (algorithmic reallocation) and **natural direct effect** (creative impact) *without* the usual sequential ignorability headache that kills most mediation in observational settings.\n\nThe practical punchline from their Meta field test: at high bids, the algorithmic channel pushed female impression share up about **+2.07 pp**, while the visible creative channel nudged it **down −0.68 pp**. Net effect looks small (+1.39 pp) and non-significant in the pilot—but the decomposition tells you the platform was doing the heavy lifting, and the creative partly counteracted it. A conventional two-arm test would have blurred that into one muddy “meh.”\n\nFor QE folks, this is a design pattern: if your system has an optimizer in the loop, consider experimental arms that “tickle the optimizer” separately from what the end user experiences.\n\n---\n\n## Reliability isn’t just about prediction—it’s about *knowing when to trust it*\n\nThree reliability-flavored papers circle the same theme: confidence signals fail exactly where we need them most (near boundaries, under non-identifiability, under domain shift). But each offers a usable fix.\n\n### Random forests: use the tree’s *decision path* as a per-sample reliability cue  \nPark et al. propose weighting trees in a Random Forest based on the “flip pattern” of majority-class labels along the root-to-leaf path—an intuitive proxy for “did this tree wander through contradictory regions before landing here?”\n\nThey learn weights via cross-validation in a carefully **class-conditioned** way (critical: naïve weighting quietly crushes minority recall due to confounding). The average accuracy gain is small (**~+0.0011**), but statistically consistent across 30 datasets, with essentially no majority-recall regressions. This feels like a safe, incremental bolt-on when you’re already using RFs and care about stability near the decision boundary.\n\n### Model selection under non-identifiability: stop trusting BIC and Laplace when posteriors have ridges  \nFoo et al. show why evidence approximations that assume “posterior ≈ ellipse” can badly undercount models with practical non-identifiability (ridge/funnel geometries). Their robust adaptive multiple importance sampling (AMIS) uses Pathfinder-based mixture proposals and then optimizes mixture weights to reduce variance.\n\nIn a 64-model ODE simulation, their approach gets model posteriors close to bridge sampling: total variation distance around **0.013** vs **0.11** for standard AMIS, and vastly better than BIC/Laplace. If you do reliability modeling with dynamical systems (degradation, growth/decay, epidemiology-style hazard models), this is a quiet warning: “cheap” evidence can be systematically biased toward identifiable models—not necessarily the right ones.\n\n### Uncertainty under domain shift: ID calibration is a mirage  \nMoulaeifard et al. benchmark cuffless BP estimation from PPG across in-distribution and multiple OOD datasets. The headline is familiar but worth repeating: uncertainty quality degrades hard under shift, and you only learn that by testing externally.\n\nDeep ensembles improve OOD accuracy; Gaussian NLL training gives better native uncertainty than MSE; and post-hoc recalibration (conformal prediction, temperature scaling, isotonic) can rescue otherwise-useless MSE uncertainty intervals. Translation: if you’re deploying probabilistic regressors, treat recalibration as part of release, not an academic afterthought.\n\n---\n\n## The thread to pull next week  \nWe’re watching a broader convergence: **designing experiments and inference pipelines that separate mechanism from measurement**—algorithm vs creative, boundary vs interior, identifiable vs sloppy, ID vs OOD.\n\nWorth pondering: where in your current workflow are you still reporting a single number (lift, accuracy, “model probability”) when the system is really a mixture of channels that deserve to be teased apart?",
+  "synthesis": "Last week’s quiet theme: we’re getting better at *aiming* our statistical machinery. Not just “detect a change” or “learn the parameters,” but detect the *right* kind of change (serial dependence that breaks your chart) and learn the *right* things (only what the downstream decision actually cares about, under real constraints).\n\n## SPC: catching “your data stopped being i.i.d.” without assuming a distribution\n\nImagine your X̄ chart starts screaming, but nothing in the process changed—your sampling just got autocorrelated after a tooling tweak, a new batching routine, or a control loop retune. Weiß et al. go straight after that failure mode: monitor **serial dependence itself**, and do it **distribution-free**.\n\nThe trick is a clever replacement for ordinal-pattern (OP) monitoring. Instead of tracking patterns of ranks directly, they track **“transcripts” between consecutive OPs**, which can be mapped to **Kendall distances**. That gives three EWMA-style charts:\n\n- **Δτ**: chi-square-type distance on the transcript PMF  \n- **ΔK**: chi-square-type distance on the Kendall-distance PMF  \n- **μK**: a two-sided chart on the centered mean Kendall distance\n\nWhy you might care: these charts are built to be **robust when the marginal distribution is unknown** (continuous only) *and* when the usual i.i.d. assumption is the thing that’s drifting. Control limits are set by Monte Carlo to hit an in-control ARL≈370 (they calibrate under normality thanks to distribution-freeness), with practical smoothing choices (λ = 0.25, 0.10, 0.05).\n\nPerformance-wise, **μK and ΔK look like the workhorses** in many AR(1)-type situations—especially under strong negative autocorrelation, where classic tools can behave weirdly. In their chemical batch yield example (n=70, lag-1 ACF ≈ −0.588), the new charts flag early (around t≈23–25 for λ=0.05), dramatically earlier than a comparator that barely signals at all.\n\nCaveat worth filing away: for a TEAR(1) setting, an OP-based **β-chart** still wins. So if your dependence is very “tail event” flavored, there may be specialized tools that beat the general-purpose transcript approach.\n\n## DOE: two strong signals—constraints are real, and decisions matter more than EIG\n\n### Constrained sequential design that actually plans ahead (COPEx)\n\nGuo et al. tackle a problem you and I hit in the field constantly: sequential Bayesian design with **hard feasibility constraints**—can’t move the probe too far, can’t violate a remaining budget, can’t take the “perfect” next experiment because the factory won’t let you.\n\nTheir COPEx recipe is pragmatic: amortize the expensive bits offline (posterior surrogate + a proposal policy), then do **online lookahead planning** with a scenario tree for a short horizon (H≈2–3 seems to be the sweet spot). The payoff shows up most when constraints tighten: as step-size limits get smaller or budgets get stingier, **non-myopic planning buys you more**. Runtime grows quickly with horizon/branching (no free lunch), but they argue you don’t need deep lookahead to get most of the gain.\n\nIf you’re doing robotic inspection paths, adaptive metrology with move limits, or active learning with “travel cost,” this is one of the more deployment-shaped approaches we’ve seen.\n\n### Stop optimizing for information; optimize for the decision (GoBOED)\n\nGo et al. lean into something many of us suspect: EIG is a nice proxy, but it’s not the objective. They propose GoBOED, which designs experiments to optimize **robust downstream decision quality** (mean objectives, chance constraints, CVaR), using an amortized posterior and a differentiable decision layer.\n\nThe practitioner-friendly insight is the “design window” effect. In their case studies, EIG picks a sharp, brittle optimum (e.g., “day 5”), while robust decision criteria produce a **broad near-optimal window** (e.g., “days 7–11”). That’s gold in real operations: if many designs are nearly equivalent for the decision, you can pick the one that’s easiest to run, cheapest, or least disruptive.\n\n## One question to take into next week\n\nIf we accept that (1) dependence is a first-class monitoring target and (2) designs should be judged by decision impact under constraints… how many of our current “optimal” procedures are optimal only in a world where data are i.i.d. and experiments are frictionless?",
   "papers": [
     {
-      "id": "2605.23706v1",
-      "title": "Algorithm or Creative? A Three-Arm Experimental Design for Decomposing Algorithmic Bias in Platform A/B Tests",
-      "authors": "Pallavi Pal|Anjana Susarla",
-      "submitted": "2026-05-22",
+      "id": "2605.26572v1",
+      "title": "Using Transcripts for Nonparametric Monitoring of Serial Dependence",
+      "authors": "Christian H. Weiß|José M. Amigó",
+      "submitted": "2026-05-26",
+      "track": "spc",
+      "link": "https://arxiv.org/pdf/2605.26572v1"
+    },
+    {
+      "id": "2605.26990v1",
+      "title": "Constrained Bayesian Experimental Design via Online Planning",
+      "authors": "Yujia Guo|Daolang Huang|Xinyu Zhang|Sammie Katt|Samuel Kaski|Ayush Bharti",
+      "submitted": "2026-05-26",
       "track": "exp_design",
-      "link": "https://arxiv.org/pdf/2605.23706v1"
+      "link": "https://arxiv.org/pdf/2605.26990v1"
     },
     {
-      "id": "2605.20716v2",
-      "title": "Decision-Path Patterns as Tree Reliability Signals: Path-based Adaptive Weighting for Random Forest Classification",
-      "authors": "Youngjoon Park",
-      "submitted": "2026-05-20",
-      "track": "reliability",
-      "link": "https://arxiv.org/pdf/2605.20716v2"
-    },
-    {
-      "id": "2605.19807v1",
-      "title": "Reliable model selection in the presence of parameter non-identifiability",
-      "authors": "Yong See Foo|Torkel E. Loman|Alexander P. Browning|Ivo Siekmann|Ruth E. Baker|Jennifer A. Flegg",
-      "submitted": "2026-05-19",
-      "track": "reliability",
-      "link": "https://arxiv.org/pdf/2605.19807v1"
-    },
-    {
-      "id": "2605.18008v1",
-      "title": "Uncertainty Reliability Under Domain Shift: An Investigation for Data-Driven Blood Pressure Estimation in Photoplethysmography",
-      "authors": "Mohammad Moulaeifard|Ciaran Bench|Philip J. Aston|Nils Strodthoff",
-      "submitted": "2026-05-18",
-      "track": "reliability",
-      "link": "https://arxiv.org/pdf/2605.18008v1"
+      "id": "2605.26093v1",
+      "title": "Goal-driven Bayesian Optimal Experimental Design for Robust Decision-Making Under Model Uncertainty",
+      "authors": "Jinwoo Go|Xiaoning Qian|Byung-Jun Yoon",
+      "submitted": "2026-05-25",
+      "track": "exp_design",
+      "link": "https://arxiv.org/pdf/2605.26093v1"
     }
   ]
 }
