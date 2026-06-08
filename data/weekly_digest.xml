@@ -7,7 +7,7 @@
     <language>en-us</language>
     <copyright>CC BY 4.0 - QE ArXiv Watch</copyright>
     <managingEditor>noreply@example.com (QE ArXiv Watch)</managingEditor>
-    <lastBuildDate>Mon, 01 Jun 2026 13:59:36 +0000</lastBuildDate>
+    <lastBuildDate>Mon, 08 Jun 2026 13:25:59 +0000</lastBuildDate>
     <ttl>10080</ttl>
     <image>
       <url>https://huggingface.co/spaces/fmegahed/arxiv_control_charts/resolve/main/www/favicon.svg</url>
@@ -16,50 +16,53 @@
     </image>
     <atom:link href="https://huggingface.co/spaces/fmegahed/arxiv_control_charts/resolve/main/data/weekly_digest.xml" rel="self" type="application/rss+xml"/>
     <item>
-      <title>QE ArXiv Watch: Week of May 25 - June 01, 2026</title>
+      <title>QE ArXiv Watch: Week of June 01 - June 08, 2026</title>
       <link>https://huggingface.co/spaces/fmegahed/arxiv_control_charts</link>
-      <guid isPermaLink="false">qe-weekly-2026-06-01</guid>
-      <pubDate>Mon, 01 Jun 2026 13:59:36 +0000</pubDate>
+      <guid isPermaLink="false">qe-weekly-2026-06-08</guid>
+      <pubDate>Mon, 08 Jun 2026 13:25:59 +0000</pubDate>
       <description><![CDATA[
-<p>Last week’s quiet theme: we’re getting better at <em>aiming</em> our statistical machinery. Not just “detect a change” or “learn the parameters,” but detect the <em>right</em> kind of change (serial dependence that breaks your chart) and learn the <em>right</em> things (only what the downstream decision actually cares about, under real constraints).</p>
+<h3>QE ArXiv Watch Weekly (week ending June 08, 2026)</h3>
 
-<h3>SPC: catching “your data stopped being i.i.d.” without assuming a distribution</h3>
+<p>If you take one idea back to your team this week, make it this: <strong>a lot of our “evaluation” work is quietly doing the same thing as measurement-system analysis</strong>—we’re mixing signal with distortion (clustering, label noise, missing detection, location error), and then acting surprised when the conclusions wobble. Several papers converge on a practical message: <em>model the distortion, or your uncertainty is fiction.</em></p>
 
-<p>Imagine your X̄ chart starts screaming, but nothing in the process changed—your sampling just got autocorrelated after a tooling tweak, a new batching routine, or a control loop retune. Weiß et al. go straight after that failure mode: monitor <strong>serial dependence itself</strong>, and do it <strong>distribution-free</strong>.</p>
+<h4>What problems are getting real attention (and why we should care)</h4>
 
-<p>The trick is a clever replacement for ordinal-pattern (OP) monitoring. Instead of tracking patterns of ranks directly, they track <strong>“transcripts” between consecutive OPs</strong>, which can be mapped to <strong>Kendall distances</strong>. That gives three EWMA-style charts:</p>
+<p><strong>1) “Your data aren’t i.i.d.” is finally getting treated as a design constraint, not a footnote.</strong>  
+Hong et al. tackle ML performance metrics under <em>clustered</em> evaluation data (think: repeated measures per unit/subject/lot). They show—pretty starkly—that naive i.i.d. standard errors can turn a non-result into a “highly significant” win. Their cluster-robust delta-method framework gives you confidence intervals and superiority/noninferiority tests for common metrics (F1, MCC, macro-F1, etc.), plus workable sample size approximations where the <strong>number of independent clusters</strong> is the true currency. If you’re evaluating models on operator/line/day repeated samples, this is immediately applicable.</p>
+
+<p>Divekar et al. come at evaluation from another angle: <strong>using LLM judgments as “cheap measurements,” but with statistical guardrails.</strong> PRECISE extends prediction-powered inference to ranking metrics like Precision@K, combining a small human-labeled set with a big pile of LLM labels while staying (provably) unbiased. The practical nugget: you can often hit diminishing returns at about <strong>100× more LLM judgments than gold labels</strong>—useful for budgeting.</p>
+
+<p>And Ebiele et al. provide the uncomfortable mirror: in feature selection research, “wins” drop as studies include more datasets and baselines, and “wins” increase with more newly proposed methods. That’s not DOE, but it’s a reminder that <strong>evaluation design choices behave like knobs that change the reported effect size</strong>. If you’ve ever wondered why a method looks unbeatable in one paper and merely okay in your shop-floor data, this is the meta-level explanation.</p>
+
+<p><strong>2) Ratio monitoring is having a moment—because short runs are the norm, not the exception.</strong>  
+Three SPC papers focus on <code>Z=X/Y</code> when both X and Y are normal-ish but the ratio isn’t.</p>
 
 <ul>
-<li><strong>Δτ</strong>: chi-square-type distance on the transcript PMF  </li>
-<li><strong>ΔK</strong>: chi-square-type distance on the Kendall-distance PMF  </li>
-<li><strong>μK</strong>: a two-sided chart on the centered mean Kendall distance</li>
+<li>Nguyen et al. propose an upper EWMA ratio chart for <strong>finite horizons</strong> (short production runs), tuned to a target <em>truncated</em> ARL. In the small-shift regime (e.g., 1–5% upward drift), they report <strong>15–40% TARL improvements</strong> over a Shewhart-style alternative, with decent robustness to mild non-normality.</li>
+
+<li>Tran et al. (measurement error) ask the question we all should ask first: <em>what if X and Y are measured with error?</em> Their result is a bit deflating but actionable: <strong>repeating measurements (m=1…10) barely helps</strong>, while <strong>increasing subgroup size n</strong> helps a lot (often 2–3× EARL improvement going from n=1 to n=15). If you’re deciding between “measure more times” vs “sample more units,” they give you evidence.</li>
+
+<li>Tran et al. (adaptive CUSUM) optimize the CUSUM reference value <code>k</code> <em>and</em> decision interval <code>h</code> for short runs. The gains over fixed-<code>k</code> are modest in routine settings, but the big win is <strong>feasibility and robustness</strong> when variability is tiny or correlation shifts between Phase I and II—exactly the kind of corner case that breaks charts in production.</li>
 
 <p></ul>
-Why you might care: these charts are built to be <strong>robust when the marginal distribution is unknown</strong> (continuous only) <em>and</em> when the usual i.i.d. assumption is the thing that’s drifting. Control limits are set by Monte Carlo to hit an in-control ARL≈370 (they calibrate under normality thanks to distribution-freeness), with practical smoothing choices (λ = 0.25, 0.10, 0.05).</p>
+<strong>3) Reliability modeling is leaning hard into “latent truth + observation process.”</strong>  
+Collins et al. model spatial point processes when you have <strong>both imperfect detection (thinning)</strong> and <strong>location error (displacement)</strong>—a nice analog to field reliability data where you miss events and mis-locate them. They show big improvements in intensity estimation and interval coverage when you model both distortions, and they prove identifiability under weak conditions. Even if you don’t do spatial work, the pattern generalizes: separate the failure process from the sensing process.</p>
 
-<p>Performance-wise, <strong>μK and ΔK look like the workhorses</strong> in many AR(1)-type situations—especially under strong negative autocorrelation, where classic tools can behave weirdly. In their chemical batch yield example (n=70, lag-1 ACF ≈ −0.588), the new charts flag early (around t≈23–25 for λ=0.05), dramatically earlier than a comparator that barely signals at all.</p>
+<p>Dutta et al. propose a bivariate inverse Gaussian degradation model with <strong>shared frailty</strong> (generalized gamma, so you can let the data choose gamma/Weibull/lognormal-like behavior). If you track two related degradation signals (say, crack length + stiffness loss), the shared random effect is a clean way to encode “some units are just frailer,” without forcing a copula choice up front.</p>
 
-<p>Caveat worth filing away: for a TEAR(1) setting, an OP-based <strong>β-chart</strong> still wins. So if your dependence is very “tail event” flavored, there may be specialized tools that beat the general-purpose transcript approach.</p>
+<p>Finally, Liu et al. release <strong>ICCDesign</strong> (R + Shiny) for planning and analyzing ICC-based reliability studies. No methodological fireworks, but it’s the kind of tooling that actually gets used—especially when you need to justify rater/replicate counts with assurance or CI-width targets.</p>
 
-<h3>DOE: two strong signals—constraints are real, and decisions matter more than EIG</h3>
+<h4>Methods you could try next week</h4>
 
-<h4>Constrained sequential design that actually plans ahead (COPEx)</h4>
+<p>If you’re evaluating models or inspectors with repeated measures: <strong>steal Hong et al.’s cluster-robust SE idea</strong> before you run your next bake-off.</p>
 
-<p>Guo et al. tackle a problem you and I hit in the field constantly: sequential Bayesian design with <strong>hard feasibility constraints</strong>—can’t move the probe too far, can’t violate a remaining budget, can’t take the “perfect” next experiment because the factory won’t let you.</p>
+<p>If you’re running short campaigns and the KPI is a ratio: <strong>consider EWMA-RZ+ or the adaptive CUSUM-RZ+</strong>, and decide early whether your real constraint is horizon length <code>I</code> or sampling budget <code>n</code>.</p>
 
-<p>Their COPEx recipe is pragmatic: amortize the expensive bits offline (posterior surrogate + a proposal policy), then do <strong>online lookahead planning</strong> with a scenario tree for a short horizon (H≈2–3 seems to be the sweet spot). The payoff shows up most when constraints tighten: as step-size limits get smaller or budgets get stingier, <strong>non-myopic planning buys you more</strong>. Runtime grows quickly with horizon/branching (no free lunch), but they argue you don’t need deep lookahead to get most of the gain.</p>
+<p>If you’re doing sensor placement / test planning in physics-heavy settings: Aarset et al.’s low-rank Bayesian OED for passive imaging is a reminder that <strong>offline/online splits</strong> are often the difference between “nice theory” and “we can optimize designs on Monday.”</p>
 
-<p>If you’re doing robotic inspection paths, adaptive metrology with move limits, or active learning with “travel cost,” this is one of the more deployment-shaped approaches we’ve seen.</p>
+<h4>Forward look</h4>
 
-<h4>Stop optimizing for information; optimize for the decision (GoBOED)</h4>
-
-<p>Go et al. lean into something many of us suspect: EIG is a nice proxy, but it’s not the objective. They propose GoBOED, which designs experiments to optimize <strong>robust downstream decision quality</strong> (mean objectives, chance constraints, CVaR), using an amortized posterior and a differentiable decision layer.</p>
-
-<p>The practitioner-friendly insight is the “design window” effect. In their case studies, EIG picks a sharp, brittle optimum (e.g., “day 5”), while robust decision criteria produce a <strong>broad near-optimal window</strong> (e.g., “days 7–11”). That’s gold in real operations: if many designs are nearly equivalent for the decision, you can pick the one that’s easiest to run, cheapest, or least disruptive.</p>
-
-<h3>One question to take into next week</h3>
-
-<p>If we accept that (1) dependence is a first-class monitoring target and (2) designs should be judged by decision impact under constraints… how many of our current “optimal” procedures are optimal only in a world where data are i.i.d. and experiments are frictionless?</p><h4>Featured Papers This Week</h4><ul><li><strong>Weiß et al.</strong>: <a href="https://arxiv.org/pdf/2605.26572v1">Using Transcripts for Nonparametric Monitoring of Serial Dependence</a> <em>(Control Charts)</em></li><li><strong>Guo et al.</strong>: <a href="https://arxiv.org/pdf/2605.26990v1">Constrained Bayesian Experimental Design via Online Planning</a> <em>(Experimental Design)</em></li><li><strong>Go et al.</strong>: <a href="https://arxiv.org/pdf/2605.26093v1">Goal-driven Bayesian Optimal Experimental Design for Robust Decision-Making Under Model Uncertainty</a> <em>(Experimental Design)</em></li></ul><hr/><p><strong>Explore More:</strong> Visit the <a href="https://huggingface.co/spaces/fmegahed/arxiv_control_charts">QE ArXiv Watch Dashboard</a> to browse all papers with AI summaries, interactive filtering, and paper chat.</p><p style="color: #666; font-size: 0.9em;">This digest is automatically generated every Monday. Questions or feedback? Open an issue on our <a href="https://github.com/fmegahed/arxiv_control_charts">GitHub repository</a>.</p>
+<p>A question worth pondering: <strong>Are we treating evaluation uncertainty as a first-class engineering requirement yet?</strong> This week’s papers suggest we’re getting closer—by explicitly modeling clustering, measurement error, imperfect detection, and biased study designs. The next step is cultural: making those uncertainty models as non-negotiable as calibration certificates.</p><h4>Featured Papers This Week</h4><ul><li><strong>Ebiele et al.</strong>: <a href="https://arxiv.org/pdf/2606.07068v1">Bias in Filter Feature Selection Evaluation: A Meta-Analysis of Datasets, Baselines, and Experimental Design Choices</a> <em>(Experimental Design)</em></li><li><strong>Nguyen et al.</strong>: <a href="https://arxiv.org/pdf/2606.06161v1">Monitoring the Ratio of two Normal Variables using EWMA Type Control Charts in Short Production Runs</a> <em>(Control Charts)</em></li><li><strong>Tran et al.</strong>: <a href="https://arxiv.org/pdf/2606.06149v1">Effect of the measurement errors on one-sided Synthetic-RZ control charts for monitoring the ratio of two normal variables</a> <em>(Control Charts)</em></li><li><strong>Tran et al.</strong>: <a href="https://arxiv.org/pdf/2606.06137v1">An Adaptive Upper One-Sided Cumulative Sum Control Chart with Joint Parameter Optimization for Monitoring the Ratio of Two Normal Variables in Short Production Runs</a> <em>(Control Charts)</em></li><li><strong>Aarset et al.</strong>: <a href="https://arxiv.org/pdf/2606.05490v1">Optimal experimental design for passive imaging source problems</a> <em>(Experimental Design)</em></li><li><strong>Collins et al.</strong>: <a href="https://arxiv.org/pdf/2606.05374v1">Analyzing spatial point processes degraded by displacement and imperfect detection</a> <em>(Reliability)</em></li><li><strong>Divekar et al.</strong>: <a href="https://arxiv.org/pdf/2606.05308v1">Statistically Reliable LLM-Based Ranking Evaluation via Prediction-Powered Inference</a> <em>(Reliability)</em></li><li><strong>Dutta et al.</strong>: <a href="https://arxiv.org/pdf/2606.04546v1">Bivariate inverse Gaussian degradation processes with shared random effects and an application to fatigue cracks</a> <em>(Reliability)</em></li></ul><hr/><p><strong>Explore More:</strong> Visit the <a href="https://huggingface.co/spaces/fmegahed/arxiv_control_charts">QE ArXiv Watch Dashboard</a> to browse all papers with AI summaries, interactive filtering, and paper chat.</p><p style="color: #666; font-size: 0.9em;">This digest is automatically generated every Monday. Questions or feedback? Open an issue on our <a href="https://github.com/fmegahed/arxiv_control_charts">GitHub repository</a>.</p>
 ]]></description>
     </item>
   </channel>
