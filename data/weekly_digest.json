@@ -1,107 +1,51 @@
 {
   "metadata": {
-    "generated_at": "2026-06-08T13:25:59Z",
-    "week_start": "2026-06-01",
-    "week_end": "2026-06-08",
+    "generated_at": "2026-06-15T14:05:33Z",
+    "week_start": "2026-06-08",
+    "week_end": "2026-06-15",
     "version": "3.1.0"
   },
   "summary": {
-    "total_papers": 11,
+    "total_papers": 4,
     "papers_by_track": {
-      "spc": 3,
-      "exp_design": 3,
-      "reliability": 5
+      "spc": 0,
+      "exp_design": 1,
+      "reliability": 3
     }
   },
-  "synthesis": "## QE ArXiv Watch Weekly (week ending June 08, 2026)\n\nIf you take one idea back to your team this week, make it this: **a lot of our “evaluation” work is quietly doing the same thing as measurement-system analysis**—we’re mixing signal with distortion (clustering, label noise, missing detection, location error), and then acting surprised when the conclusions wobble. Several papers converge on a practical message: *model the distortion, or your uncertainty is fiction.*\n\n### What problems are getting real attention (and why we should care)\n\n**1) “Your data aren’t i.i.d.” is finally getting treated as a design constraint, not a footnote.**  \nHong et al. tackle ML performance metrics under *clustered* evaluation data (think: repeated measures per unit/subject/lot). They show—pretty starkly—that naive i.i.d. standard errors can turn a non-result into a “highly significant” win. Their cluster-robust delta-method framework gives you confidence intervals and superiority/noninferiority tests for common metrics (F1, MCC, macro-F1, etc.), plus workable sample size approximations where the **number of independent clusters** is the true currency. If you’re evaluating models on operator/line/day repeated samples, this is immediately applicable.\n\nDivekar et al. come at evaluation from another angle: **using LLM judgments as “cheap measurements,” but with statistical guardrails.** PRECISE extends prediction-powered inference to ranking metrics like Precision@K, combining a small human-labeled set with a big pile of LLM labels while staying (provably) unbiased. The practical nugget: you can often hit diminishing returns at about **100× more LLM judgments than gold labels**—useful for budgeting.\n\nAnd Ebiele et al. provide the uncomfortable mirror: in feature selection research, “wins” drop as studies include more datasets and baselines, and “wins” increase with more newly proposed methods. That’s not DOE, but it’s a reminder that **evaluation design choices behave like knobs that change the reported effect size**. If you’ve ever wondered why a method looks unbeatable in one paper and merely okay in your shop-floor data, this is the meta-level explanation.\n\n**2) Ratio monitoring is having a moment—because short runs are the norm, not the exception.**  \nThree SPC papers focus on \\(Z=X/Y\\) when both X and Y are normal-ish but the ratio isn’t.\n\n- Nguyen et al. propose an upper EWMA ratio chart for **finite horizons** (short production runs), tuned to a target *truncated* ARL. In the small-shift regime (e.g., 1–5% upward drift), they report **15–40% TARL improvements** over a Shewhart-style alternative, with decent robustness to mild non-normality.\n\n- Tran et al. (measurement error) ask the question we all should ask first: *what if X and Y are measured with error?* Their result is a bit deflating but actionable: **repeating measurements (m=1…10) barely helps**, while **increasing subgroup size n** helps a lot (often 2–3× EARL improvement going from n=1 to n=15). If you’re deciding between “measure more times” vs “sample more units,” they give you evidence.\n\n- Tran et al. (adaptive CUSUM) optimize the CUSUM reference value \\(k\\) *and* decision interval \\(h\\) for short runs. The gains over fixed-\\(k\\) are modest in routine settings, but the big win is **feasibility and robustness** when variability is tiny or correlation shifts between Phase I and II—exactly the kind of corner case that breaks charts in production.\n\n**3) Reliability modeling is leaning hard into “latent truth + observation process.”**  \nCollins et al. model spatial point processes when you have **both imperfect detection (thinning)** and **location error (displacement)**—a nice analog to field reliability data where you miss events and mis-locate them. They show big improvements in intensity estimation and interval coverage when you model both distortions, and they prove identifiability under weak conditions. Even if you don’t do spatial work, the pattern generalizes: separate the failure process from the sensing process.\n\nDutta et al. propose a bivariate inverse Gaussian degradation model with **shared frailty** (generalized gamma, so you can let the data choose gamma/Weibull/lognormal-like behavior). If you track two related degradation signals (say, crack length + stiffness loss), the shared random effect is a clean way to encode “some units are just frailer,” without forcing a copula choice up front.\n\nFinally, Liu et al. release **ICCDesign** (R + Shiny) for planning and analyzing ICC-based reliability studies. No methodological fireworks, but it’s the kind of tooling that actually gets used—especially when you need to justify rater/replicate counts with assurance or CI-width targets.\n\n### Methods you could try next week\n\nIf you’re evaluating models or inspectors with repeated measures: **steal Hong et al.’s cluster-robust SE idea** before you run your next bake-off.\n\nIf you’re running short campaigns and the KPI is a ratio: **consider EWMA-RZ+ or the adaptive CUSUM-RZ+**, and decide early whether your real constraint is horizon length \\(I\\) or sampling budget \\(n\\).\n\nIf you’re doing sensor placement / test planning in physics-heavy settings: Aarset et al.’s low-rank Bayesian OED for passive imaging is a reminder that **offline/online splits** are often the difference between “nice theory” and “we can optimize designs on Monday.”\n\n### Forward look\n\nA question worth pondering: **Are we treating evaluation uncertainty as a first-class engineering requirement yet?** This week’s papers suggest we’re getting closer—by explicitly modeling clustering, measurement error, imperfect detection, and biased study designs. The next step is cultural: making those uncertainty models as non-negotiable as calibration certificates.",
+  "synthesis": "The sneaky villain of the week is *reliability*—not the bathtub-curve kind, but the “can I trust this number?” kind. Across three very different settings—panel regressions, probabilistic emulators, and customer value modeling—the same theme shows up: if your measurement/uncertainty story is even slightly off, the conclusions don’t just get noisy… they can flip.\n\n### When fixed effects quietly eat your signal\n\nIf you do any panel modeling, Rosenberg et al. is the one to read. The punchline: fixed-effects (FE) regression can *systematically* shrink coefficients toward zero when your regressor is slow-moving and measured with error. Why? The within-unit transformation is supposed to remove time-invariant confounding, but for high-persistence variables it also strips away most of the true variation—leaving measurement noise disproportionately behind.\n\nThey formalize this with a “within reliability” factor, \\(\\lambda_w\\), tied to the intraclass correlation (ICC) and the regressor’s overall measurement reliability. Under classical measurement error, FE converges to \\(\\beta \\lambda_w\\), not \\(\\beta\\). And \\(\\lambda_w\\) can be *much* smaller than the reliability you’d quote for the raw variable when ICC is high (exactly the case for lots of country-year, policy, and “slow governance” variables).\n\nWhat’s practitioner-useful is the workflow: report pooled + FE, report ICC, compute corrected within reliability, and then decide how to interpret FE based on sign comparisons (bounds vs “within” vs complement regime). No external reliability estimate? They propose an “autocorrelation frontier” to lower-bound \\(\\lambda_w\\) using within autocorrelations plus an assumption about how persistent the error can be. Also: an R package (`ferobust`) that automates the diagnostics.\n\nIf you’ve ever seen FE “wash out” effects you *believed* were real, this gives you a way to separate “no effect” from “effect times attenuation.” The simulation note is brutal: naive FE intervals can under-cover catastrophically under attenuation—so this isn’t a subtle academic corner case.\n\n### Calibration beats cleverness in probabilistic physical emulation\n\nGreenbury et al. run a surprisingly clean comparison between two families of probabilistic emulators for spatiotemporal PDE-ish systems: latent-space flow-matching generative models vs deterministic ensembles trained with CRPS-type losses. Same-ish parameter budget, same-ish compute envelope, evaluated the way we *should* evaluate uncertainty: coverage vs nominal over many levels, plus what happens when you roll out 100 steps autoregressively.\n\nThe result you can take to work: CRPS-trained ensembles are generally *more reliable* (better calibrated coverage), especially as rollout horizon grows—and they’re orders faster at inference (~15 ms/sample vs ~650+ ms/sample). Flow matching can catch up on calibration if you move from latent-space to ambient-space training, but then compute cost spikes; latent compression seems to be where calibration goes to die.\n\nThe broader trend: we’re seeing more papers treating calibration as a first-class engineering metric, not an afterthought to VRMSE. That’s a win for anyone who has to make decisions off predictive intervals, not point forecasts.\n\n### Long-term value of reliability: causal inference with operational teeth\n\nQiu et al. tackle a question reliability folks get asked constantly and rarely answer well: “Okay, delays are bad… but what’s the *long-term* value of reducing them?” Their Chronos LTV system models customers as Markovian agents with latent states and estimates a marginal policy effect for nudging the delay rate downward.\n\nMethodologically, it’s an identification + estimation story: truncated policy-gradient/IPW representation under Markov + sequential unconfoundedness assumptions, with a covariate-balancing propensity score (CBPS) logistic model to keep weights sane. The simulator validation is the point: CBPS-IPW tracks long-horizon randomized “ground truth” closely, while naive contrasts (and even flexible ML propensity models) badly overstate value. The “switchback × Chronos” combo is especially interesting: use a short-term experiment to induce the change, then use the observational panel + Chronos to translate it into long-term value with good coverage.\n\nIf you run reliability improvements through an LTV lens, this is a concrete template: experiment for the *shock*, observational structure for the *persistence*.\n\n### DOE still matters: 160-device maps beat one hero device\n\nYang et al. is classic DOE done right in a modern hardware context: sweeping ring radius, coupling angle, and waveguide geometries across 160 hybrid III–V/Si QD microring lasers to map trade-offs among threshold, efficiency, output power, and bandwidth. The useful part for quality-minded readers isn’t just the sub-mA threshold headline—it’s the multi-factor performance surface and the explicit “you can’t optimize everything” couplings (stronger coupling boosts slope efficiency but can raise threshold; smaller radii reduce threshold but risk radiation loss and power trapping).\n\nIt’s a reminder that in complex physical products, reliability and performance engineering often starts with *design-space literacy*, not just post-hoc screening.\n\n### One question to sit with\n\nAcross all four: are we treating “reliability” as a property of the *system*, or of the *measurement and inference pipeline* wrapped around it? This week’s papers argue you can’t separate them—and if you try, the bias will happily do it for you.",
   "papers": [
     {
-      "id": "2606.07068v1",
-      "title": "Bias in Filter Feature Selection Evaluation: A Meta-Analysis of Datasets, Baselines, and Experimental Design Choices",
-      "authors": "Malick Ebiele|Malika Bendechache|Rob Brennan",
-      "submitted": "2026-06-05",
+      "id": "2606.14009v1",
+      "title": "Reliable Panel Regression: A Default Workflow for Slow-Moving, Mismeasured Variables",
+      "authors": "Andrew S. Rosenberg",
+      "submitted": "2026-06-12",
+      "track": "reliability",
+      "link": "https://arxiv.org/pdf/2606.14009v1"
+    },
+    {
+      "id": "2606.13371v1",
+      "title": "Experimental Design Space Exploration of Ultra-Low Threshold Hybrid III-V/Si Quantum Dot Microring Lasers",
+      "authors": "Xucheng Yang|Preston Luong|Yatiraj Ramanujam|Antoine Descos|Yingtao Hu|Yuan Yuan|Bassem Tossoun|Geza Kurczveil|Eunso Shin|Jonathan Wierer|Ray Beausoleil|Di Liang|Stanley Cheung",
+      "submitted": "2026-06-11",
       "track": "exp_design",
-      "link": "https://arxiv.org/pdf/2606.07068v1"
+      "link": "https://arxiv.org/pdf/2606.13371v1"
     },
     {
-      "id": "2606.06161v1",
-      "title": "Monitoring the Ratio of two Normal Variables using EWMA Type Control Charts in Short Production Runs",
-      "authors": "Thi Hien Nguyen|Jean-Michel Masereel|Guillaume Tartare|Kim Duc Tran",
-      "submitted": "2026-06-04",
-      "track": "spc",
-      "link": "https://arxiv.org/pdf/2606.06161v1"
-    },
-    {
-      "id": "2606.06149v1",
-      "title": "Effect of the measurement errors on one-sided Synthetic-RZ control charts for monitoring the ratio of two normal variables",
-      "authors": "Kim Duc Tran|Thi Hien Nguyen|Kim Phuc Tran",
-      "submitted": "2026-06-04",
-      "track": "spc",
-      "link": "https://arxiv.org/pdf/2606.06149v1"
-    },
-    {
-      "id": "2606.06137v1",
-      "title": "An Adaptive Upper One-Sided Cumulative Sum Control Chart with Joint Parameter Optimization for Monitoring the Ratio of Two Normal Variables in Short Production Runs",
-      "authors": "Kim Duc Tran",
-      "submitted": "2026-06-04",
-      "track": "spc",
-      "link": "https://arxiv.org/pdf/2606.06137v1"
-    },
-    {
-      "id": "2606.05490v1",
-      "title": "Optimal experimental design for passive imaging source problems",
-      "authors": "Christian Aarset|Thorsten Hohage|Georg Stadler",
-      "submitted": "2026-06-03",
-      "track": "exp_design",
-      "link": "https://arxiv.org/pdf/2606.05490v1"
-    },
-    {
-      "id": "2606.05374v1",
-      "title": "Analyzing spatial point processes degraded by displacement and imperfect detection",
-      "authors": "Kevin M. Collins|Erin M. Schliep|Alan E. Gelfand|Tina M. Yack|Christopher W. Clark|Robert S. Schick",
-      "submitted": "2026-06-03",
+      "id": "2606.12997v1",
+      "title": "Reliability of Probabilistic Emulation of Physical Systems",
+      "authors": "Sam F. Greenbury|Radka Jersakova|Paolo Conti|Marjan Famili|Christopher Iliffe Sprague|Edwin Brown|Jason D. McEwen",
+      "submitted": "2026-06-11",
       "track": "reliability",
-      "link": "https://arxiv.org/pdf/2606.05374v1"
+      "link": "https://arxiv.org/pdf/2606.12997v1"
     },
     {
-      "id": "2606.05308v1",
-      "title": "Statistically Reliable LLM-Based Ranking Evaluation via Prediction-Powered Inference",
-      "authors": "Abhishek Divekar",
-      "submitted": "2026-06-03",
+      "id": "2606.11526v1",
+      "title": "What is the Long-Term Value of Reliability?",
+      "authors": "Chenyu Qiu|Xu Kuang|Inessa Liskovich|Ali Rauh|Stefan Wager",
+      "submitted": "2026-06-10",
       "track": "reliability",
-      "link": "https://arxiv.org/pdf/2606.05308v1"
-    },
-    {
-      "id": "2606.04546v1",
-      "title": "Bivariate inverse Gaussian degradation processes with shared random effects and an application to fatigue cracks",
-      "authors": "Yuvraj Dutta|Sandip Barui|Debanjan Mitra|Narayanaswamy Balakrishnan",
-      "submitted": "2026-06-03",
-      "track": "reliability",
-      "link": "https://arxiv.org/pdf/2606.04546v1"
-    },
-    {
-      "id": "2606.03656v2",
-      "title": "Beyond Point Estimates: Reliable Evaluation of Prediction Performance Metrics under Clustered Data",
-      "authors": "Taekwon Hong|Daeyoung Lim|Woojung Bae",
-      "submitted": "2026-06-02",
-      "track": "reliability",
-      "link": "https://arxiv.org/pdf/2606.03656v2"
-    },
-    {
-      "id": "2606.02247v1",
-      "title": "ShaplEIG: Bayesian Experimental Design for Shapley Value Estimation",
-      "authors": "David Rundel|Fabian Fumagalli|Maximilian Muschalik|Bernd Bischl|Matthias Feurer",
-      "submitted": "2026-06-01",
-      "track": "exp_design",
-      "link": "https://arxiv.org/pdf/2606.02247v1"
-    },
-    {
-      "id": "2606.02059v1",
-      "title": "ICCDesign: An R Package for the Design and Analysis of ICC-Based Reliability Studies with Continuous Responses",
-      "authors": "Ziyu Liu|Ruilin Ma|Yundan Zhang|Chenge Gao",
-      "submitted": "2026-06-01",
-      "track": "reliability",
-      "link": "https://arxiv.org/pdf/2606.02059v1"
+      "link": "https://arxiv.org/pdf/2606.11526v1"
     }
   ]
 }
