@@ -1,51 +1,27 @@
 {
   "metadata": {
-    "generated_at": "2026-06-15T14:05:33Z",
-    "week_start": "2026-06-08",
-    "week_end": "2026-06-15",
+    "generated_at": "2026-06-22T13:52:02Z",
+    "week_start": "2026-06-15",
+    "week_end": "2026-06-22",
     "version": "3.1.0"
   },
   "summary": {
-    "total_papers": 4,
+    "total_papers": 1,
     "papers_by_track": {
       "spc": 0,
       "exp_design": 1,
-      "reliability": 3
+      "reliability": 0
     }
   },
-  "synthesis": "The sneaky villain of the week is *reliability*—not the bathtub-curve kind, but the “can I trust this number?” kind. Across three very different settings—panel regressions, probabilistic emulators, and customer value modeling—the same theme shows up: if your measurement/uncertainty story is even slightly off, the conclusions don’t just get noisy… they can flip.\n\n### When fixed effects quietly eat your signal\n\nIf you do any panel modeling, Rosenberg et al. is the one to read. The punchline: fixed-effects (FE) regression can *systematically* shrink coefficients toward zero when your regressor is slow-moving and measured with error. Why? The within-unit transformation is supposed to remove time-invariant confounding, but for high-persistence variables it also strips away most of the true variation—leaving measurement noise disproportionately behind.\n\nThey formalize this with a “within reliability” factor, \\(\\lambda_w\\), tied to the intraclass correlation (ICC) and the regressor’s overall measurement reliability. Under classical measurement error, FE converges to \\(\\beta \\lambda_w\\), not \\(\\beta\\). And \\(\\lambda_w\\) can be *much* smaller than the reliability you’d quote for the raw variable when ICC is high (exactly the case for lots of country-year, policy, and “slow governance” variables).\n\nWhat’s practitioner-useful is the workflow: report pooled + FE, report ICC, compute corrected within reliability, and then decide how to interpret FE based on sign comparisons (bounds vs “within” vs complement regime). No external reliability estimate? They propose an “autocorrelation frontier” to lower-bound \\(\\lambda_w\\) using within autocorrelations plus an assumption about how persistent the error can be. Also: an R package (`ferobust`) that automates the diagnostics.\n\nIf you’ve ever seen FE “wash out” effects you *believed* were real, this gives you a way to separate “no effect” from “effect times attenuation.” The simulation note is brutal: naive FE intervals can under-cover catastrophically under attenuation—so this isn’t a subtle academic corner case.\n\n### Calibration beats cleverness in probabilistic physical emulation\n\nGreenbury et al. run a surprisingly clean comparison between two families of probabilistic emulators for spatiotemporal PDE-ish systems: latent-space flow-matching generative models vs deterministic ensembles trained with CRPS-type losses. Same-ish parameter budget, same-ish compute envelope, evaluated the way we *should* evaluate uncertainty: coverage vs nominal over many levels, plus what happens when you roll out 100 steps autoregressively.\n\nThe result you can take to work: CRPS-trained ensembles are generally *more reliable* (better calibrated coverage), especially as rollout horizon grows—and they’re orders faster at inference (~15 ms/sample vs ~650+ ms/sample). Flow matching can catch up on calibration if you move from latent-space to ambient-space training, but then compute cost spikes; latent compression seems to be where calibration goes to die.\n\nThe broader trend: we’re seeing more papers treating calibration as a first-class engineering metric, not an afterthought to VRMSE. That’s a win for anyone who has to make decisions off predictive intervals, not point forecasts.\n\n### Long-term value of reliability: causal inference with operational teeth\n\nQiu et al. tackle a question reliability folks get asked constantly and rarely answer well: “Okay, delays are bad… but what’s the *long-term* value of reducing them?” Their Chronos LTV system models customers as Markovian agents with latent states and estimates a marginal policy effect for nudging the delay rate downward.\n\nMethodologically, it’s an identification + estimation story: truncated policy-gradient/IPW representation under Markov + sequential unconfoundedness assumptions, with a covariate-balancing propensity score (CBPS) logistic model to keep weights sane. The simulator validation is the point: CBPS-IPW tracks long-horizon randomized “ground truth” closely, while naive contrasts (and even flexible ML propensity models) badly overstate value. The “switchback × Chronos” combo is especially interesting: use a short-term experiment to induce the change, then use the observational panel + Chronos to translate it into long-term value with good coverage.\n\nIf you run reliability improvements through an LTV lens, this is a concrete template: experiment for the *shock*, observational structure for the *persistence*.\n\n### DOE still matters: 160-device maps beat one hero device\n\nYang et al. is classic DOE done right in a modern hardware context: sweeping ring radius, coupling angle, and waveguide geometries across 160 hybrid III–V/Si QD microring lasers to map trade-offs among threshold, efficiency, output power, and bandwidth. The useful part for quality-minded readers isn’t just the sub-mA threshold headline—it’s the multi-factor performance surface and the explicit “you can’t optimize everything” couplings (stronger coupling boosts slope efficiency but can raise threshold; smaller radii reduce threshold but risk radiation loss and power trapping).\n\nIt’s a reminder that in complex physical products, reliability and performance engineering often starts with *design-space literacy*, not just post-hoc screening.\n\n### One question to sit with\n\nAcross all four: are we treating “reliability” as a property of the *system*, or of the *measurement and inference pipeline* wrapped around it? This week’s papers argue you can’t separate them—and if you try, the bias will happily do it for you.",
+  "synthesis": "If you’ve ever tried to coordinate a “global” DOE across plants, labs, or teams, you know the real bottleneck isn’t the math — it’s the bandwidth. Not network bandwidth. Organizational bandwidth. Everyone can tell you what *they* think the next run should be, but nobody wants to ship full posteriors, raw data, or model guts to a central hub.\n\nThis week’s lone (but meaty) arXiv entry tackles exactly that: how to do *Bayesian* experimental design when all each site can send is a **compressed recommendation** — basically, “I vote for experiment \\(d\\)” — and the fusion center has to pick one system-wide experiment.\n\n### The problem they’re really solving\n\nG et al. frame distributed design as a decision problem with regret: how far your chosen experiment’s **centralized expected information gain (EIG)** falls short of what an omniscient oracle would pick if it could see all local components.\n\nThat’s a practical lens. In the field, we often *can* get a single shared experimental run approved (one recipe change, one stress profile, one inspection plan), but we can’t get everyone to agree on what the “best” one is — especially when sites have different signal quality, different nuisance factors, or simply different amounts of data.\n\n### The key idea: fuse recommendations like a Bayesian, not like a democracy\n\nMajority voting is the obvious baseline: pick the experiment that gets the most votes. The paper makes a strong case that this is the wrong mental model when sites differ in informativeness.\n\nInstead, they derive a **Bayes-optimal fusion rule**: choose the design that maximizes the *conditional expected centralized EIG* given the entire pattern of local recommendations. If that sounds reminiscent of distributed detection (optimal fusion of sensor decisions), you’re on the right track — it’s analogous, but tuned to EIG/regret rather than classification error.\n\nImagine three sites: one is a high-SNR metrology lab, two are noisy pilot lines. A vote treats them equally. Bayes fusion implicitly *reweights* them by how diagnostic their recommendations are about the globally optimal experiment.\n\n### Does it work? The numbers say yes — and the failure mode is instructive\n\nIn their scalar Gaussian example (nice because EIG is closed-form), with \\(M=25\\) sites:\n\n- **Bayes fusion**: mean EIG 2.316 vs oracle 2.326 (regret 0.010)  \n- **Majority vote**: mean EIG 2.160 (regret 0.166)\n\nAs \\(M\\) grows, Bayes fusion gets *better fast*: regret drops to 0.002 by \\(M=81\\), and it agrees with the oracle ~95% of the time. Majority voting, meanwhile, can actually get worse with more sites under heterogeneity — agreement collapsing to ~6% at \\(M=81\\). More “votes” just means more ways for low-quality sites to drown out the few good ones.\n\nThey also test a distributed logistic/binary-response setup (using Fisher information as an EIG approximation). Same story: Bayes fusion nearly tracks the oracle; voting misses badly.\n\n### What’s ready to try (and what you’ll need)\n\nIf you’re doing multi-site or federated DOE where sharing raw data/models is hard, the fusion rule is a clean template:\n\n1. Define candidate experiments/design points.\n2. Let each site compute its preferred design (via EIG or an approximation).\n3. Learn/estimate how reliable each site’s recommendation is as a function of the true global best (those \\(p_m, q_m\\)-style “informativeness” parameters).\n4. Fuse by maximizing expected centralized utility conditional on the recommendation pattern.\n\nThe catch is Step 3: you need some calibration of site reliability (historical performance, simulation, or periodic “full-share” audits). But that’s also the point: once you admit sites aren’t equally informative, you can stop pretending a vote is fair.\n\n### One question to carry into next week\n\nIn quality organizations, we already weight voices informally (“trust the lab more than the line”). What would it look like to formalize that weighting with a regret-optimal fusion rule — and, critically, how do we keep it from calcifying when site conditions drift?",
   "papers": [
     {
-      "id": "2606.14009v1",
-      "title": "Reliable Panel Regression: A Default Workflow for Slow-Moving, Mismeasured Variables",
-      "authors": "Andrew S. Rosenberg",
-      "submitted": "2026-06-12",
-      "track": "reliability",
-      "link": "https://arxiv.org/pdf/2606.14009v1"
-    },
-    {
-      "id": "2606.13371v1",
-      "title": "Experimental Design Space Exploration of Ultra-Low Threshold Hybrid III-V/Si Quantum Dot Microring Lasers",
-      "authors": "Xucheng Yang|Preston Luong|Yatiraj Ramanujam|Antoine Descos|Yingtao Hu|Yuan Yuan|Bassem Tossoun|Geza Kurczveil|Eunso Shin|Jonathan Wierer|Ray Beausoleil|Di Liang|Stanley Cheung",
-      "submitted": "2026-06-11",
+      "id": "2606.17790v1",
+      "title": "Distributed Experimental Design: Bayes-optimal Fusion of Local Designs",
+      "authors": "Nagananda K G|Lav R. Varshney|Pramod K. Varshney",
+      "submitted": "2026-06-16",
       "track": "exp_design",
-      "link": "https://arxiv.org/pdf/2606.13371v1"
-    },
-    {
-      "id": "2606.12997v1",
-      "title": "Reliability of Probabilistic Emulation of Physical Systems",
-      "authors": "Sam F. Greenbury|Radka Jersakova|Paolo Conti|Marjan Famili|Christopher Iliffe Sprague|Edwin Brown|Jason D. McEwen",
-      "submitted": "2026-06-11",
-      "track": "reliability",
-      "link": "https://arxiv.org/pdf/2606.12997v1"
-    },
-    {
-      "id": "2606.11526v1",
-      "title": "What is the Long-Term Value of Reliability?",
-      "authors": "Chenyu Qiu|Xu Kuang|Inessa Liskovich|Ali Rauh|Stefan Wager",
-      "submitted": "2026-06-10",
-      "track": "reliability",
-      "link": "https://arxiv.org/pdf/2606.11526v1"
+      "link": "https://arxiv.org/pdf/2606.17790v1"
     }
   ]
 }
