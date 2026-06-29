@@ -1,27 +1,75 @@
 {
   "metadata": {
-    "generated_at": "2026-06-22T13:52:02Z",
-    "week_start": "2026-06-15",
-    "week_end": "2026-06-22",
+    "generated_at": "2026-06-29T13:26:19Z",
+    "week_start": "2026-06-22",
+    "week_end": "2026-06-29",
     "version": "3.1.0"
   },
   "summary": {
-    "total_papers": 1,
+    "total_papers": 7,
     "papers_by_track": {
       "spc": 0,
-      "exp_design": 1,
-      "reliability": 0
+      "exp_design": 5,
+      "reliability": 2
     }
   },
-  "synthesis": "If you’ve ever tried to coordinate a “global” DOE across plants, labs, or teams, you know the real bottleneck isn’t the math — it’s the bandwidth. Not network bandwidth. Organizational bandwidth. Everyone can tell you what *they* think the next run should be, but nobody wants to ship full posteriors, raw data, or model guts to a central hub.\n\nThis week’s lone (but meaty) arXiv entry tackles exactly that: how to do *Bayesian* experimental design when all each site can send is a **compressed recommendation** — basically, “I vote for experiment \\(d\\)” — and the fusion center has to pick one system-wide experiment.\n\n### The problem they’re really solving\n\nG et al. frame distributed design as a decision problem with regret: how far your chosen experiment’s **centralized expected information gain (EIG)** falls short of what an omniscient oracle would pick if it could see all local components.\n\nThat’s a practical lens. In the field, we often *can* get a single shared experimental run approved (one recipe change, one stress profile, one inspection plan), but we can’t get everyone to agree on what the “best” one is — especially when sites have different signal quality, different nuisance factors, or simply different amounts of data.\n\n### The key idea: fuse recommendations like a Bayesian, not like a democracy\n\nMajority voting is the obvious baseline: pick the experiment that gets the most votes. The paper makes a strong case that this is the wrong mental model when sites differ in informativeness.\n\nInstead, they derive a **Bayes-optimal fusion rule**: choose the design that maximizes the *conditional expected centralized EIG* given the entire pattern of local recommendations. If that sounds reminiscent of distributed detection (optimal fusion of sensor decisions), you’re on the right track — it’s analogous, but tuned to EIG/regret rather than classification error.\n\nImagine three sites: one is a high-SNR metrology lab, two are noisy pilot lines. A vote treats them equally. Bayes fusion implicitly *reweights* them by how diagnostic their recommendations are about the globally optimal experiment.\n\n### Does it work? The numbers say yes — and the failure mode is instructive\n\nIn their scalar Gaussian example (nice because EIG is closed-form), with \\(M=25\\) sites:\n\n- **Bayes fusion**: mean EIG 2.316 vs oracle 2.326 (regret 0.010)  \n- **Majority vote**: mean EIG 2.160 (regret 0.166)\n\nAs \\(M\\) grows, Bayes fusion gets *better fast*: regret drops to 0.002 by \\(M=81\\), and it agrees with the oracle ~95% of the time. Majority voting, meanwhile, can actually get worse with more sites under heterogeneity — agreement collapsing to ~6% at \\(M=81\\). More “votes” just means more ways for low-quality sites to drown out the few good ones.\n\nThey also test a distributed logistic/binary-response setup (using Fisher information as an EIG approximation). Same story: Bayes fusion nearly tracks the oracle; voting misses badly.\n\n### What’s ready to try (and what you’ll need)\n\nIf you’re doing multi-site or federated DOE where sharing raw data/models is hard, the fusion rule is a clean template:\n\n1. Define candidate experiments/design points.\n2. Let each site compute its preferred design (via EIG or an approximation).\n3. Learn/estimate how reliable each site’s recommendation is as a function of the true global best (those \\(p_m, q_m\\)-style “informativeness” parameters).\n4. Fuse by maximizing expected centralized utility conditional on the recommendation pattern.\n\nThe catch is Step 3: you need some calibration of site reliability (historical performance, simulation, or periodic “full-share” audits). But that’s also the point: once you admit sites aren’t equally informative, you can stop pretending a vote is fair.\n\n### One question to carry into next week\n\nIn quality organizations, we already weight voices informally (“trust the lab more than the line”). What would it look like to formalize that weighting with a regret-optimal fusion rule — and, critically, how do we keep it from calcifying when site conditions drift?",
+  "synthesis": "### QE ArXiv Watch Weekly — Week ending June 29, 2026 (7 papers)\n\nIf you only lean in for one idea this week: **Bayesian experimental design is drifting from “learn the parameters fastest” toward “collect the data that makes the *next decision* best”**—and two papers make that shift feel unusually actionable. One even bakes *fairness* directly into what you choose to measure next.\n\n#### Design is getting more “task-shaped” (and that matters in practice)\n\nA lot of us still treat DOE like a clean, model-centric game: maximize Fisher info, minimize posterior variance, maybe approximate EIG if we’re fancy. Rossa et al. flip the framing with **ACTION-BED**: instead of optimizing “how much uncertainty we reduce,” we optimize **expected future loss** on the downstream action we actually care about.\n\nThat’s a subtle change with big implications. Imagine you’re running a reliability demonstration, troubleshooting a yield excursion, or tuning an HVAC model: you don’t win by knowing *everything*; you win by knowing the *right things* to choose the next maintenance action, setpoint policy, or mitigation.\n\nThe clever part is computational: by jointly optimizing an **action policy** and a **design policy**, they rewrite the objective to avoid the usual doubly-intractable EIG mess. When simulators are differentiable, you get pathwise gradients; otherwise, REINFORCE-style gradients still work. Benchmarks (source localization, pendulums, even masked MNIST) suggest better task loss and often less compute than strong EIG baselines. If you’ve avoided Bayesian design because it felt like “posterior estimation all the way down,” this is one of the more credible off-ramps.\n\nNow layer on Hedman et al.’s **FairBED**, which asks a question we rarely formalize in QE: *can we design data collection to be informative for the quality/reliability target while being intentionally uninformative about a sensitive attribute?* They operationalize “leakage” as mutual information about the sensitive attribute and subtract it (weighted by β) from target EIG. In active learning settings (Census Income, Student Graduation, CelebA), the fairness–accuracy trade improves meaningfully versus standard acquisitions.\n\nFor practitioners, the takeaway isn’t “mutual information everywhere.” It’s: **fairness can be treated as a first-class constraint in sampling and measurement design**, not just a post-hoc model audit.\n\n#### N-of-1 design: the “switching schedule” is your design variable\n\nGuo et al. tackle a very QE-flavored setting: **one unit, lots of time, treatments that can carry over** (finite impulse response with K lags). They compare Markov “random-switch” assignments and deterministic “cycle-switch” blocks.\n\nTwo results you can actually use:\n\n- If you care about **lag-specific effects** (which lag k mattered), **i.i.d. Bernoulli(1/2)** randomization is asymptotically optimal—and it’s also the robust/minimax choice.\n- If you care about **cumulative effects** (total effect across lags), you want **longer blocks**; their block-length optimum is roughly  \n  \\[\n  \\ell^\\* \\approx (K-1) + \\sqrt{K-1}.\n  \\]\nThis is a nice “design dial”: pick randomness for isolating dynamics; pick persistence for estimating totals.\n\n#### Spend measurement budget where it buys variance (even if it’s “incomplete” data)\n\nMareis et al. offer a clean optimization story: in an IV Gaussian graphical model, you can buy **complete samples** \\((X_1,X_2,X_3)\\) or cheaper **partial samples** \\((X_1,X_2)\\). If your IV estimator is a ratio of covariances, improving the denominator with lots of cheap partials can cut variance—*but only under specific sign/strength conditions* (notably when confounding and effect signs oppose and instruments are weak). They derive the asymptotic variance when numerator/denominator come from different datasets and give closed-form allocation rules.\n\nThis feels directly transferable to: “Do we log *all* signals at high rate, or log a subset broadly and a subset deeply?”\n\n#### Two reliability papers worth stealing ideas from\n\n- Lucas et al. show how to estimate **failure-focused Shapley effects** when inputs are correlated and you only have a single sample of failure points. The move is to estimate conditional marginals \\(f_{X_u\\mid F_t}\\) with **normalizing flows**, then compute target Sobol/Shapley quantities via density ratios—no extra expensive model calls. If you’re already doing conditional simulation around rare events, this is a promising sensitivity workflow upgrade.\n- Failenschmid et al. make Gaussian process state-space models less of a “beautiful but fragile” tool by improving MCMC mixing (block sampling hyperparameters with dynamics) and particle filtering (auxiliary PF with better proposals), then validating with simulation-based calibration. If you use GP-SSMs for degradation or latent health states, the emphasis on calibrated inference and reliable computation is the real value.\n\n#### The question to take into next week\n\nAs design gets more policy-based—optimizing for decisions, constraints, and even fairness—**what do we want our “design objective” to be in QE: parameter precision, action regret, cost-of-poor-quality, or something else entirely?** The tooling is catching up to whatever answer we pick.",
   "papers": [
     {
-      "id": "2606.17790v1",
-      "title": "Distributed Experimental Design: Bayes-optimal Fusion of Local Designs",
-      "authors": "Nagananda K G|Lav R. Varshney|Pramod K. Varshney",
-      "submitted": "2026-06-16",
+      "id": "2606.28200v1",
+      "title": "Experimental Design When N Equals One",
+      "authors": "Wenxuan Guo|Tengyuan Liang",
+      "submitted": "2026-06-26",
       "track": "exp_design",
-      "link": "https://arxiv.org/pdf/2606.17790v1"
+      "link": "https://arxiv.org/pdf/2606.28200v1"
+    },
+    {
+      "id": "2606.26818v1",
+      "title": "Optimizing Experimental Design for Causal Effect Estimation with Partial Measurements",
+      "authors": "Leopold Mareis",
+      "submitted": "2026-06-25",
+      "track": "exp_design",
+      "link": "https://arxiv.org/pdf/2606.26818v1"
+    },
+    {
+      "id": "2606.26826v1",
+      "title": "High-dimensional reliability-oriented Shapley effect estimation with Normalizing Flows",
+      "authors": "Monteiro Lucas|Morio Jérôme|Demange-Chryst Julien|Bachoc François",
+      "submitted": "2026-06-25",
+      "track": "reliability",
+      "link": "https://arxiv.org/pdf/2606.26826v1"
+    },
+    {
+      "id": "2606.25301v1",
+      "title": "Active Learning for Optimal Experimental Design in Machine Learning-Based Building Energy System Identification",
+      "authors": "Nam T. Nguyen|Truong X. Nghiem",
+      "submitted": "2026-06-24",
+      "track": "exp_design",
+      "link": "https://arxiv.org/pdf/2606.25301v1"
+    },
+    {
+      "id": "2606.24691v1",
+      "title": "Learning Nonlinear Dynamics: Improving the Estimation Efficiency and Reliability of Gaussian Process State-Space Models",
+      "authors": "Jan I. Failenschmid|Leonie V. D. E. Vogelsmeier|Joris Mulder|Joran Jongerling",
+      "submitted": "2026-06-23",
+      "track": "reliability",
+      "link": "https://arxiv.org/pdf/2606.24691v1"
+    },
+    {
+      "id": "2606.23662v1",
+      "title": "Action-BED: Task-Driven Bayesian Experimental Design with Singly Intractable Objectives",
+      "authors": "Tom Rossa|Angus Phillips|Tom Rainforth",
+      "submitted": "2026-06-22",
+      "track": "exp_design",
+      "link": "https://arxiv.org/pdf/2606.23662v1"
+    },
+    {
+      "id": "2606.23515v1",
+      "title": "FairBED: A Bayesian Experimental Design Approach to Gathering Fairer Data",
+      "authors": "Marcel Hedman|Emily Alger|Brieuc Lehmann|Chris Holmes|Tom Rainforth",
+      "submitted": "2026-06-22",
+      "track": "exp_design",
+      "link": "https://arxiv.org/pdf/2606.23515v1"
     }
   ]
 }

@@ -7,7 +7,7 @@
     <language>en-us</language>
     <copyright>CC BY 4.0 - QE ArXiv Watch</copyright>
     <managingEditor>noreply@example.com (QE ArXiv Watch)</managingEditor>
-    <lastBuildDate>Mon, 22 Jun 2026 13:52:02 +0000</lastBuildDate>
+    <lastBuildDate>Mon, 29 Jun 2026 13:26:19 +0000</lastBuildDate>
     <ttl>10080</ttl>
     <image>
       <url>https://huggingface.co/spaces/fmegahed/arxiv_control_charts/resolve/main/www/favicon.svg</url>
@@ -16,56 +16,58 @@
     </image>
     <atom:link href="https://huggingface.co/spaces/fmegahed/arxiv_control_charts/resolve/main/data/weekly_digest.xml" rel="self" type="application/rss+xml"/>
     <item>
-      <title>QE ArXiv Watch: Week of June 15 - June 22, 2026</title>
+      <title>QE ArXiv Watch: Week of June 22 - June 29, 2026</title>
       <link>https://huggingface.co/spaces/fmegahed/arxiv_control_charts</link>
-      <guid isPermaLink="false">qe-weekly-2026-06-22</guid>
-      <pubDate>Mon, 22 Jun 2026 13:52:02 +0000</pubDate>
+      <guid isPermaLink="false">qe-weekly-2026-06-29</guid>
+      <pubDate>Mon, 29 Jun 2026 13:26:19 +0000</pubDate>
       <description><![CDATA[
-<p>If you’ve ever tried to coordinate a “global” DOE across plants, labs, or teams, you know the real bottleneck isn’t the math — it’s the bandwidth. Not network bandwidth. Organizational bandwidth. Everyone can tell you what <em>they</em> think the next run should be, but nobody wants to ship full posteriors, raw data, or model guts to a central hub.</p>
+<h4>QE ArXiv Watch Weekly — Week ending June 29, 2026 (7 papers)</h4>
 
-<p>This week’s lone (but meaty) arXiv entry tackles exactly that: how to do <em>Bayesian</em> experimental design when all each site can send is a <strong>compressed recommendation</strong> — basically, “I vote for experiment <code>d</code>” — and the fusion center has to pick one system-wide experiment.</p>
+<p>If you only lean in for one idea this week: **Bayesian experimental design is drifting from “learn the parameters fastest” toward “collect the data that makes the <em>next decision</em> best”**—and two papers make that shift feel unusually actionable. One even bakes <em>fairness</em> directly into what you choose to measure next.</p>
 
-<h4>The problem they’re really solving</h4>
+<p>#### Design is getting more “task-shaped” (and that matters in practice)</p>
 
-<p>G et al. frame distributed design as a decision problem with regret: how far your chosen experiment’s <strong>centralized expected information gain (EIG)</strong> falls short of what an omniscient oracle would pick if it could see all local components.</p>
+<p>A lot of us still treat DOE like a clean, model-centric game: maximize Fisher info, minimize posterior variance, maybe approximate EIG if we’re fancy. Rossa et al. flip the framing with <strong>ACTION-BED</strong>: instead of optimizing “how much uncertainty we reduce,” we optimize <strong>expected future loss</strong> on the downstream action we actually care about.</p>
 
-<p>That’s a practical lens. In the field, we often <em>can</em> get a single shared experimental run approved (one recipe change, one stress profile, one inspection plan), but we can’t get everyone to agree on what the “best” one is — especially when sites have different signal quality, different nuisance factors, or simply different amounts of data.</p>
+<p>That’s a subtle change with big implications. Imagine you’re running a reliability demonstration, troubleshooting a yield excursion, or tuning an HVAC model: you don’t win by knowing <em>everything</em>; you win by knowing the <em>right things</em> to choose the next maintenance action, setpoint policy, or mitigation.</p>
 
-<h4>The key idea: fuse recommendations like a Bayesian, not like a democracy</h4>
+<p>The clever part is computational: by jointly optimizing an <strong>action policy</strong> and a <strong>design policy</strong>, they rewrite the objective to avoid the usual doubly-intractable EIG mess. When simulators are differentiable, you get pathwise gradients; otherwise, REINFORCE-style gradients still work. Benchmarks (source localization, pendulums, even masked MNIST) suggest better task loss and often less compute than strong EIG baselines. If you’ve avoided Bayesian design because it felt like “posterior estimation all the way down,” this is one of the more credible off-ramps.</p>
 
-<p>Majority voting is the obvious baseline: pick the experiment that gets the most votes. The paper makes a strong case that this is the wrong mental model when sites differ in informativeness.</p>
+<p>Now layer on Hedman et al.’s <strong>FairBED</strong>, which asks a question we rarely formalize in QE: <em>can we design data collection to be informative for the quality/reliability target while being intentionally uninformative about a sensitive attribute?</em> They operationalize “leakage” as mutual information about the sensitive attribute and subtract it (weighted by β) from target EIG. In active learning settings (Census Income, Student Graduation, CelebA), the fairness–accuracy trade improves meaningfully versus standard acquisitions.</p>
 
-<p>Instead, they derive a <strong>Bayes-optimal fusion rule</strong>: choose the design that maximizes the <em>conditional expected centralized EIG</em> given the entire pattern of local recommendations. If that sounds reminiscent of distributed detection (optimal fusion of sensor decisions), you’re on the right track — it’s analogous, but tuned to EIG/regret rather than classification error.</p>
+<p>For practitioners, the takeaway isn’t “mutual information everywhere.” It’s: <strong>fairness can be treated as a first-class constraint in sampling and measurement design</strong>, not just a post-hoc model audit.</p>
 
-<p>Imagine three sites: one is a high-SNR metrology lab, two are noisy pilot lines. A vote treats them equally. Bayes fusion implicitly <em>reweights</em> them by how diagnostic their recommendations are about the globally optimal experiment.</p>
+<p>#### N-of-1 design: the “switching schedule” is your design variable</p>
 
-<h4>Does it work? The numbers say yes — and the failure mode is instructive</h4>
+<p>Guo et al. tackle a very QE-flavored setting: <strong>one unit, lots of time, treatments that can carry over</strong> (finite impulse response with K lags). They compare Markov “random-switch” assignments and deterministic “cycle-switch” blocks.</p>
 
-<p>In their scalar Gaussian example (nice because EIG is closed-form), with <code>M=25</code> sites:</p>
+<p>Two results you can actually use:</p>
 
 <ul>
-<li><strong>Bayes fusion</strong>: mean EIG 2.316 vs oracle 2.326 (regret 0.010)  </li>
-<li><strong>Majority vote</strong>: mean EIG 2.160 (regret 0.166)</li>
+<li>If you care about <strong>lag-specific effects</strong> (which lag k mattered), <strong>i.i.d. Bernoulli(1/2)</strong> randomization is asymptotically optimal—and it’s also the robust/minimax choice.</li>
+<li>If you care about <strong>cumulative effects</strong> (total effect across lags), you want <strong>longer blocks</strong>; their block-length optimum is roughly  </li>
+</ul>
+  <pre><code>
+  \ell^\<em> ≈ (K-1) + √(K-1).
+  </code></pre>
+This is a nice “design dial”: pick randomness for isolating dynamics; pick persistence for estimating totals.
+
+<p>#### Spend measurement budget where it buys variance (even if it’s “incomplete” data)</p>
+
+<p>Mareis et al. offer a clean optimization story: in an IV Gaussian graphical model, you can buy <strong>complete samples</strong> <code>(X_1,X_2,X_3)</code> or cheaper <strong>partial samples</strong> <code>(X_1,X_2)</code>. If your IV estimator is a ratio of covariances, improving the denominator with lots of cheap partials can cut variance—</em>but only under specific sign/strength conditions<em> (notably when confounding and effect signs oppose and instruments are weak). They derive the asymptotic variance when numerator/denominator come from different datasets and give closed-form allocation rules.</p>
+
+<p>This feels directly transferable to: “Do we log </em>all* signals at high rate, or log a subset broadly and a subset deeply?”</p>
+
+<p>#### Two reliability papers worth stealing ideas from</p>
+
+<ul>
+<li>Lucas et al. show how to estimate <strong>failure-focused Shapley effects</strong> when inputs are correlated and you only have a single sample of failure points. The move is to estimate conditional marginals <code>f_{X_u\mid F_t}</code> with <strong>normalizing flows</strong>, then compute target Sobol/Shapley quantities via density ratios—no extra expensive model calls. If you’re already doing conditional simulation around rare events, this is a promising sensitivity workflow upgrade.</li>
+<li>Failenschmid et al. make Gaussian process state-space models less of a “beautiful but fragile” tool by improving MCMC mixing (block sampling hyperparameters with dynamics) and particle filtering (auxiliary PF with better proposals), then validating with simulation-based calibration. If you use GP-SSMs for degradation or latent health states, the emphasis on calibrated inference and reliable computation is the real value.</li>
 
 <p></ul>
-As <code>M</code> grows, Bayes fusion gets <em>better fast</em>: regret drops to 0.002 by <code>M=81</code>, and it agrees with the oracle ~95% of the time. Majority voting, meanwhile, can actually get worse with more sites under heterogeneity — agreement collapsing to ~6% at <code>M=81</code>. More “votes” just means more ways for low-quality sites to drown out the few good ones.</p>
+#### The question to take into next week</p>
 
-<p>They also test a distributed logistic/binary-response setup (using Fisher information as an EIG approximation). Same story: Bayes fusion nearly tracks the oracle; voting misses badly.</p>
-
-<h4>What’s ready to try (and what you’ll need)</h4>
-
-<p>If you’re doing multi-site or federated DOE where sharing raw data/models is hard, the fusion rule is a clean template:</p>
-
-<p>1. Define candidate experiments/design points.
-2. Let each site compute its preferred design (via EIG or an approximation).
-3. Learn/estimate how reliable each site’s recommendation is as a function of the true global best (those <code>p_m, q_m</code>-style “informativeness” parameters).
-4. Fuse by maximizing expected centralized utility conditional on the recommendation pattern.</p>
-
-<p>The catch is Step 3: you need some calibration of site reliability (historical performance, simulation, or periodic “full-share” audits). But that’s also the point: once you admit sites aren’t equally informative, you can stop pretending a vote is fair.</p>
-
-<h4>One question to carry into next week</h4>
-
-<p>In quality organizations, we already weight voices informally (“trust the lab more than the line”). What would it look like to formalize that weighting with a regret-optimal fusion rule — and, critically, how do we keep it from calcifying when site conditions drift?</p><h4>Featured Papers This Week</h4><ul><li><strong>G et al.</strong>: <a href="https://arxiv.org/pdf/2606.17790v1">Distributed Experimental Design: Bayes-optimal Fusion of Local Designs</a> <em>(Experimental Design)</em></li></ul><hr/><p><strong>Explore More:</strong> Visit the <a href="https://huggingface.co/spaces/fmegahed/arxiv_control_charts">QE ArXiv Watch Dashboard</a> to browse all papers with AI summaries, interactive filtering, and paper chat.</p><p style="color: #666; font-size: 0.9em;">This digest is automatically generated every Monday. Questions or feedback? Open an issue on our <a href="https://github.com/fmegahed/arxiv_control_charts">GitHub repository</a>.</p>
+<p>As design gets more policy-based—optimizing for decisions, constraints, and even fairness—<strong>what do we want our “design objective” to be in QE: parameter precision, action regret, cost-of-poor-quality, or something else entirely?</strong> The tooling is catching up to whatever answer we pick.</p><h4>Featured Papers This Week</h4><ul><li><strong>Guo et al.</strong>: <a href="https://arxiv.org/pdf/2606.28200v1">Experimental Design When N Equals One</a> <em>(Experimental Design)</em></li><li><strong>Mareis et al.</strong>: <a href="https://arxiv.org/pdf/2606.26818v1">Optimizing Experimental Design for Causal Effect Estimation with Partial Measurements</a> <em>(Experimental Design)</em></li><li><strong>Lucas et al.</strong>: <a href="https://arxiv.org/pdf/2606.26826v1">High-dimensional reliability-oriented Shapley effect estimation with Normalizing Flows</a> <em>(Reliability)</em></li><li><strong>Nguyen et al.</strong>: <a href="https://arxiv.org/pdf/2606.25301v1">Active Learning for Optimal Experimental Design in Machine Learning-Based Building Energy System Identification</a> <em>(Experimental Design)</em></li><li><strong>Failenschmid et al.</strong>: <a href="https://arxiv.org/pdf/2606.24691v1">Learning Nonlinear Dynamics: Improving the Estimation Efficiency and Reliability of Gaussian Process State-Space Models</a> <em>(Reliability)</em></li><li><strong>Rossa et al.</strong>: <a href="https://arxiv.org/pdf/2606.23662v1">Action-BED: Task-Driven Bayesian Experimental Design with Singly Intractable Objectives</a> <em>(Experimental Design)</em></li><li><strong>Hedman et al.</strong>: <a href="https://arxiv.org/pdf/2606.23515v1">FairBED: A Bayesian Experimental Design Approach to Gathering Fairer Data</a> <em>(Experimental Design)</em></li></ul><hr/><p><strong>Explore More:</strong> Visit the <a href="https://huggingface.co/spaces/fmegahed/arxiv_control_charts">QE ArXiv Watch Dashboard</a> to browse all papers with AI summaries, interactive filtering, and paper chat.</p><p style="color: #666; font-size: 0.9em;">This digest is automatically generated every Monday. Questions or feedback? Open an issue on our <a href="https://github.com/fmegahed/arxiv_control_charts">GitHub repository</a>.</p>
 ]]></description>
     </item>
   </channel>
