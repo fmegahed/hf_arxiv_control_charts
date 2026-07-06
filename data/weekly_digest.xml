@@ -7,7 +7,7 @@
     <language>en-us</language>
     <copyright>CC BY 4.0 - QE ArXiv Watch</copyright>
     <managingEditor>noreply@example.com (QE ArXiv Watch)</managingEditor>
-    <lastBuildDate>Mon, 29 Jun 2026 13:26:19 +0000</lastBuildDate>
+    <lastBuildDate>Mon, 06 Jul 2026 13:13:46 +0000</lastBuildDate>
     <ttl>10080</ttl>
     <image>
       <url>https://huggingface.co/spaces/fmegahed/arxiv_control_charts/resolve/main/www/favicon.svg</url>
@@ -16,58 +16,61 @@
     </image>
     <atom:link href="https://huggingface.co/spaces/fmegahed/arxiv_control_charts/resolve/main/data/weekly_digest.xml" rel="self" type="application/rss+xml"/>
     <item>
-      <title>QE ArXiv Watch: Week of June 22 - June 29, 2026</title>
+      <title>QE ArXiv Watch: Week of June 29 - July 06, 2026</title>
       <link>https://huggingface.co/spaces/fmegahed/arxiv_control_charts</link>
-      <guid isPermaLink="false">qe-weekly-2026-06-29</guid>
-      <pubDate>Mon, 29 Jun 2026 13:26:19 +0000</pubDate>
+      <guid isPermaLink="false">qe-weekly-2026-07-06</guid>
+      <pubDate>Mon, 06 Jul 2026 13:13:46 +0000</pubDate>
       <description><![CDATA[
-<h4>QE ArXiv Watch Weekly — Week ending June 29, 2026 (7 papers)</h4>
+<p>If you’ve ever watched your “model quality” metric bounce around week to week and wondered, <em>is the model changing… or are our labels just noisy today?</em> — HERO is aimed squarely at that pain.</p>
 
-<p>If you only lean in for one idea this week: **Bayesian experimental design is drifting from “learn the parameters fastest” toward “collect the data that makes the <em>next decision</em> best”**—and two papers make that shift feel unusually actionable. One even bakes <em>fairness</em> directly into what you choose to measure next.</p>
+<p>Ruan et al. take a reliability-engineering lens (sensitivity/specificity, calibration, variance reduction) and point it at a modern problem: ongoing evaluation of generative models where we repeatedly sample items, get “silver” labels from imperfect raters or heuristics, and only occasionally pay for “gold” audits. In that setting, the evaluation pipeline is the measurement system. And like any measurement system, it drifts, it has bias, and it can drown real signal in noise.</p>
 
-<p>#### Design is getting more “task-shaped” (and that matters in practice)</p>
+<h4>The problem they’re really solving</h4>
 
-<p>A lot of us still treat DOE like a clean, model-centric game: maximize Fisher info, minimize posterior variance, maybe approximate EIG if we’re fancy. Rossa et al. flip the framing with <strong>ACTION-BED</strong>: instead of optimizing “how much uncertainty we reduce,” we optimize <strong>expected future loss</strong> on the downstream action we actually care about.</p>
-
-<p>That’s a subtle change with big implications. Imagine you’re running a reliability demonstration, troubleshooting a yield excursion, or tuning an HVAC model: you don’t win by knowing <em>everything</em>; you win by knowing the <em>right things</em> to choose the next maintenance action, setpoint policy, or mitigation.</p>
-
-<p>The clever part is computational: by jointly optimizing an <strong>action policy</strong> and a <strong>design policy</strong>, they rewrite the objective to avoid the usual doubly-intractable EIG mess. When simulators are differentiable, you get pathwise gradients; otherwise, REINFORCE-style gradients still work. Benchmarks (source localization, pendulums, even masked MNIST) suggest better task loss and often less compute than strong EIG baselines. If you’ve avoided Bayesian design because it felt like “posterior estimation all the way down,” this is one of the more credible off-ramps.</p>
-
-<p>Now layer on Hedman et al.’s <strong>FairBED</strong>, which asks a question we rarely formalize in QE: <em>can we design data collection to be informative for the quality/reliability target while being intentionally uninformative about a sensitive attribute?</em> They operationalize “leakage” as mutual information about the sensitive attribute and subtract it (weighted by β) from target EIG. In active learning settings (Census Income, Student Graduation, CelebA), the fairness–accuracy trade improves meaningfully versus standard acquisitions.</p>
-
-<p>For practitioners, the takeaway isn’t “mutual information everywhere.” It’s: <strong>fairness can be treated as a first-class constraint in sampling and measurement design</strong>, not just a post-hoc model audit.</p>
-
-<p>#### N-of-1 design: the “switching schedule” is your design variable</p>
-
-<p>Guo et al. tackle a very QE-flavored setting: <strong>one unit, lots of time, treatments that can carry over</strong> (finite impulse response with K lags). They compare Markov “random-switch” assignments and deterministic “cycle-switch” blocks.</p>
-
-<p>Two results you can actually use:</p>
+<p>Most teams do some flavor of majority vote or Dawid–Skene to aggregate noisy labels. That’s fine when you have enough gold anchors <em>right now</em> and labelers behave consistently. But in practice, we often have:</p>
 
 <ul>
-<li>If you care about <strong>lag-specific effects</strong> (which lag k mattered), <strong>i.i.d. Bernoulli(1/2)</strong> randomization is asymptotically optimal—and it’s also the robust/minimax choice.</li>
-<li>If you care about <strong>cumulative effects</strong> (total effect across lags), you want <strong>longer blocks</strong>; their block-length optimum is roughly  </li>
-</ul>
-  <pre><code>
-  \ell^\<em> ≈ (K-1) + √(K-1).
-  </code></pre>
-This is a nice “design dial”: pick randomness for isolating dynamics; pick persistence for estimating totals.
-
-<p>#### Spend measurement budget where it buys variance (even if it’s “incomplete” data)</p>
-
-<p>Mareis et al. offer a clean optimization story: in an IV Gaussian graphical model, you can buy <strong>complete samples</strong> <code>(X_1,X_2,X_3)</code> or cheaper <strong>partial samples</strong> <code>(X_1,X_2)</code>. If your IV estimator is a ratio of covariances, improving the denominator with lots of cheap partials can cut variance—</em>but only under specific sign/strength conditions<em> (notably when confounding and effect signs oppose and instruments are weak). They derive the asymptotic variance when numerator/denominator come from different datasets and give closed-form allocation rules.</p>
-
-<p>This feels directly transferable to: “Do we log </em>all* signals at high rate, or log a subset broadly and a subset deeply?”</p>
-
-<p>#### Two reliability papers worth stealing ideas from</p>
-
-<ul>
-<li>Lucas et al. show how to estimate <strong>failure-focused Shapley effects</strong> when inputs are correlated and you only have a single sample of failure points. The move is to estimate conditional marginals <code>f_{X_u\mid F_t}</code> with <strong>normalizing flows</strong>, then compute target Sobol/Shapley quantities via density ratios—no extra expensive model calls. If you’re already doing conditional simulation around rare events, this is a promising sensitivity workflow upgrade.</li>
-<li>Failenschmid et al. make Gaussian process state-space models less of a “beautiful but fragile” tool by improving MCMC mixing (block sampling hyperparameters with dynamics) and particle filtering (auxiliary PF with better proposals), then validating with simulation-based calibration. If you use GP-SSMs for degradation or latent health states, the emphasis on calibrated inference and reliable computation is the real value.</li>
+<li>A thin gold-label budget each round (say 5–10%)</li>
+<li>New labelers, evolving rubrics, or shifting prompt distributions</li>
+<li>Huge historical datasets from earlier audits that we don’t exploit statistically</li>
 
 <p></ul>
-#### The question to take into next week</p>
+HERO’s pitch: stop treating each evaluation round like it’s the first. Use historical gold-labeled audits to <em>transfer</em> what we’ve learned about labeler reliability into the current round, then use a control-variate trick to squeeze down variance.</p>
 
-<p>As design gets more policy-based—optimizing for decisions, constraints, and even fairness—<strong>what do we want our “design objective” to be in QE: parameter precision, action regret, cost-of-poor-quality, or something else entirely?</strong> The tooling is catching up to whatever answer we pick.</p><h4>Featured Papers This Week</h4><ul><li><strong>Guo et al.</strong>: <a href="https://arxiv.org/pdf/2606.28200v1">Experimental Design When N Equals One</a> <em>(Experimental Design)</em></li><li><strong>Mareis et al.</strong>: <a href="https://arxiv.org/pdf/2606.26818v1">Optimizing Experimental Design for Causal Effect Estimation with Partial Measurements</a> <em>(Experimental Design)</em></li><li><strong>Lucas et al.</strong>: <a href="https://arxiv.org/pdf/2606.26826v1">High-dimensional reliability-oriented Shapley effect estimation with Normalizing Flows</a> <em>(Reliability)</em></li><li><strong>Nguyen et al.</strong>: <a href="https://arxiv.org/pdf/2606.25301v1">Active Learning for Optimal Experimental Design in Machine Learning-Based Building Energy System Identification</a> <em>(Experimental Design)</em></li><li><strong>Failenschmid et al.</strong>: <a href="https://arxiv.org/pdf/2606.24691v1">Learning Nonlinear Dynamics: Improving the Estimation Efficiency and Reliability of Gaussian Process State-Space Models</a> <em>(Reliability)</em></li><li><strong>Rossa et al.</strong>: <a href="https://arxiv.org/pdf/2606.23662v1">Action-BED: Task-Driven Bayesian Experimental Design with Singly Intractable Objectives</a> <em>(Experimental Design)</em></li><li><strong>Hedman et al.</strong>: <a href="https://arxiv.org/pdf/2606.23515v1">FairBED: A Bayesian Experimental Design Approach to Gathering Fairer Data</a> <em>(Experimental Design)</em></li></ul><hr/><p><strong>Explore More:</strong> Visit the <a href="https://huggingface.co/spaces/fmegahed/arxiv_control_charts">QE ArXiv Watch Dashboard</a> to browse all papers with AI summaries, interactive filtering, and paper chat.</p><p style="color: #666; font-size: 0.9em;">This digest is automatically generated every Monday. Questions or feedback? Open an issue on our <a href="https://github.com/fmegahed/arxiv_control_charts">GitHub repository</a>.</p>
+<h4>What’s clever (and surprisingly practical)</h4>
+
+<p>HERO comes in two layers:</p>
+
+<p><strong>HERO-1 (bias control via historical reliability transfer).</strong>  
+They use historical gold data to estimate silver labeler sensitivity/specificity, then calibrate today’s silver labels accordingly. Conceptually, it’s like bringing a gauge block to today’s measurement setup: we’re not just aggregating votes, we’re correcting for known rater error modes. The paper argues this avoids bias that can show up with unanchored Dawid–Skene when current-round gold is scarce.</p>
+
+<p><strong>HERO-2 (variance control via control variates).</strong>  
+Even after calibration, estimates can be noisy. HERO-2 adds a score-based control-variate adjustment using covariates shared across time—prompt features, TF‑IDF, or even “model-predicted labels” (they mention GPT‑5 predictions). The anchor is a large historical sample mean of those covariates. If the covariate is informative (correlated with the score), asymptotic variance drops.</p>
+
+<p>If you’ve used control charts with a good baseline or regression adjustment to stabilize an estimate, it’s the same instinct—just applied to the statistical estimator of “true defect rate” (or whatever the latent quality metric is).</p>
+
+<h4>What you can take to work next week</h4>
+
+<p>This is most ready-to-try for teams doing recurring audits of model outputs (safety, defect detection, policy compliance, preference wins) where:</p>
+
+<ul>
+<li>You have <em>any</em> historical gold data</li>
+<li>Silver labels come from raters or automated heuristics with known quirks</li>
+<li>You track evaluation metrics over time and care about sensitivity to real changes</li>
+
+<p></ul>
+Implementation-wise, think of it as: (1) estimate rater confusion matrices from historical gold, (2) calibrate current silver labels, (3) add a regression/control-variate adjustment using stable features and a big historical baseline.</p>
+
+<h4>Evidence worth noting (numbers, not vibes)</h4>
+
+<p>In a 3D asset defect detection case study with only 10% gold labels, reported RMSE drops from 0.131 (majority vote) and 0.123 (Dawid–Skene) down to 0.093 (HERO‑1) and 0.080 (HERO‑2). That’s a meaningful swing if you’re trying to detect small regressions.</p>
+
+<p>Theory-wise, they claim root-n consistency with an additional historical term:  
+<code>\hatμ_{HERO-1}-μ=O_p(n^{-1/2})+O_p(N^{-1/2})</code>, and HERO‑2 strictly reduces asymptotic variance when the covariate actually helps.</p>
+
+<h4>The question to carry forward</h4>
+
+<p>As AI evaluation becomes a continuous process, we’re basically building measurement systems with memory. The interesting question is organizational, not just statistical: <em>are we archiving our “gold audits” in a way that lets us reuse them as calibration assets?</em> HERO suggests that yesterday’s audits aren’t just documentation—they’re metrology.</p><h4>Featured Papers This Week</h4><ul><li><strong>Ruan et al.</strong>: <a href="https://arxiv.org/pdf/2606.29784v1">HERO: Improving the Reliability and Sensitivity of Generative Model Evaluation Using Historical Data</a> <em>(Reliability)</em></li></ul><hr/><p><strong>Explore More:</strong> Visit the <a href="https://huggingface.co/spaces/fmegahed/arxiv_control_charts">QE ArXiv Watch Dashboard</a> to browse all papers with AI summaries, interactive filtering, and paper chat.</p><p style="color: #666; font-size: 0.9em;">This digest is automatically generated every Monday. Questions or feedback? Open an issue on our <a href="https://github.com/fmegahed/arxiv_control_charts">GitHub repository</a>.</p>
 ]]></description>
     </item>
   </channel>
