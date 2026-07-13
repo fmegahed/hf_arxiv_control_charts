@@ -7,7 +7,7 @@
     <language>en-us</language>
     <copyright>CC BY 4.0 - QE ArXiv Watch</copyright>
     <managingEditor>noreply@example.com (QE ArXiv Watch)</managingEditor>
-    <lastBuildDate>Mon, 06 Jul 2026 13:13:46 +0000</lastBuildDate>
+    <lastBuildDate>Mon, 13 Jul 2026 12:48:38 +0000</lastBuildDate>
     <ttl>10080</ttl>
     <image>
       <url>https://huggingface.co/spaces/fmegahed/arxiv_control_charts/resolve/main/www/favicon.svg</url>
@@ -16,61 +16,69 @@
     </image>
     <atom:link href="https://huggingface.co/spaces/fmegahed/arxiv_control_charts/resolve/main/data/weekly_digest.xml" rel="self" type="application/rss+xml"/>
     <item>
-      <title>QE ArXiv Watch: Week of June 29 - July 06, 2026</title>
+      <title>QE ArXiv Watch: Week of July 06 - July 13, 2026</title>
       <link>https://huggingface.co/spaces/fmegahed/arxiv_control_charts</link>
-      <guid isPermaLink="false">qe-weekly-2026-07-06</guid>
-      <pubDate>Mon, 06 Jul 2026 13:13:46 +0000</pubDate>
+      <guid isPermaLink="false">qe-weekly-2026-07-13</guid>
+      <pubDate>Mon, 13 Jul 2026 12:48:38 +0000</pubDate>
       <description><![CDATA[
-<p>If you’ve ever watched your “model quality” metric bounce around week to week and wondered, <em>is the model changing… or are our labels just noisy today?</em> — HERO is aimed squarely at that pain.</p>
+<h4>QE ArXiv Watch Weekly — Week ending July 13, 2026 (4 papers)</h4>
 
-<p>Ruan et al. take a reliability-engineering lens (sensitivity/specificity, calibration, variance reduction) and point it at a modern problem: ongoing evaluation of generative models where we repeatedly sample items, get “silver” labels from imperfect raters or heuristics, and only occasionally pay for “gold” audits. In that setting, the evaluation pipeline is the measurement system. And like any measurement system, it drifts, it has bias, and it can drown real signal in noise.</p>
+<p>If you’ve ever stared at a parameter fit that “looks great” and still felt uneasy… this week delivers a satisfying punchline: <strong>sometimes the optimizer isn’t failing—you’re asking it to estimate something the data literally can’t distinguish.</strong> And the fix isn’t a new optimizer. It’s reparameterizing to what’s actually identifiable.</p>
 
-<h4>The problem they’re really solving</h4>
+<p>---</p>
 
-<p>Most teams do some flavor of majority vote or Dawid–Skene to aggregate noisy labels. That’s fine when you have enough gold anchors <em>right now</em> and labelers behave consistently. But in practice, we often have:</p>
+<h3>What problems are researchers tackling (and why we should care)?</h3>
 
+<h4>1) Identifiability isn’t academic—it's the difference between “fit” and “truth”</h4>
+Campillo-Funollet et al. take the classic SEIR model with only infections observed, <code>y(t)=I(t)</code>, and do the uncomfortable but necessary work: <strong>what can we uniquely learn from that measurement stream?</strong>
+
+<p>They show <code>(α,γ)</code> are only <em>locally</em> identifiable—meaning the model happily supports two parameter settings that generate the same observations (here: <code>α</code> and <code>γ</code> can swap). In their simulation grid, vanilla least-squares on the original SEIR converges to the <em>wrong</em> swapped solution about <strong>80%</strong> of the time.</p>
+
+<p>The practical move: they derive globally identifiable combinations like
 <ul>
-<li>A thin gold-label budget each round (say 5–10%)</li>
-<li>New labelers, evolving rubrics, or shifting prompt distributions</li>
-<li>Huge historical datasets from earlier audits that we don’t exploit statistically</li>
+<li><code>c_1=α+γ</code></li>
+<li><code>c_3=αγ</code></li></p>
 
 <p></ul>
-HERO’s pitch: stop treating each evaluation round like it’s the first. Use historical gold-labeled audits to <em>transfer</em> what we’ve learned about labeler reliability into the current round, then use a control-variate trick to squeeze down variance.</p>
+…and fit <em>those</em> instead, via a reparameterized “UVY” system with a feasibility constraint <code>c_1^2-4c_3\ge 0</code>. Suddenly the landscape stops playing shell games: all tested initial guesses collapse to the same identifiable solution in the simplified setting, and when fitting all six unknowns, convergence jumps to ~<strong>80%</strong>, then ~<strong>90%</strong> with sensitivity equations added.</p>
 
-<h4>What’s clever (and surprisingly practical)</h4>
+<p>Imagine translating “two knobs that trade places” into “sum and product of the knobs.” The data can see the latter cleanly—so your optimization stops hallucinating certainty about the former.</p>
 
-<p>HERO comes in two layers:</p>
+<h4>2) Prediction claims need ceilings, not just scores</h4>
+Chen et al. tackle a different kind of identifiability problem: <strong>how predictable are psychometric item parameters from text embeddings?</strong> The key contribution isn’t another embedding model—it’s the evaluation discipline.
 
-<p><strong>HERO-1 (bias control via historical reliability transfer).</strong>  
-They use historical gold data to estimate silver labeler sensitivity/specificity, then calibrate today’s silver labels accordingly. Conceptually, it’s like bringing a gauge block to today’s measurement setup: we’re not just aggregating votes, we’re correcting for known rater error modes. The paper argues this avoids bias that can show up with unanchored Dawid–Skene when current-round gold is scarce.</p>
-
-<p><strong>HERO-2 (variance control via control variates).</strong>  
-Even after calibration, estimates can be noisy. HERO-2 adds a score-based control-variate adjustment using covariates shared across time—prompt features, TF‑IDF, or even “model-predicted labels” (they mention GPT‑5 predictions). The anchor is a large historical sample mean of those covariates. If the covariate is informative (correlated with the score), asymptotic variance drops.</p>
-
-<p>If you’ve used control charts with a good baseline or regression adjustment to stabilize an estimate, it’s the same instinct—just applied to the statistical estimator of “true defect rate” (or whatever the latent quality metric is).</p>
-
-<h4>What you can take to work next week</h4>
-
-<p>This is most ready-to-try for teams doing recurring audits of model outputs (safety, defect detection, policy compliance, preference wins) where:</p>
+<p>They push repeated K-fold CV and report mean <em>and</em> resampling SD for out-of-fold <code>R^2</code>/RMSE, then add two “reality checks”:</p>
 
 <ul>
-<li>You have <em>any</em> historical gold data</li>
-<li>Silver labels come from raters or automated heuristics with known quirks</li>
-<li>You track evaluation metrics over time and care about sensitivity to real changes</li>
+<li><strong>Reliability ceiling</strong>: how much variance is even recoverable given calibration standard errors?</li>
+<li><strong>Design ceiling</strong>: whether your CV procedure could detect signal if it existed (their simulations say yes—ceilings near 1.0)</li>
 
 <p></ul>
-Implementation-wise, think of it as: (1) estimate rater confusion matrices from historical gold, (2) calibrate current silver labels, (3) add a regression/control-variate adjustment using stable features and a big historical baseline.</p>
+This explains a common gotcha: on the BEA benchmark, RMSE looks competitive, yet <code>R^2</code> is ~0.01–0.03 because a mean-only baseline is already strong. Translation: <strong>you can “win” RMSE and still not be explaining anything.</strong></p>
 
-<h4>Evidence worth noting (numbers, not vibes)</h4>
+<p>They also show why some targets are basically dead-on-arrival: the 3PL pseudo-guessing parameter has an effective reliability ceiling near zero at available precision—so don’t over-interpret models that “predict” it.</p>
 
-<p>In a 3D asset defect detection case study with only 10% gold labels, reported RMSE drops from 0.131 (majority vote) and 0.123 (Dawid–Skene) down to 0.093 (HERO‑1) and 0.080 (HERO‑2). That’s a meaningful swing if you’re trying to detect small regressions.</p>
+<p>---</p>
 
-<p>Theory-wise, they claim root-n consistency with an additional historical term:  
-<code>\hatμ_{HERO-1}-μ=O_p(n^{-1/2})+O_p(N^{-1/2})</code>, and HERO‑2 strictly reduces asymptotic variance when the covariate actually helps.</p>
+<h3>Methods that feel ready to try</h3>
 
-<h4>The question to carry forward</h4>
+<ul>
+<li><strong>Reparameterize to identifiable combinations</strong> (Campillo-Funollet et al.). If your model has symmetry or swapping behavior, fit the invariants first. Also: <strong>add first-order sensitivities</strong> to your optimizer—here it materially reduced wasted runs and improved convergence.</li>
+<li><strong>Report reliability ceilings alongside CV metrics</strong> (Chen et al.). Especially for inferred “ground truth” targets with measurement error. If ceiling-adjusted performance is flat across models, stop tuning embeddings and start improving calibration.</li>
 
-<p>As AI evaluation becomes a continuous process, we’re basically building measurement systems with memory. The interesting question is organizational, not just statistical: <em>are we archiving our “gold audits” in a way that lets us reuse them as calibration assets?</em> HERO suggests that yesterday’s audits aren’t just documentation—they’re metrology.</p><h4>Featured Papers This Week</h4><ul><li><strong>Ruan et al.</strong>: <a href="https://arxiv.org/pdf/2606.29784v1">HERO: Improving the Reliability and Sensitivity of Generative Model Evaluation Using Historical Data</a> <em>(Reliability)</em></li></ul><hr/><p><strong>Explore More:</strong> Visit the <a href="https://huggingface.co/spaces/fmegahed/arxiv_control_charts">QE ArXiv Watch Dashboard</a> to browse all papers with AI summaries, interactive filtering, and paper chat.</p><p style="color: #666; font-size: 0.9em;">This digest is automatically generated every Monday. Questions or feedback? Open an issue on our <a href="https://github.com/fmegahed/arxiv_control_charts">GitHub repository</a>.</p>
+<p></ul>
+---</p>
+
+<h3>DOE corner: two very different design stories, one shared theme</h3>
+
+<p>Phillips et al. (SCOREBED) is the “big machinery” paper: <strong>Bayesian experimental design without paying the nested Monte Carlo tax every time you restart a policy.</strong> They amortize the nasty marginal-score terms with score matching, then reuse that learned score model across many policy restarts—great when you want adaptive design but can’t afford to retrain everything for each hyperparameter tweak.</p>
+
+<p>He et al. is the refreshingly pragmatic counterpoint: treat <strong>agentic AI evaluation as an actual designed experiment</strong>, not a one-off benchmark run. Their factorial study finds “more reasoning effort” mostly buys you cost and complexity, not quality—utility slopes are negative in 7/8 strata after correction. That’s a DOE lesson we’ve all learned on the factory floor: <strong>turning the knob up isn’t improvement unless the response moves in the right direction.</strong></p>
+
+<p>---</p>
+
+<h3>One question to take into next week</h3>
+How many of our “model improvements” are really just <strong>optimization artifacts hidden by non-identifiability or low target reliability</strong>—and how often would a ceiling (or a reparameterization) save us weeks of tuning?<h4>Featured Papers This Week</h4><ul><li><strong>Campillo-Funollet et al.</strong>: <a href="https://arxiv.org/pdf/2607.09137v1">Comprehensive identifiability analysis and reliable parameter estimation for an SEIR model</a> <em>(Reliability)</em></li><li><strong>Phillips et al.</strong>: <a href="https://arxiv.org/pdf/2607.08335v1">Bayesian Experimental Design via Score Matching</a> <em>(Experimental Design)</em></li><li><strong>Chen et al.</strong>: <a href="https://arxiv.org/pdf/2607.07141v1">From Text to Parameters: Predicting Item Parameters from Embedding Regularization with Reliability and Design Ceilings</a> <em>(Reliability)</em></li><li><strong>He et al.</strong>: <a href="https://arxiv.org/pdf/2607.06413v1">An Experimental Design Approach to Evaluating Agentic AI&apos;s Autonomous Model Discovery</a> <em>(Experimental Design)</em></li></ul><hr/><p><strong>Explore More:</strong> Visit the <a href="https://huggingface.co/spaces/fmegahed/arxiv_control_charts">QE ArXiv Watch Dashboard</a> to browse all papers with AI summaries, interactive filtering, and paper chat.</p><p style="color: #666; font-size: 0.9em;">This digest is automatically generated every Monday. Questions or feedback? Open an issue on our <a href="https://github.com/fmegahed/arxiv_control_charts">GitHub repository</a>.</p>
 ]]></description>
     </item>
   </channel>
