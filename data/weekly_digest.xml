@@ -7,7 +7,7 @@
     <language>en-us</language>
     <copyright>CC BY 4.0 - QE ArXiv Watch</copyright>
     <managingEditor>noreply@example.com (QE ArXiv Watch)</managingEditor>
-    <lastBuildDate>Mon, 13 Jul 2026 12:48:38 +0000</lastBuildDate>
+    <lastBuildDate>Mon, 20 Jul 2026 12:43:09 +0000</lastBuildDate>
     <ttl>10080</ttl>
     <image>
       <url>https://huggingface.co/spaces/fmegahed/arxiv_control_charts/resolve/main/www/favicon.svg</url>
@@ -16,69 +16,52 @@
     </image>
     <atom:link href="https://huggingface.co/spaces/fmegahed/arxiv_control_charts/resolve/main/data/weekly_digest.xml" rel="self" type="application/rss+xml"/>
     <item>
-      <title>QE ArXiv Watch: Week of July 06 - July 13, 2026</title>
+      <title>QE ArXiv Watch: Week of July 13 - July 20, 2026</title>
       <link>https://huggingface.co/spaces/fmegahed/arxiv_control_charts</link>
-      <guid isPermaLink="false">qe-weekly-2026-07-13</guid>
-      <pubDate>Mon, 13 Jul 2026 12:48:38 +0000</pubDate>
+      <guid isPermaLink="false">qe-weekly-2026-07-20</guid>
+      <pubDate>Mon, 20 Jul 2026 12:43:09 +0000</pubDate>
       <description><![CDATA[
-<h4>QE ArXiv Watch Weekly — Week ending July 13, 2026 (4 papers)</h4>
+<p>If you’ve ever tried to run “one DOE to rule them all” across multiple sites, you know the pain: everybody has partial context, everybody has an opinion, and the simplest fusion rule—majority vote—often feels…too democratic for something as expensive as experimentation. The neat twist this week is a fusion rule that doesn’t try to be “most likely correct,” but “least likely to waste information.”</p>
 
-<p>If you’ve ever stared at a parameter fit that “looks great” and still felt uneasy… this week delivers a satisfying punchline: <strong>sometimes the optimizer isn’t failing—you’re asking it to estimate something the data literally can’t distinguish.</strong> And the fix isn’t a new optimizer. It’s reparameterizing to what’s actually identifiable.</p>
+<h4>So what problem are we really solving?</h4>
 
-<p>---</p>
+<p>G et al. tackle <strong>distributed experimental design</strong> when you have a <em>finite menu</em> of candidate experiments (say, 10 settings you could run next), and multiple sites each sees only part of the relevant data/model context.</p>
 
-<h3>What problems are researchers tackling (and why we should care)?</h3>
+<p>Each site sends <strong>one recommended experiment</strong> to a fusion center. The fusion center wants to approximate what a centralized “oracle” would pick—defined here as the candidate with the largest <strong>expected information gain (EIG)</strong>.</p>
 
-<h4>1) Identifiability isn’t academic—it's the difference between “fit” and “truth”</h4>
-Campillo-Funollet et al. take the classic SEIR model with only infections observed, <code>y(t)=I(t)</code>, and do the uncomfortable but necessary work: <strong>what can we uniquely learn from that measurement stream?</strong>
+<p>That setup is common in practice: plants with local data, labs with local expertise, product lines with partial telemetry. The decision bottleneck is real: you often only get <em>one</em> next experiment.</p>
 
-<p>They show <code>(α,γ)</code> are only <em>locally</em> identifiable—meaning the model happily supports two parameter settings that generate the same observations (here: <code>α</code> and <code>γ</code> can swap). In their simulation grid, vanilla least-squares on the original SEIR converges to the <em>wrong</em> swapped solution about <strong>80%</strong> of the time.</p>
+<h4>The key move: fuse recommendations by <em>regret</em>, not by votes</h4>
 
-<p>The practical move: they derive globally identifiable combinations like
-<ul>
-<li><code>c_1=α+γ</code></li>
-<li><code>c_3=αγ</code></li></p>
+<p>Instead of treating fusion like a standard classification task (“guess which experiment the oracle would pick”), they treat it as <strong>Bayes fusion with a loss matrix</strong>, where the loss of choosing experiment <em>i</em> when the oracle would choose <em>j</em> is the <strong>information regret</strong>:</p>
 
-<p></ul>
-…and fit <em>those</em> instead, via a reparameterized “UVY” system with a feasibility constraint <code>c_1^2-4c_3\ge 0</code>. Suddenly the landscape stops playing shell games: all tested initial guesses collapse to the same identifiable solution in the simplified setting, and when fitting all six unknowns, convergence jumps to ~<strong>80%</strong>, then ~<strong>90%</strong> with sensitivity equations added.</p>
+<p>> regret(i, j) = EIG(j) − EIG(i)</p>
 
-<p>Imagine translating “two knobs that trade places” into “sum and product of the knobs.” The data can see the latter cleanly—so your optimization stops hallucinating certainty about the former.</p>
+<p>So mis-picking an experiment that’s “almost as good” is a small sin; mis-picking a terrible one is costly. That’s exactly how we think about DOE in the real world, and it’s surprisingly absent from many fusion schemes.</p>
 
-<h4>2) Prediction claims need ceilings, not just scores</h4>
-Chen et al. tackle a different kind of identifiability problem: <strong>how predictable are psychometric item parameters from text embeddings?</strong> The key contribution isn’t another embedding model—it’s the evaluation discipline.
+<p>They derive the <strong>Bayes-optimal fusion rule</strong> for a general loss matrix, then specialize it to this regret loss. The resulting rule is what they call <strong>regret-weighted Bayes fusion</strong>.</p>
 
-<p>They push repeated K-fold CV and report mean <em>and</em> resampling SD for out-of-fold <code>R^2</code>/RMSE, then add two “reality checks”:</p>
+<p>Here’s the practical implication: <strong>MAP fusion</strong> (choose the most probable oracle label given the site recommendations) may maximize “oracle-label accuracy,” but it can still make <em>high-regret</em> mistakes. Regret-Bayes is allowed to be “wrong” more often—as long as it’s wrong in low-cost ways.</p>
 
-<ul>
-<li><strong>Reliability ceiling</strong>: how much variance is even recoverable given calibration standard errors?</li>
-<li><strong>Design ceiling</strong>: whether your CV procedure could detect signal if it existed (their simulations say yes—ceilings near 1.0)</li>
+<h4>When is majority vote actually justified?</h4>
 
-<p></ul>
-This explains a common gotcha: on the BEA benchmark, RMSE looks competitive, yet <code>R^2</code> is ~0.01–0.03 because a mean-only baseline is already strong. Translation: <strong>you can “win” RMSE and still not be explaining anything.</strong></p>
+<p>They make this concrete: <strong>majority vote is Bayes-optimal only under pretty restrictive symmetry</strong>—uniform priors and identical, symmetric site reliabilities. Once reliabilities differ by site (the usual case), majority can be strictly suboptimal. They even give a small worked example (L=3 experiments, M=3 sites) where majority selects one design, but Bayes/MAP selects another.</p>
 
-<p>They also show why some targets are basically dead-on-arrival: the 3PL pseudo-guessing parameter has an effective reliability ceiling near zero at available precision—so don’t over-interpret models that “predict” it.</p>
+<p>If you’ve ever thought “we should weight Site A more than Site B,” this paper formalizes that—and then goes one step further by weighting not just <em>sites</em>, but <em>mistakes</em>.</p>
 
-<p>---</p>
+<h4>What’s ready to try?</h4>
 
-<h3>Methods that feel ready to try</h3>
+<p>If you can estimate a <strong>confusion matrix</strong> for each site’s recommendation behavior—call it <code>Q_m(\text{rec}=k \mid \text{oracle}=j)</code>—you can implement their fusion rule directly. That confusion matrix can come from historical decisions, simulations, or offline training splits (as they do).</p>
 
-<ul>
-<li><strong>Reparameterize to identifiable combinations</strong> (Campillo-Funollet et al.). If your model has symmetry or swapping behavior, fit the invariants first. Also: <strong>add first-order sensitivities</strong> to your optimizer—here it materially reduced wasted runs and improved convergence.</li>
-<li><strong>Report reliability ceilings alongside CV metrics</strong> (Chen et al.). Especially for inferred “ground truth” targets with measurement error. If ceiling-adjusted performance is flat across models, stop tuning embeddings and start improving calibration.</li>
+<p>Then you decide: is your goal to maximize agreement with the oracle (MAP) or to minimize downstream information loss (regret-Bayes)? In uneven-cost DOE settings, they show regret-Bayes wins on the metric we actually care about: <strong>expected information regret</strong>, even when its “accuracy” is lower.</p>
 
-<p></ul>
----</p>
+<h4>A broader trend worth noticing</h4>
 
-<h3>DOE corner: two very different design stories, one shared theme</h3>
+<p>This feels like part of a larger shift: moving from “predict the right label” to <strong>decision-focused inference</strong>. If your KPI is information gained per run, optimizing for label accuracy is a proxy—and sometimes a bad one.</p>
 
-<p>Phillips et al. (SCOREBED) is the “big machinery” paper: <strong>Bayesian experimental design without paying the nested Monte Carlo tax every time you restart a policy.</strong> They amortize the nasty marginal-score terms with score matching, then reuse that learned score model across many policy restarts—great when you want adaptive design but can’t afford to retrain everything for each hyperparameter tweak.</p>
+<h4>Question to take into next week</h4>
 
-<p>He et al. is the refreshingly pragmatic counterpoint: treat <strong>agentic AI evaluation as an actual designed experiment</strong>, not a one-off benchmark run. Their factorial study finds “more reasoning effort” mostly buys you cost and complexity, not quality—utility slopes are negative in 7/8 strata after correction. That’s a DOE lesson we’ve all learned on the factory floor: <strong>turning the knob up isn’t improvement unless the response moves in the right direction.</strong></p>
-
-<p>---</p>
-
-<h3>One question to take into next week</h3>
-How many of our “model improvements” are really just <strong>optimization artifacts hidden by non-identifiability or low target reliability</strong>—and how often would a ceiling (or a reparameterization) save us weeks of tuning?<h4>Featured Papers This Week</h4><ul><li><strong>Campillo-Funollet et al.</strong>: <a href="https://arxiv.org/pdf/2607.09137v1">Comprehensive identifiability analysis and reliable parameter estimation for an SEIR model</a> <em>(Reliability)</em></li><li><strong>Phillips et al.</strong>: <a href="https://arxiv.org/pdf/2607.08335v1">Bayesian Experimental Design via Score Matching</a> <em>(Experimental Design)</em></li><li><strong>Chen et al.</strong>: <a href="https://arxiv.org/pdf/2607.07141v1">From Text to Parameters: Predicting Item Parameters from Embedding Regularization with Reliability and Design Ceilings</a> <em>(Reliability)</em></li><li><strong>He et al.</strong>: <a href="https://arxiv.org/pdf/2607.06413v1">An Experimental Design Approach to Evaluating Agentic AI&apos;s Autonomous Model Discovery</a> <em>(Experimental Design)</em></li></ul><hr/><p><strong>Explore More:</strong> Visit the <a href="https://huggingface.co/spaces/fmegahed/arxiv_control_charts">QE ArXiv Watch Dashboard</a> to browse all papers with AI summaries, interactive filtering, and paper chat.</p><p style="color: #666; font-size: 0.9em;">This digest is automatically generated every Monday. Questions or feedback? Open an issue on our <a href="https://github.com/fmegahed/arxiv_control_charts">GitHub repository</a>.</p>
+<p>Where in your organization are you still using majority vote (explicitly or implicitly) for high-stakes technical decisions—when what you really want is <em>minimum regret</em>?</p><h4>Featured Papers This Week</h4><ul><li><strong>G et al.</strong>: <a href="https://arxiv.org/pdf/2607.11023v1">Regret-weighted Bayes Fusion for Distributed Experimental Design</a> <em>(Experimental Design)</em></li></ul><hr/><p><strong>Explore More:</strong> Visit the <a href="https://huggingface.co/spaces/fmegahed/arxiv_control_charts">QE ArXiv Watch Dashboard</a> to browse all papers with AI summaries, interactive filtering, and paper chat.</p><p style="color: #666; font-size: 0.9em;">This digest is automatically generated every Monday. Questions or feedback? Open an issue on our <a href="https://github.com/fmegahed/arxiv_control_charts">GitHub repository</a>.</p>
 ]]></description>
     </item>
   </channel>
