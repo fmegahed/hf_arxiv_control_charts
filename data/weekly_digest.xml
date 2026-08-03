@@ -7,7 +7,7 @@
     <language>en-us</language>
     <copyright>CC BY 4.0 - QE ArXiv Watch</copyright>
     <managingEditor>noreply@example.com (QE ArXiv Watch)</managingEditor>
-    <lastBuildDate>Mon, 27 Jul 2026 13:03:12 +0000</lastBuildDate>
+    <lastBuildDate>Mon, 03 Aug 2026 13:02:09 +0000</lastBuildDate>
     <ttl>10080</ttl>
     <image>
       <url>https://huggingface.co/spaces/fmegahed/arxiv_control_charts/resolve/main/www/favicon.svg</url>
@@ -16,44 +16,54 @@
     </image>
     <atom:link href="https://huggingface.co/spaces/fmegahed/arxiv_control_charts/resolve/main/data/weekly_digest.xml" rel="self" type="application/rss+xml"/>
     <item>
-      <title>QE ArXiv Watch: Week of July 20 - July 27, 2026</title>
+      <title>QE ArXiv Watch: Week of July 27 - August 03, 2026</title>
       <link>https://huggingface.co/spaces/fmegahed/arxiv_control_charts</link>
-      <guid isPermaLink="false">qe-weekly-2026-07-27</guid>
-      <pubDate>Mon, 27 Jul 2026 13:03:12 +0000</pubDate>
+      <guid isPermaLink="false">qe-weekly-2026-08-03</guid>
+      <pubDate>Mon, 03 Aug 2026 13:02:09 +0000</pubDate>
       <description><![CDATA[
-<p>The most useful idea this week: stop treating “remaining useful life” and “what will fail” as two separate supervised labels you only get at the end of life. Instead, treat them like <em>quantities that must satisfy a Bellman recursion right now</em>, so every partial trace you have—censored, stitched, anonymous—still teaches the model something.</p>
+<p>The thing I can’t stop thinking about this week: we’re finally seeing experimental design papers that treat <em>time</em> as a first-class design variable—not just “run more trials,” but “choose what to randomize now because it changes what you’ll be able to learn later.” If you’ve ever run a rollout where operators adapt, policies drift, or the “best” treatment depends on what happens downstream… you’ll feel this.</p>
 
-<p>That’s the core move in Yan et al.: they recast RUL + failure-mode prediction as a <em>vector of General Value Functions</em> (GVFs) over an absorbing degradation process. If you’ve ever stared at a fleet dataset full of “everything except the failure,” you know why that matters.</p>
+<h4>Adaptive design grows up (and goes longitudinal)</h4>
 
-<h4>Learning from fragments, not just failures (Yan et al.)</h4>
-Here’s the practical shift: once RUL and mode are GVFs, you can train them with multi-step TD learning (their truncated TD(n,λ)) and bootstrap from successor states. So instead of discarding partial histories or waiting for run-to-failure labels, you propagate learning signals backward through time—Bellman-style.
+<p>Zhang et al. tackle a very QE-shaped headache: multi-stage, time-varying treatments where we care about <em>more than one</em> estimand (e.g., effect of early vs late initiation). The clever bit is the “oracle” design that minimizes the semiparametric efficiency bound—basically, it allocates randomization probability to minimize the variance you <em>must</em> pay to estimate your targets.</p>
 
-<p>Why you should care: in real predictive maintenance programs, labels are scarce, delayed, and biased toward “the units that actually died on your watch.” Their “stitch” protocol on C-MAPSS is basically a stress test for that reality, and TD absolutely crushes the Monte Carlo-style supervised baseline when terminal labels are limited (e.g., FD002 at 10% labeled: TD NAE 0.257 vs MC 0.633). On full trajectories, TD still wins consistently (FD003: 0.212 vs 0.287).</p>
+<p>Two practical takeaways:</p>
 
-<p>Also nice: the theory is not hand-wavy—fixed points, projected TD under linear approximation, and a variance decomposition that clarifies when TD targets beat MC returns (often: before absorption, at finite n).</p>
+<p>1) Optimal earlier randomization can depend on later-stage allocation. That backward-recursive structure is a good mental model for staged interventions: you don’t design stage 1 in isolation.</p>
 
-<p>If you’re building RUL models today, the “try this” takeaway is simple: if you can define your target as a value function on a degradation Markov process, you can start using <em>all</em> your data, not just the happy few run-to-failure sequences.</p>
+<p>2) They pair the design with an inference procedure (ADL‑LTMLE) that stays asymptotically normal/efficient under the <em>mixture law induced by the adaptive design</em>. Translation: you can adapt without giving up clean inference (if you use the right machinery).</p>
 
-<h4>Cross-validation you can trust in hierarchical models (Bindoff et al.)</h4>
-Switching gears: Bindoff et al. tackle a painful, practical Bayesian workflow issue—PSIS-LOO often breaks in hierarchical models, especially for singleton or small groups where random effects are heavily data-driven. You’ve seen the Pareto-k warnings; the real question is “now what?”
+<p>The reported variance reductions are not marginal. For K=3 stages, their adaptive design roughly halves the weighted variance criterion versus a fixed 0.5/0.5/0.5 scheme (TarVar 0.056 → 0.026), getting close to the oracle (0.022). If you’re planning sequential interventions (maintenance policies, multi-touch customer flows, clinical pathways), this is one of the more “ready-to-try in principle” frameworks—assuming you can support covariate-adjusted adaptive randomization and are comfortable with TMLE tooling.</p>
 
-<p>Two contributions feel immediately actionable:</p>
+<h4>Repeated algorithm exposure: stop pretending decisions are independent</h4>
 
-<p>1) <strong>Triage without weights.</strong> They predict which folds will fail <em>before</em> running PSIS-LOO using the pooling factor / structural leverage idea. In Gaussian LMM sims they get AUC 0.96 at flagging failures—meaning you can anticipate trouble cheaply.</p>
+<p>Wang et al. call out a design failure many of us have lived: you randomize assistance per decision (interleaving on/off), then discover users learned (or got numb) and your estimator is biased. They formalize four estimands that map to real operational questions: immediate effect, habituation under sustained exposure, and the “skilling/deskilling” effect when you remove help after prior exposure.</p>
 
-<p>2) <strong>A cure that doesn’t require refitting everything.</strong> Their Rao–Blackwellized LOO (RB-LOO) marginalizes random effects and importance-samples only the base parameters. Closed forms for Gaussian random-intercept models, simple quadrature for common GLMMs. On nasty folds, RB-LOO tracks exact refits closely (epilepsy example: elpd RMSE 0.041 vs PSIS-LOO 0.638) and can even flip model-comparison conclusions.</p>
+<p>Their recommended design—the minimax stepped “double wedge”—forces exposure trajectories that let you identify these dynamic effects without the between-decision interference that breaks per-decision randomization. Yes, you often pay variance. But they show regimes where the bias from interleaving dominates RMSE, so the more structured rollout wins.</p>
 
-<p>If you do reliability modeling with hierarchical Bayes (field returns by plant, operator, line, supplier…), this is workflow gold: <em>predict failure folds → RB-LOO them → only re-fit the true stragglers.</em></p>
+<p>If you run decision support in healthcare, inspection assistance on the line, or any tool where humans adapt, this is a strong argument to design like a rollout engineer, not like an A/B tester.</p>
 
-<h4>Topology as an “early warning light” for tabular foundation models (Hu et al.)</h4>
-Hu et al. is more ML-calibration than physical reliability, but it has an intriguing diagnostic vibe: they probe TabPFN’s hidden representations with zigzag persistent homology and find topological signatures that track calibration/reliability metrics. The headline correlation is hard to ignore (warped circle: H0 fragmentation vs MAR ρ≈0.92).
+<h4>Designing environments, not just treatments (Bayesian style)</h4>
 
-<p>Interpret it like this: when the representation starts “shattering” into many disconnected components (high H0 fragmentation) or losing durable structure, the model gets overconfident and wrong. It’s not yet a turn-key tool for production monitoring, but it suggests a direction: <em>representation topology as a health metric</em> for black-box predictors.</p>
+<p>Dubey et al. frame the <em>task environment</em> (an MDP) as the design variable and optimize expected information gain (EIG). It’s cognition-oriented, but the idea transfers: in reliability testing or human-in-the-loop quality tasks, you can often choose the “world” you test in (stress profiles, scenario trees, workload patterns).</p>
 
-<h4>The connective tissue</h4>
-A theme emerges: reliability isn’t just “predict the endpoint.” It’s about <strong>knowing when learning signals are trustworthy</strong> (TD vs MC with scarce labels), <strong>knowing when evaluation is trustworthy</strong> (RB-LOO vs fragile PSIS-LOO), and <strong>knowing when a model’s internal geometry is heading into a danger zone</strong> (topological stress).
+<p>The pragmatic contribution is amortization: train a neural surrogate to approximate posteriors and directly predict KL gain, so you can rank many candidate environments cheaply. They also highlight an uncomfortable truth: the most informative design by EIG isn’t always the best for finite-sample parameter recoverability. In practice, we may need a multi-objective view: “max info” vs “max stable decisions.”</p>
 
-<p>Forward-looking question for the week: if we can bootstrap RUL from partial trajectories with Bellman consistency, can we also bootstrap <em>uncertainty calibration</em> the same way—so the model learns not just “how long,” but “how much do I trust this,” even when failures are rare?</p><h4>Featured Papers This Week</h4><ul><li><strong>Yan et al.</strong>: <a href="https://arxiv.org/pdf/2607.22268v1">General Value Functions for Remaining Useful Life and Failure-Mode Prediction</a> <em>(Reliability)</em></li><li><strong>Bindoff et al.</strong>: <a href="https://arxiv.org/pdf/2607.18836v1">Partial pooling predicts cross-validation reliability: a closed-form triage and Rao-Blackwellised cure for hierarchical LOO</a> <em>(Reliability)</em></li><li><strong>Hu et al.</strong>: <a href="https://arxiv.org/pdf/2607.17962v1">Topological Signatures of Context-Level Reliability in TabPFN</a> <em>(Reliability)</em></li></ul><hr/><p><strong>Explore More:</strong> Visit the <a href="https://huggingface.co/spaces/fmegahed/arxiv_control_charts">QE ArXiv Watch Dashboard</a> to browse all papers with AI summaries, interactive filtering, and paper chat.</p><p style="color: #666; font-size: 0.9em;">This digest is automatically generated every Monday. Questions or feedback? Open an issue on our <a href="https://github.com/fmegahed/arxiv_control_charts">GitHub repository</a>.</p>
+<h4>DOE from observational data, with orthogonality as the north star</h4>
+
+<p>Fulton et al.’s Retrospective Orthogonal Design (ROD) is for when you didn’t get to randomize, but you still want DOE-like interpretability: orthogonal contrasts, unique sums of squares, and order-invariant decomposition. They rebalance observational data onto a lattice, code an orthonormal contrast basis (so <code>X^\top W X</code> is essentially diagonal), and reconstruct a response surface with piecewise-affine interpolation.</p>
+
+<p>Where it shines is exactly where polynomial regression hurts: thresholding, XOR-ish interactions, localized bumps. They report big out-of-sample <code>R^2</code> gains on those shapes. Where it struggles: some smoother-but-nonlinear families (log-saturation, hurdle, etc.). So: a tool for <em>structure discovery</em> when you suspect non-smooth interactions and you want an ANOVA-like accounting that doesn’t depend on term entry order.</p>
+
+<h4>Proxy outcomes: the reliability story we all need</h4>
+
+<p>Darmon et al. (proxymate) brings discipline to “we’ll just use a proxy.” The framework is memorable: Representativity, Unit, Estimate, Domain—plus a diagnostic-to-adjustment bridge. The most QE-relevant claim is also the most sobering: unnecessary adjustment can <em>increase</em> MSE, so you should gate corrections based on diagnostics, not reflex.</p>
+
+<p>The case studies land the point. In scam prevalence, representativity failures plus weak unit sensitivity caused them to reject all proxies; naïve proxy-based prevalence was ~11× off the importance-weighted primary estimate. That’s a strong warning for anyone doing reliability inference from telemetry, automated labels, or surrogate defect signals.</p>
+
+<h4>Question to take into next week</h4>
+
+<p>Are we ready—organizationally and technically—to treat experiments as <em>adaptive systems</em> (with time, learning, and proxy validity baked in), rather than one-shot comparisons? The methods are getting there. Our pipelines and governance might be the bottleneck.</p><h4>Featured Papers This Week</h4><ul><li><strong>Zhang et al.</strong>: <a href="https://arxiv.org/pdf/2607.29421v1">Longitudinal Adaptive Experimental Design for Learning Multiple Target Estimands with Semiparametric Efficient Inference</a> <em>(Experimental Design)</em></li><li><strong>Dubey et al.</strong>: <a href="https://arxiv.org/pdf/2607.28894v1">Identifying Informative Environments for Cognition Parameter Inference via Bayesian Experimental Design</a> <em>(Experimental Design)</em></li><li><strong>Wang et al.</strong>: <a href="https://arxiv.org/pdf/2607.27701v1">Evaluating Algorithm-Assisted Human Decision-Making Over Repeated Algorithm Exposure: Recommendations for Effect Estimands and Experimental Design</a> <em>(Experimental Design)</em></li><li><strong>Fulton et al.</strong>: <a href="https://arxiv.org/pdf/2607.26219v1">Retrospective Orthogonal Design: Response-Surface Reconstruction from Observational Data</a> <em>(Experimental Design)</em></li><li><strong>Darmon et al.</strong>: <a href="https://arxiv.org/pdf/2607.24401v1">proxymate: Diagnosis and Adjustment of Proxy Estimates for Reliable Inference</a> <em>(Reliability)</em></li></ul><hr/><p><strong>Explore More:</strong> Visit the <a href="https://huggingface.co/spaces/fmegahed/arxiv_control_charts">QE ArXiv Watch Dashboard</a> to browse all papers with AI summaries, interactive filtering, and paper chat.</p><p style="color: #666; font-size: 0.9em;">This digest is automatically generated every Monday. Questions or feedback? Open an issue on our <a href="https://github.com/fmegahed/arxiv_control_charts">GitHub repository</a>.</p>
 ]]></description>
     </item>
   </channel>
