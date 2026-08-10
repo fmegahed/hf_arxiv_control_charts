@@ -7,7 +7,7 @@
     <language>en-us</language>
     <copyright>CC BY 4.0 - QE ArXiv Watch</copyright>
     <managingEditor>noreply@example.com (QE ArXiv Watch)</managingEditor>
-    <lastBuildDate>Mon, 03 Aug 2026 13:02:09 +0000</lastBuildDate>
+    <lastBuildDate>Mon, 10 Aug 2026 12:15:41 +0000</lastBuildDate>
     <ttl>10080</ttl>
     <image>
       <url>https://huggingface.co/spaces/fmegahed/arxiv_control_charts/resolve/main/www/favicon.svg</url>
@@ -16,54 +16,46 @@
     </image>
     <atom:link href="https://huggingface.co/spaces/fmegahed/arxiv_control_charts/resolve/main/data/weekly_digest.xml" rel="self" type="application/rss+xml"/>
     <item>
-      <title>QE ArXiv Watch: Week of July 27 - August 03, 2026</title>
+      <title>QE ArXiv Watch: Week of August 03 - August 10, 2026</title>
       <link>https://huggingface.co/spaces/fmegahed/arxiv_control_charts</link>
-      <guid isPermaLink="false">qe-weekly-2026-08-03</guid>
-      <pubDate>Mon, 03 Aug 2026 13:02:09 +0000</pubDate>
+      <guid isPermaLink="false">qe-weekly-2026-08-10</guid>
+      <pubDate>Mon, 10 Aug 2026 12:15:41 +0000</pubDate>
       <description><![CDATA[
-<p>The thing I can’t stop thinking about this week: we’re finally seeing experimental design papers that treat <em>time</em> as a first-class design variable—not just “run more trials,” but “choose what to randomize now because it changes what you’ll be able to learn later.” If you’ve ever run a rollout where operators adapt, policies drift, or the “best” treatment depends on what happens downstream… you’ll feel this.</p>
+<p>The most actionable idea this week: <strong>stop letting “reliability” (or “evidence”) be a single number your software quietly chooses for you.</strong> Across very different domains—psychometric tests, sequential decision-making, and even recommendation/optimization—authors are pushing the same theme: <em>name your estimand, quantify uncertainty, and optimize for the population/decision you actually care about.</em></p>
 
-<h4>Adaptive design grows up (and goes longitudinal)</h4>
+<h4>Reliability isn’t a number; it’s a choice (and that choice moves outcomes a lot)</h4>
 
-<p>Zhang et al. tackle a very QE-shaped headache: multi-stage, time-varying treatments where we care about <em>more than one</em> estimand (e.g., effect of early vs late initiation). The clever bit is the “oracle” design that minimizes the semiparametric efficiency bound—basically, it allocates randomization probability to minimize the variance you <em>must</em> pay to estimate your targets.</p>
+<p>Lee et al. looked at <strong>889 real item-response datasets</strong> and did what most of us wish more fields would do: run a standardized pipeline, compute multiple defensible reliability estimands, and ask how much dispersion is “just estimation noise” versus real heterogeneity.</p>
 
-<p>Two practical takeaways:</p>
+<p>The punchline is uncomfortable: depending on the estimand, <strong>30%–50% of administrations fall below 0.80</strong>, and under a stricter WLE/separation flavor, about <strong>10% dip below 0.50</strong>. Even more telling, after deconvolving standard errors, <strong>only ~1% of the observed spread is estimation noise</strong>. So the variability is mostly real—different instruments, populations, conditions, proctoring, etc.</p>
 
-<p>1) Optimal earlier randomization can depend on later-stage allocation. That backward-recursive structure is a good mental model for staged interventions: you don’t design stage 1 in isolation.</p>
+<p>Practitioner takeaway: if you’re doing any measurement system analysis for surveys, ratings, audits, rubric scoring, etc., treat “reliability” like a spec with variants. <strong>Report (at least) a strict and a lenient operational coefficient plus uncertainty</strong>, and don’t let defaults decide. The EAP-vs-WLE gap is <em>systematically positive</em> (EAP higher in 97% of datasets), so swapping software settings can “improve reliability” without improving the measurement.</p>
 
-<p>2) They pair the design with an inference procedure (ADL‑LTMLE) that stays asymptotically normal/efficient under the <em>mixture law induced by the adaptive design</em>. Translation: you can adapt without giving up clean inference (if you use the right machinery).</p>
+<h4>Sequential testing: don’t just stop when you can decide—stop when you can decide <em>precisely</em></h4>
 
-<p>The reported variance reductions are not marginal. For K=3 stages, their adaptive design roughly halves the weighted variance criterion versus a fixed 0.5/0.5/0.5 scheme (TarVar 0.056 → 0.026), getting close to the oracle (0.022). If you’re planning sequential interventions (maintenance policies, multi-touch customer flows, clinical pathways), this is one of the more “ready-to-try in principle” frameworks—assuming you can support covariate-adjusted adaptive randomization and are comfortable with TMLE tooling.</p>
+<p>Kazin et al. propose DPitG, a Bayesian sequential test that only stops when <strong>two conditions</strong> hold: (1) you’ve hit a <strong>precision goal</strong> (HDI width) and (2) the <strong>HDI+ROPE decision is conclusive</strong>.</p>
 
-<h4>Repeated algorithm exposure: stop pretending decisions are independent</h4>
+<p>Why we should care in reliability/quality work: this is a clean fix for a familiar pathology in online experimentation and acceptance decisions—rules that stop the first time the result “looks decisive” can <strong>inflate false positives</strong>. In their null-true coin-flip simulations, the “stop when conclusive” variant rejects falsely <strong>6.3%</strong> of the time. DPitG stays essentially at <strong>0% false rejects</strong> while being <strong>97.8% conclusive</strong>, costing only a small median sample increase versus precision-only stopping.</p>
 
-<p>Wang et al. call out a design failure many of us have lived: you randomize assistance per decision (interleaving on/off), then discover users learned (or got numb) and your estimator is biased. They formalize four estimands that map to real operational questions: immediate effect, habituation under sustained exposure, and the “skilling/deskilling” effect when you remove help after prior exposure.</p>
+<p>If you run sequential A/B tests on process changes, inspections, or alarms: DPitG is a practical pattern—<strong>gate decisions on both precision and decisiveness</strong>, not either one.</p>
 
-<p>Their recommended design—the minimax stepped “double wedge”—forces exposure trajectories that let you identify these dynamic effects without the between-decision interference that breaks per-decision randomization. Yes, you often pay variance. But they show regimes where the bias from interleaving dominates RMSE, so the more structured rollout wins.</p>
+<h4>Designing experiments for the population you’ll actually deploy to</h4>
 
-<p>If you run decision support in healthcare, inspection assistance on the line, or any tool where humans adapt, this is a strong argument to design like a rollout engineer, not like an A/B tester.</p>
+<p>Dang et al. is classic DOE/causal design with a modern twist: you’re estimating <strong>group-specific effects</strong>, but the <strong>deployment mix differs from the experimental mix</strong>. Their Target-Weighted Neyman Allocation uses a small balanced pilot to estimate within-group variances, then allocates the main sample to minimize <strong>deployment-weighted MSE</strong> for the GATE vector.</p>
 
-<h4>Designing environments, not just treatments (Bayesian style)</h4>
+<p>This is gold for anyone doing reliability improvements across segments (plants, suppliers, climates, user cohorts) where the “future business” mix won’t match the convenient test mix. TWNA beats naive “sample like deployment” when variances fight the weights, and it stays close to the oracle design in sims and benchmarks. The robust variants (minimax, shrinkage/winsorized pilot) are exactly the kind of guardrails we need in messy real data.</p>
 
-<p>Dubey et al. frame the <em>task environment</em> (an MDP) as the design variable and optimize expected information gain (EIG). It’s cognition-oriented, but the idea transfers: in reliability testing or human-in-the-loop quality tasks, you can often choose the “world” you test in (stress profiles, scenario trees, workload patterns).</p>
+<h4>Two method notes worth stealing</h4>
 
-<p>The pragmatic contribution is amortization: train a neural surrogate to approximate posteriors and directly predict KL gain, so you can rank many candidate environments cheaply. They also highlight an uncomfortable truth: the most informative design by EIG isn’t always the best for finite-sample parameter recoverability. In practice, we may need a multi-objective view: “max info” vs “max stable decisions.”</p>
+<p>Herman et al. deliver a construction pipeline and catalogs for <strong>large three-level OMARS designs</strong>—useful when you want screening <em>and</em> second-order response surface information in one shot (think complex recipes or multi-factor manufacturing). If your team lives on 96-run constraints (plates, shifts), these designs are aimed right at you.</p>
 
-<h4>DOE from observational data, with orthogonality as the north star</h4>
+<p>Neumann et al. bring “risk-aware” thinking to recommendation optimization: penalize predicted benefit by model uncertainty inside a MAP-Elites quality-diversity search. Imagine doing process setpoint optimization but refusing to “win” in regions your model barely saw—this is that instinct, formalized.</p>
 
-<p>Fulton et al.’s Retrospective Orthogonal Design (ROD) is for when you didn’t get to randomize, but you still want DOE-like interpretability: orthogonal contrasts, unique sums of squares, and order-invariant decomposition. They rebalance observational data onto a lattice, code an orthonormal contrast basis (so <code>X^\top W X</code> is essentially diagonal), and reconstruct a response surface with piecewise-affine interpolation.</p>
+<h4>And a sobering meta-result: LLMs still can’t reliably plan experiments end-to-end</h4>
 
-<p>Where it shines is exactly where polynomial regression hurts: thresholding, XOR-ish interactions, localized bumps. They report big out-of-sample <code>R^2</code> gains on those shapes. Where it struggles: some smoother-but-nonlinear families (log-saturation, hurdle, etc.). So: a tool for <em>structure discovery</em> when you suspect non-smooth interactions and you want an ANOVA-like accounting that doesn’t depend on term entry order.</p>
+<p>Liu et al.’s SCOPE benchmark finds models can outline high-level experiments, but <strong>low-level configuration (datasets/baselines/metrics/constraints) is the bottleneck</strong>—and adding web search can make things worse. Their OptED workflow helps, but the planning–configuration gap persists. For quality teams: treat LLMs as brainstorming partners, not autonomous DOE engineers—yet.</p>
 
-<h4>Proxy outcomes: the reliability story we all need</h4>
-
-<p>Darmon et al. (proxymate) brings discipline to “we’ll just use a proxy.” The framework is memorable: Representativity, Unit, Estimate, Domain—plus a diagnostic-to-adjustment bridge. The most QE-relevant claim is also the most sobering: unnecessary adjustment can <em>increase</em> MSE, so you should gate corrections based on diagnostics, not reflex.</p>
-
-<p>The case studies land the point. In scam prevalence, representativity failures plus weak unit sensitivity caused them to reject all proxies; naïve proxy-based prevalence was ~11× off the importance-weighted primary estimate. That’s a strong warning for anyone doing reliability inference from telemetry, automated labels, or surrogate defect signals.</p>
-
-<h4>Question to take into next week</h4>
-
-<p>Are we ready—organizationally and technically—to treat experiments as <em>adaptive systems</em> (with time, learning, and proxy validity baked in), rather than one-shot comparisons? The methods are getting there. Our pipelines and governance might be the bottleneck.</p><h4>Featured Papers This Week</h4><ul><li><strong>Zhang et al.</strong>: <a href="https://arxiv.org/pdf/2607.29421v1">Longitudinal Adaptive Experimental Design for Learning Multiple Target Estimands with Semiparametric Efficient Inference</a> <em>(Experimental Design)</em></li><li><strong>Dubey et al.</strong>: <a href="https://arxiv.org/pdf/2607.28894v1">Identifying Informative Environments for Cognition Parameter Inference via Bayesian Experimental Design</a> <em>(Experimental Design)</em></li><li><strong>Wang et al.</strong>: <a href="https://arxiv.org/pdf/2607.27701v1">Evaluating Algorithm-Assisted Human Decision-Making Over Repeated Algorithm Exposure: Recommendations for Effect Estimands and Experimental Design</a> <em>(Experimental Design)</em></li><li><strong>Fulton et al.</strong>: <a href="https://arxiv.org/pdf/2607.26219v1">Retrospective Orthogonal Design: Response-Surface Reconstruction from Observational Data</a> <em>(Experimental Design)</em></li><li><strong>Darmon et al.</strong>: <a href="https://arxiv.org/pdf/2607.24401v1">proxymate: Diagnosis and Adjustment of Proxy Estimates for Reliable Inference</a> <em>(Reliability)</em></li></ul><hr/><p><strong>Explore More:</strong> Visit the <a href="https://huggingface.co/spaces/fmegahed/arxiv_control_charts">QE ArXiv Watch Dashboard</a> to browse all papers with AI summaries, interactive filtering, and paper chat.</p><p style="color: #666; font-size: 0.9em;">This digest is automatically generated every Monday. Questions or feedback? Open an issue on our <a href="https://github.com/fmegahed/arxiv_control_charts">GitHub repository</a>.</p>
+<p><strong>Question to chew on:</strong> where in your workflow are you still reporting a single “reliability” or “significance” number—when what you really need is an explicitly named estimand plus uncertainty, optimized for the deployment decision?</p><h4>Featured Papers This Week</h4><ul><li><strong>Lee et al.</strong>: <a href="https://arxiv.org/pdf/2608.06806v1">How Reliable Are Psychological Measurements? The Distribution of Marginal Reliability Across 889 Item-Response Datasets</a> <em>(Reliability)</em></li><li><strong>Dang et al.</strong>: <a href="https://arxiv.org/pdf/2608.06512v1">Target-Weighted Neyman Allocation: Experimental Design for Heterogeneous Treatment Effects under Population Shift</a> <em>(Experimental Design)</em></li><li><strong>Herman et al.</strong>: <a href="https://arxiv.org/pdf/2608.04814v1">Constructing Large Orthogonal Minimally Aliased Response Surface Designs Through Enumeration and Combination of Weighing Designs</a> <em>(Experimental Design)</em></li><li><strong>Kazin et al.</strong>: <a href="https://arxiv.org/pdf/2608.05301v1">Precision and Decisiveness as Goals: Reliable Sequential Hypothesis Testing with a Dual Stopping Criterion</a> <em>(Reliability)</em></li><li><strong>Park et al.</strong>: <a href="https://arxiv.org/pdf/2608.04826v1">Group-regularized matrix factorization for fast and reliable module discovery in pan-omics pan-cancer studies</a> <em>(Reliability)</em></li><li><strong>Neumann et al.</strong>: <a href="https://arxiv.org/pdf/2608.05230v1">Quality Diversity for Reliable Data Driven Time-Use Optimization</a> <em>(Reliability)</em></li><li><strong>Liu et al.</strong>: <a href="https://arxiv.org/pdf/2608.03501v1">Can LLM design high-quality experiments? A Comprehensive and Systematic Benchmark on Autonomous Experimental Design</a> <em>(Experimental Design)</em></li></ul><hr/><p><strong>Explore More:</strong> Visit the <a href="https://huggingface.co/spaces/fmegahed/arxiv_control_charts">QE ArXiv Watch Dashboard</a> to browse all papers with AI summaries, interactive filtering, and paper chat.</p><p style="color: #666; font-size: 0.9em;">This digest is automatically generated every Monday. Questions or feedback? Open an issue on our <a href="https://github.com/fmegahed/arxiv_control_charts">GitHub repository</a>.</p>
 ]]></description>
     </item>
   </channel>
