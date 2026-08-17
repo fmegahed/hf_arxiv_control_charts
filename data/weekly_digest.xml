@@ -7,7 +7,7 @@
     <language>en-us</language>
     <copyright>CC BY 4.0 - QE ArXiv Watch</copyright>
     <managingEditor>noreply@example.com (QE ArXiv Watch)</managingEditor>
-    <lastBuildDate>Mon, 10 Aug 2026 12:15:41 +0000</lastBuildDate>
+    <lastBuildDate>Mon, 17 Aug 2026 12:07:25 +0000</lastBuildDate>
     <ttl>10080</ttl>
     <image>
       <url>https://huggingface.co/spaces/fmegahed/arxiv_control_charts/resolve/main/www/favicon.svg</url>
@@ -16,46 +16,38 @@
     </image>
     <atom:link href="https://huggingface.co/spaces/fmegahed/arxiv_control_charts/resolve/main/data/weekly_digest.xml" rel="self" type="application/rss+xml"/>
     <item>
-      <title>QE ArXiv Watch: Week of August 03 - August 10, 2026</title>
+      <title>QE ArXiv Watch: Week of August 10 - August 17, 2026</title>
       <link>https://huggingface.co/spaces/fmegahed/arxiv_control_charts</link>
-      <guid isPermaLink="false">qe-weekly-2026-08-10</guid>
-      <pubDate>Mon, 10 Aug 2026 12:15:41 +0000</pubDate>
+      <guid isPermaLink="false">qe-weekly-2026-08-17</guid>
+      <pubDate>Mon, 17 Aug 2026 12:07:25 +0000</pubDate>
       <description><![CDATA[
-<p>The most actionable idea this week: <strong>stop letting “reliability” (or “evidence”) be a single number your software quietly chooses for you.</strong> Across very different domains—psychometric tests, sequential decision-making, and even recommendation/optimization—authors are pushing the same theme: <em>name your estimand, quantify uncertainty, and optimize for the population/decision you actually care about.</em></p>
+<h3>QE ArXiv Watch Weekly — Week ending Aug 17, 2026 (4 papers)</h3>
 
-<h4>Reliability isn’t a number; it’s a choice (and that choice moves outcomes a lot)</h4>
+<p>If you’re monitoring anything “smart” with ML scores—defect probabilities, anomaly logits, risk scores—this week’s hook is simple: <strong>treat the model output like a process variable, but don’t pretend your Phase I data are i.i.d.</strong> Kang et al. bake that reality into a vision-SPC framework with a bootstrap that <em>resamples images and augments them</em> to hit a target ARL. It’s a very “2026” answer to the awkward question we all face: <em>how do I set control limits when my statistic is coming from a deep net and the distribution is a moving target?</em></p>
 
-<p>Lee et al. looked at <strong>889 real item-response datasets</strong> and did what most of us wish more fields would do: run a standardized pipeline, compute multiple defensible reliability estimands, and ask how much dispersion is “just estimation noise” versus real heterogeneity.</p>
+<h4>Vision + SPC that actually looks deployable</h4>
+Kang et al.’s MODERN framework is essentially three parts you can imagine putting on a line tomorrow:
 
-<p>The punchline is uncomfortable: depending on the estimand, <strong>30%–50% of administrations fall below 0.80</strong>, and under a stricter WLE/separation flavor, about <strong>10% dip below 0.50</strong>. Even more telling, after deconvolving standard errors, <strong>only ~1% of the observed spread is estimation noise</strong>. So the variability is mostly real—different instruments, populations, conditions, proctoring, etc.</p>
+<p>1) <strong>MODERN-Net</strong> outputs a per-image defect likelihood.  
+2) <strong>MODERN-Chart</strong> is a one-sided EWMA-ish chart with a restart-at-zero mechanism to catch persistent upward drift (so you don’t “bank” old evidence forever).  
+3) <strong>MODERN-Diagnosis</strong> repurposes the net to localize defects as ellipses (a pragmatic middle ground between “classification only” and full segmentation).</p>
 
-<p>Practitioner takeaway: if you’re doing any measurement system analysis for surveys, ratings, audits, rubric scoring, etc., treat “reliability” like a spec with variants. <strong>Report (at least) a strict and a lenient operational coefficient plus uncertainty</strong>, and don’t let defaults decide. The EAP-vs-WLE gap is <em>systematically positive</em> (EAP higher in 97% of datasets), so swapping software settings can “improve reliability” without improving the measurement.</p>
+<p>The practical nugget is the <strong>Augmented Bootstrap</strong> for control limits: resample in-control images <em>and</em> apply rotations/flips to mimic nuisance variation, then choose limits to hit ARL0 (e.g., 1000 on DAGM with limit 0.0275). On benchmarks they report very “on-the-change-point” behavior (Prop.On often 0.94–1.00) and ARL1 around 21 when the shift happens at t=21. The near-zero sdARL1 they report in places is… eye-catching; if you try this idea, you’ll want to sanity-check with more replicates and with augmentation sets that reflect your real physics (lighting, pose, blur), not just flips.</p>
 
-<h4>Sequential testing: don’t just stop when you can decide—stop when you can decide <em>precisely</em></h4>
+<p>Also worth stealing: a <strong>transfer monitoring</strong> idea—reuse a pretrained network in a new setting only after an applicability check (they use a two-sample t-test). That’s not the final word on domain shift, but it’s a concrete gate you can operationalize.</p>
 
-<p>Kazin et al. propose DPitG, a Bayesian sequential test that only stops when <strong>two conditions</strong> hold: (1) you’ve hit a <strong>precision goal</strong> (HDI width) and (2) the <strong>HDI+ROPE decision is conclusive</strong>.</p>
+<h4>DOE, but with a “geometry” lens (and a cautionary tale about balancing)</h4>
+Two DOE papers hit very different worlds, but they rhyme: <strong>design should follow identifiability, not tradition.</strong>
 
-<p>Why we should care in reliability/quality work: this is a clean fix for a familiar pathology in online experimentation and acceptance decisions—rules that stop the first time the result “looks decisive” can <strong>inflate false positives</strong>. In their null-true coin-flip simulations, the “stop when conclusive” variant rejects falsely <strong>6.3%</strong> of the time. DPitG stays essentially at <strong>0% false rejects</strong> while being <strong>97.8% conclusive</strong>, costing only a small median sample increase versus precision-only stopping.</p>
+<p>Liu et al. tackle multimodal neutron scattering for quantum magnets, but the method is the transferable part: they learn fast differentiable surrogates (implicit neural representations) and then compute an <strong>observation-induced geometry</strong>—a pullback metric from spectral derivatives—to tell you which parameter directions are stiff vs. sloppy. Imagine having a dashboard that says, “this experiment can’t possibly identify <em>that</em> parameter, no matter how much data you collect.” Their “sloppiness scores” line up with posterior uncertainty, and they use posterior predictive variance to pick the next measurement setting (rotation angle ψ). Net effect: faster convergence than fixed/sequential acquisition, and a clear story on why powder data under-identifies compared to single-crystal.</p>
 
-<p>If you run sequential A/B tests on process changes, inspections, or alarms: DPitG is a practical pattern—<strong>gate decisions on both precision and decisiveness</strong>, not either one.</p>
+<p>Hull et al. bring the same “stop doing things by habit” energy to randomized experiments with <strong>bounded outcomes</strong> (binary is the obvious case). Under a minimax worst-case MSE criterion, <strong>independent Bernoulli(0.5) assignment is optimal</strong>, and—here’s the twist—<strong>balanced complete randomization is strictly suboptimal</strong>. Even more provocative: paired randomization with pair fixed effects can be <em>twice</em> as bad in worst case. The recommended affine estimator is basically “center outcomes at the midpoint of the support and regress on centered treatment with no intercept” (a centered Horvitz–Thompson/OLS variant). If you run A/B tests on defect/no-defect, pass/fail, or any bounded KPI, this is a reminder that “always balance” is not a universal optimum—it depends on the loss you’re optimizing.</p>
 
-<h4>Designing experiments for the population you’ll actually deploy to</h4>
+<h4>Reliability angle: measuring bias in LLMs like we measure leakage in systems</h4>
+X et al. deliver a clean reliability-style lesson for AI governance: <strong>latent association is not a reliable predictor of behavioral leakage.</strong> Across eight model/provider cells, they find strong “elite surname → high status” associations in probes, but decision-task leakage is usually practically small and often equivalent within ±0.10 SD. Correlations between association strength and decision leakage are basically noise (r ≈ 0.20 across models; ≈ 0.07 across cells). If you’re building audits, the takeaway is methodological: <strong>treat “association” and “action” as different failure modes with different tests</strong>, the way we separate component degradation metrics from system-level hazard.
 
-<p>Dang et al. is classic DOE/causal design with a modern twist: you’re estimating <strong>group-specific effects</strong>, but the <strong>deployment mix differs from the experimental mix</strong>. Their Target-Weighted Neyman Allocation uses a small balanced pilot to estimate within-group variances, then allocates the main sample to minimize <strong>deployment-weighted MSE</strong> for the GATE vector.</p>
-
-<p>This is gold for anyone doing reliability improvements across segments (plants, suppliers, climates, user cohorts) where the “future business” mix won’t match the convenient test mix. TWNA beats naive “sample like deployment” when variances fight the weights, and it stays close to the oracle design in sims and benchmarks. The robust variants (minimax, shrinkage/winsorized pilot) are exactly the kind of guardrails we need in messy real data.</p>
-
-<h4>Two method notes worth stealing</h4>
-
-<p>Herman et al. deliver a construction pipeline and catalogs for <strong>large three-level OMARS designs</strong>—useful when you want screening <em>and</em> second-order response surface information in one shot (think complex recipes or multi-factor manufacturing). If your team lives on 96-run constraints (plates, shifts), these designs are aimed right at you.</p>
-
-<p>Neumann et al. bring “risk-aware” thinking to recommendation optimization: penalize predicted benefit by model uncertainty inside a MAP-Elites quality-diversity search. Imagine doing process setpoint optimization but refusing to “win” in regions your model barely saw—this is that instinct, formalized.</p>
-
-<h4>And a sobering meta-result: LLMs still can’t reliably plan experiments end-to-end</h4>
-
-<p>Liu et al.’s SCOPE benchmark finds models can outline high-level experiments, but <strong>low-level configuration (datasets/baselines/metrics/constraints) is the bottleneck</strong>—and adding web search can make things worse. Their OptED workflow helps, but the planning–configuration gap persists. For quality teams: treat LLMs as brainstorming partners, not autonomous DOE engineers—yet.</p>
-
-<p><strong>Question to chew on:</strong> where in your workflow are you still reporting a single “reliability” or “significance” number—when what you really need is an explicitly named estimand plus uncertainty, optimized for the deployment decision?</p><h4>Featured Papers This Week</h4><ul><li><strong>Lee et al.</strong>: <a href="https://arxiv.org/pdf/2608.06806v1">How Reliable Are Psychological Measurements? The Distribution of Marginal Reliability Across 889 Item-Response Datasets</a> <em>(Reliability)</em></li><li><strong>Dang et al.</strong>: <a href="https://arxiv.org/pdf/2608.06512v1">Target-Weighted Neyman Allocation: Experimental Design for Heterogeneous Treatment Effects under Population Shift</a> <em>(Experimental Design)</em></li><li><strong>Herman et al.</strong>: <a href="https://arxiv.org/pdf/2608.04814v1">Constructing Large Orthogonal Minimally Aliased Response Surface Designs Through Enumeration and Combination of Weighing Designs</a> <em>(Experimental Design)</em></li><li><strong>Kazin et al.</strong>: <a href="https://arxiv.org/pdf/2608.05301v1">Precision and Decisiveness as Goals: Reliable Sequential Hypothesis Testing with a Dual Stopping Criterion</a> <em>(Reliability)</em></li><li><strong>Park et al.</strong>: <a href="https://arxiv.org/pdf/2608.04826v1">Group-regularized matrix factorization for fast and reliable module discovery in pan-omics pan-cancer studies</a> <em>(Reliability)</em></li><li><strong>Neumann et al.</strong>: <a href="https://arxiv.org/pdf/2608.05230v1">Quality Diversity for Reliable Data Driven Time-Use Optimization</a> <em>(Reliability)</em></li><li><strong>Liu et al.</strong>: <a href="https://arxiv.org/pdf/2608.03501v1">Can LLM design high-quality experiments? A Comprehensive and Systematic Benchmark on Autonomous Experimental Design</a> <em>(Experimental Design)</em></li></ul><hr/><p><strong>Explore More:</strong> Visit the <a href="https://huggingface.co/spaces/fmegahed/arxiv_control_charts">QE ArXiv Watch Dashboard</a> to browse all papers with AI summaries, interactive filtering, and paper chat.</p><p style="color: #666; font-size: 0.9em;">This digest is automatically generated every Monday. Questions or feedback? Open an issue on our <a href="https://github.com/fmegahed/arxiv_control_charts">GitHub repository</a>.</p>
+<h4>The question to take into next week</h4>
+As more of our monitoring statistics become ML outputs, are we ready to standardize “Phase I for models”—control limit setting, domain-shift gates, and diagnostics—so it’s as routine as an X̄-R chart? Or are we still pretending the score stream is just another sensor?<h4>Featured Papers This Week</h4><ul><li><strong>Kang et al.</strong>: <a href="https://arxiv.org/pdf/2608.13937v1">Deep Vision in Smart Manufacturing: MODERN Framework for Intelligent Quality Monitoring and Diagnosis</a> <em>(Control Charts)</em></li><li><strong>Liu et al.</strong>: <a href="https://arxiv.org/pdf/2608.10350v1">Observation geometry for uncertainty-aware Hamiltonian inference and experimental design in quantum magnets</a> <em>(Experimental Design)</em></li><li><strong>Hull et al.</strong>: <a href="https://arxiv.org/pdf/2608.09812v2">Optimal Experimental Design and Estimation when Potential Outcomes are Bounded</a> <em>(Experimental Design)</em></li><li><strong>X et al.</strong>: <a href="https://arxiv.org/pdf/2608.10089v1">Status Association Does Not Reliably Predict Decision Leakage</a> <em>(Reliability)</em></li></ul><hr/><p><strong>Explore More:</strong> Visit the <a href="https://huggingface.co/spaces/fmegahed/arxiv_control_charts">QE ArXiv Watch Dashboard</a> to browse all papers with AI summaries, interactive filtering, and paper chat.</p><p style="color: #666; font-size: 0.9em;">This digest is automatically generated every Monday. Questions or feedback? Open an issue on our <a href="https://github.com/fmegahed/arxiv_control_charts">GitHub repository</a>.</p>
 ]]></description>
     </item>
   </channel>
