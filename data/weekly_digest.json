@@ -1,51 +1,83 @@
 {
   "metadata": {
-    "generated_at": "2026-08-17T12:07:25Z",
-    "week_start": "2026-08-10",
-    "week_end": "2026-08-17",
+    "generated_at": "2026-08-24T12:07:38Z",
+    "week_start": "2026-08-17",
+    "week_end": "2026-08-24",
     "version": "3.1.0"
   },
   "summary": {
-    "total_papers": 4,
+    "total_papers": 8,
     "papers_by_track": {
-      "spc": 1,
-      "exp_design": 2,
-      "reliability": 1
+      "spc": 0,
+      "exp_design": 4,
+      "reliability": 4
     }
   },
-  "synthesis": "## QE ArXiv Watch Weekly — Week ending Aug 17, 2026 (4 papers)\n\nIf you’re monitoring anything “smart” with ML scores—defect probabilities, anomaly logits, risk scores—this week’s hook is simple: **treat the model output like a process variable, but don’t pretend your Phase I data are i.i.d.** Kang et al. bake that reality into a vision-SPC framework with a bootstrap that *resamples images and augments them* to hit a target ARL. It’s a very “2026” answer to the awkward question we all face: *how do I set control limits when my statistic is coming from a deep net and the distribution is a moving target?*\n\n### Vision + SPC that actually looks deployable\nKang et al.’s MODERN framework is essentially three parts you can imagine putting on a line tomorrow:\n\n1) **MODERN-Net** outputs a per-image defect likelihood.  \n2) **MODERN-Chart** is a one-sided EWMA-ish chart with a restart-at-zero mechanism to catch persistent upward drift (so you don’t “bank” old evidence forever).  \n3) **MODERN-Diagnosis** repurposes the net to localize defects as ellipses (a pragmatic middle ground between “classification only” and full segmentation).\n\nThe practical nugget is the **Augmented Bootstrap** for control limits: resample in-control images *and* apply rotations/flips to mimic nuisance variation, then choose limits to hit ARL0 (e.g., 1000 on DAGM with limit 0.0275). On benchmarks they report very “on-the-change-point” behavior (Prop.On often 0.94–1.00) and ARL1 around 21 when the shift happens at t=21. The near-zero sdARL1 they report in places is… eye-catching; if you try this idea, you’ll want to sanity-check with more replicates and with augmentation sets that reflect your real physics (lighting, pose, blur), not just flips.\n\nAlso worth stealing: a **transfer monitoring** idea—reuse a pretrained network in a new setting only after an applicability check (they use a two-sample t-test). That’s not the final word on domain shift, but it’s a concrete gate you can operationalize.\n\n### DOE, but with a “geometry” lens (and a cautionary tale about balancing)\nTwo DOE papers hit very different worlds, but they rhyme: **design should follow identifiability, not tradition.**\n\nLiu et al. tackle multimodal neutron scattering for quantum magnets, but the method is the transferable part: they learn fast differentiable surrogates (implicit neural representations) and then compute an **observation-induced geometry**—a pullback metric from spectral derivatives—to tell you which parameter directions are stiff vs. sloppy. Imagine having a dashboard that says, “this experiment can’t possibly identify *that* parameter, no matter how much data you collect.” Their “sloppiness scores” line up with posterior uncertainty, and they use posterior predictive variance to pick the next measurement setting (rotation angle ψ). Net effect: faster convergence than fixed/sequential acquisition, and a clear story on why powder data under-identifies compared to single-crystal.\n\nHull et al. bring the same “stop doing things by habit” energy to randomized experiments with **bounded outcomes** (binary is the obvious case). Under a minimax worst-case MSE criterion, **independent Bernoulli(0.5) assignment is optimal**, and—here’s the twist—**balanced complete randomization is strictly suboptimal**. Even more provocative: paired randomization with pair fixed effects can be *twice* as bad in worst case. The recommended affine estimator is basically “center outcomes at the midpoint of the support and regress on centered treatment with no intercept” (a centered Horvitz–Thompson/OLS variant). If you run A/B tests on defect/no-defect, pass/fail, or any bounded KPI, this is a reminder that “always balance” is not a universal optimum—it depends on the loss you’re optimizing.\n\n### Reliability angle: measuring bias in LLMs like we measure leakage in systems\nX et al. deliver a clean reliability-style lesson for AI governance: **latent association is not a reliable predictor of behavioral leakage.** Across eight model/provider cells, they find strong “elite surname → high status” associations in probes, but decision-task leakage is usually practically small and often equivalent within ±0.10 SD. Correlations between association strength and decision leakage are basically noise (r ≈ 0.20 across models; ≈ 0.07 across cells). If you’re building audits, the takeaway is methodological: **treat “association” and “action” as different failure modes with different tests**, the way we separate component degradation metrics from system-level hazard.\n\n### The question to take into next week\nAs more of our monitoring statistics become ML outputs, are we ready to standardize “Phase I for models”—control limit setting, domain-shift gates, and diagnostics—so it’s as routine as an X̄-R chart? Or are we still pretending the score stream is just another sensor?",
+  "synthesis": "## QE ArXiv Watch Weekly (Week ending Aug 24, 2026) — When “optimize the experiment” meets “don’t fool yourself”\n\nThe most useful idea this week: **stop pretending every objective is “learn the parameters.”** Two different Cheng et al. papers make the same point from different angles: if your real goal is a decision or a prediction, the *optimal* experiment can look totally different—and if your quantity of interest has a discrete spike (think “no failure event”), a lot of the usual variational OED machinery quietly breaks.\n\n### Experimental design: objective-first, and sometimes the math fights you\n\nCheng et al.’s urban flood sensor placement study is a great “imagine if…” for anyone doing monitoring networks. If you optimize placement to learn a model’s parameters (classic Bayesian OED), the best sensor moves around with **when** you sample. If you optimize placement to learn a **downstream predictive target** (goal-oriented OED), the best sensor can move around with **what** you care about—point depth vs regional average vs regional max, different lead times, etc.\n\nThe punchline practitioners will care about: for a **regional average** QoI, the max-information sensor can end up **outside the region** you’re averaging over. That sounds wrong until you remember: you’re not “measuring the region,” you’re reducing uncertainty in a prediction, and sometimes the best leverage point is upstream in the dynamics. They also separate “information ranking” from “can we actually deploy here?” using OpenStreetMap-style feasibility screens—exactly the right sequencing for real programs.\n\nThen Cheng et al. (ship roll safety) delivers a very practical warning for anyone using variational EIG with thresholded QoIs: if your QoI distribution has an **atom** (e.g., exceedance probability is exactly zero for many draws), and you approximate it with a purely continuous density, the KL can blow up and the Barber–Agakov lower bound can go to **−∞** (or worse: your estimator can look *better than truth* because you’re “scoring” atom samples incorrectly). Their fix—explicitly modeling a **mixed discrete–continuous variational posterior** (atom probability + normalizing flow for the continuous part)—is the kind of detail that determines whether GO-OED is trustworthy or a demo.\n\nCytrynbaum et al. bring some healthy skepticism: there are **fundamental limits to covariate balance** as dimension grows. In plain terms, if you’re hoping your randomization scheme will make the unadjusted ATE estimator hit the semiparametric efficiency bound “uniformly,” you run into an impossibility wall unless \\(d\\) is on the order of \\(o(\\log n)\\). Their kernelized Gram–Schmidt Walk designs are interesting because they shift the conversation from “balance everything” to “balance the function class you actually believe” (additive, bivariate interactions, Sobolev smoothness). That’s a very QE-friendly reframing: design to the model complexity you can defend.\n\nMayer et al. is “DOE at climate scale”: clever counterfactual seasonal hindcasts suggest that **ocean/sea-ice initial condition adjustments** dominate long-term trend changes more than tweaking atmospheric CO₂ forcing on seasonal timescales. For QE folks, it’s a reminder that in complex systems, what you call a “treatment” might be less influential than the state you initialize.\n\n### Reliability: calibration, certification, and causal levers you can pull\n\nDette et al. tackle a common reliability headache: estimating the **safe set** (inputs where success probability exceeds \\(p_R\\)) when your probability model is misspecified. Their modeling-then-calibration approach is appealingly pragmatic: fit whatever model you want, then use a held-out calibration set to pick a decision threshold that is **guaranteed not to be worse** (in their risk sense) than the naive plug-in. Add conformal-style risk control and you get finite-sample guarantees on false inclusion—exactly what safety cases need. Bonus: their adaptive sampling focuses effort near the boundary, where mistakes matter.\n\nMahato et al. (ProxyGuard) is about **reliability of randomized data release mechanisms** when many releases get judged against one sealed target dataset. If you’ve ever worried about “we tried 200 variants and one passed,” this is a serious attempt to quantify mechanism-level reliability without requiring multiple targets. The key move is correcting for “false passes” induced by reuse of the same target—directly, with a contamination subtraction that they show you can’t just wish away.\n\nYao et al. take service reliability in metro systems and ask for causal effects, not correlations, using panel DML with operator fixed effects. The actionable read: demand pressure and utilization push incident rates up; supply adequacy and operational intensity push them down—and the fixed effects matter a lot for the supply-side story. If you’re benchmarking plants/lines/operators, it’s a good template for “learn the lever, not the leaderboard.”\n\n### Forward look\n\nA theme is emerging: **we’re moving from point estimates to guarantees about decisions**—optimal design tied to explicit QoIs, calibration that protects against misspecification, certificates that survive adaptive reuse. The question to sit with: in your own reliability work, what’s the “atom” you’re ignoring (zero-failure mass, censored events, pass/fail thresholds) that could be quietly breaking your inference or your OED?",
   "papers": [
     {
-      "id": "2608.13937v1",
-      "title": "Deep Vision in Smart Manufacturing: MODERN Framework for Intelligent Quality Monitoring and Diagnosis",
-      "authors": "Yicheng Kang|Yuling Jiao|Xin Geng|Mahesh Nagarajan",
-      "submitted": "2026-08-14",
-      "track": "spc",
-      "link": "https://arxiv.org/pdf/2608.13937v1"
-    },
-    {
-      "id": "2608.10350v1",
-      "title": "Observation geometry for uncertainty-aware Hamiltonian inference and experimental design in quantum magnets",
-      "authors": "Roy Liu|Venugopal Ranganathan|David Dahlbom|Shizhou Xu|Tianyu Zhang|Yuan Ni|Daniel M. Pajerowski|Garrett Granroth|Thomas Strohmer|Matthew B. Stone|Andrew F. May|Mark D. Lumsden|Joshua J. Turner|Yongqiang Cheng|Zhantao Chen",
-      "submitted": "2026-08-11",
+      "id": "2608.21182v1",
+      "title": "Matching Urban Flood Sensor Placement to Monitoring Objectives Using Bayesian Optimal Experimental Design",
+      "authors": "Chen Cheng|Vinh Ngoc Tran|Jiayuan Dong|Sarah Whitaker|Shannon Bergt|John Ziker|Valeriy Y. Ivanov|Xun Huan",
+      "submitted": "2026-08-21",
       "track": "exp_design",
-      "link": "https://arxiv.org/pdf/2608.10350v1"
+      "link": "https://arxiv.org/pdf/2608.21182v1"
     },
     {
-      "id": "2608.09812v2",
-      "title": "Optimal Experimental Design and Estimation when Potential Outcomes are Bounded",
-      "authors": "Peter Hull",
-      "submitted": "2026-08-10",
-      "track": "exp_design",
-      "link": "https://arxiv.org/pdf/2608.09812v2"
-    },
-    {
-      "id": "2608.10089v1",
-      "title": "Status Association Does Not Reliably Predict Decision Leakage",
-      "authors": "Abdullah X",
-      "submitted": "2026-08-10",
+      "id": "2608.21148v1",
+      "title": "Statistical and Deep Learning Approaches for Predicting Degradation of Polymeric Materials in Photovoltaics",
+      "authors": "Yili Hong|Xiaohong Gu",
+      "submitted": "2026-08-21",
       "track": "reliability",
-      "link": "https://arxiv.org/pdf/2608.10089v1"
+      "link": "https://arxiv.org/pdf/2608.21148v1"
+    },
+    {
+      "id": "2608.19631v1",
+      "title": "Variational Goal-Oriented Optimal Experimental Design for Mixed-Distribution Quantities of Interest: Application to Ship Roll Safety",
+      "authors": "Chen Cheng|Xun Huan|Yulin Pan",
+      "submitted": "2026-08-20",
+      "track": "exp_design",
+      "link": "https://arxiv.org/pdf/2608.19631v1"
+    },
+    {
+      "id": "2608.19815v1",
+      "title": "Trustworthy Decisions in Reliability Set Estimation under Insufficient Model Information",
+      "authors": "Holger Dette|Zhengfu Liu|Jun Yu",
+      "submitted": "2026-08-20",
+      "track": "reliability",
+      "link": "https://arxiv.org/pdf/2608.19815v1"
+    },
+    {
+      "id": "2608.18712v1",
+      "title": "Sensitivity of the ECMWF seasonal forecast model to CO2 and anthropogenic aerosol forcings: Experimental design and impact on climate trends",
+      "authors": "Michael Mayer|Daniel J. Befort|Jacob Maddison|Antje Weisheimer",
+      "submitted": "2026-08-19",
+      "track": "exp_design",
+      "link": "https://arxiv.org/pdf/2608.18712v1"
+    },
+    {
+      "id": "2608.18643v1",
+      "title": "ProxyGuard: Direct Reliability Inference for Randomized Data Release Mechanisms with Shared Targets",
+      "authors": "Dipesh Tharu Mahato|Pramod Dhungana",
+      "submitted": "2026-08-19",
+      "track": "reliability",
+      "link": "https://arxiv.org/pdf/2608.18643v1"
+    },
+    {
+      "id": "2608.18057v1",
+      "title": "The Limits of Experimental Design: Covariate Balance Beyond Low Dimension",
+      "authors": "Max Cytrynbaum",
+      "submitted": "2026-08-18",
+      "track": "exp_design",
+      "link": "https://arxiv.org/pdf/2608.18057v1"
+    },
+    {
+      "id": "2608.17901v1",
+      "title": "Quantifying the Causal Operational Determinants of Service Reliability in Urban Rail Transit: Evidence from Panel Double/Debiased Machine Learning",
+      "authors": "Ying Yao|Nan Zhang|Daniel J. Graham",
+      "submitted": "2026-08-18",
+      "track": "reliability",
+      "link": "https://arxiv.org/pdf/2608.17901v1"
     }
   ]
 }
