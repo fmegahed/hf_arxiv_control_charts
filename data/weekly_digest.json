@@ -1,83 +1,59 @@
 {
   "metadata": {
-    "generated_at": "2026-08-24T12:07:38Z",
-    "week_start": "2026-08-17",
-    "week_end": "2026-08-24",
+    "generated_at": "2026-08-31T12:10:29Z",
+    "week_start": "2026-08-24",
+    "week_end": "2026-08-31",
     "version": "3.1.0"
   },
   "summary": {
-    "total_papers": 8,
+    "total_papers": 5,
     "papers_by_track": {
       "spc": 0,
-      "exp_design": 4,
-      "reliability": 4
+      "exp_design": 2,
+      "reliability": 3
     }
   },
-  "synthesis": "## QE ArXiv Watch Weekly (Week ending Aug 24, 2026) — When “optimize the experiment” meets “don’t fool yourself”\n\nThe most useful idea this week: **stop pretending every objective is “learn the parameters.”** Two different Cheng et al. papers make the same point from different angles: if your real goal is a decision or a prediction, the *optimal* experiment can look totally different—and if your quantity of interest has a discrete spike (think “no failure event”), a lot of the usual variational OED machinery quietly breaks.\n\n### Experimental design: objective-first, and sometimes the math fights you\n\nCheng et al.’s urban flood sensor placement study is a great “imagine if…” for anyone doing monitoring networks. If you optimize placement to learn a model’s parameters (classic Bayesian OED), the best sensor moves around with **when** you sample. If you optimize placement to learn a **downstream predictive target** (goal-oriented OED), the best sensor can move around with **what** you care about—point depth vs regional average vs regional max, different lead times, etc.\n\nThe punchline practitioners will care about: for a **regional average** QoI, the max-information sensor can end up **outside the region** you’re averaging over. That sounds wrong until you remember: you’re not “measuring the region,” you’re reducing uncertainty in a prediction, and sometimes the best leverage point is upstream in the dynamics. They also separate “information ranking” from “can we actually deploy here?” using OpenStreetMap-style feasibility screens—exactly the right sequencing for real programs.\n\nThen Cheng et al. (ship roll safety) delivers a very practical warning for anyone using variational EIG with thresholded QoIs: if your QoI distribution has an **atom** (e.g., exceedance probability is exactly zero for many draws), and you approximate it with a purely continuous density, the KL can blow up and the Barber–Agakov lower bound can go to **−∞** (or worse: your estimator can look *better than truth* because you’re “scoring” atom samples incorrectly). Their fix—explicitly modeling a **mixed discrete–continuous variational posterior** (atom probability + normalizing flow for the continuous part)—is the kind of detail that determines whether GO-OED is trustworthy or a demo.\n\nCytrynbaum et al. bring some healthy skepticism: there are **fundamental limits to covariate balance** as dimension grows. In plain terms, if you’re hoping your randomization scheme will make the unadjusted ATE estimator hit the semiparametric efficiency bound “uniformly,” you run into an impossibility wall unless \\(d\\) is on the order of \\(o(\\log n)\\). Their kernelized Gram–Schmidt Walk designs are interesting because they shift the conversation from “balance everything” to “balance the function class you actually believe” (additive, bivariate interactions, Sobolev smoothness). That’s a very QE-friendly reframing: design to the model complexity you can defend.\n\nMayer et al. is “DOE at climate scale”: clever counterfactual seasonal hindcasts suggest that **ocean/sea-ice initial condition adjustments** dominate long-term trend changes more than tweaking atmospheric CO₂ forcing on seasonal timescales. For QE folks, it’s a reminder that in complex systems, what you call a “treatment” might be less influential than the state you initialize.\n\n### Reliability: calibration, certification, and causal levers you can pull\n\nDette et al. tackle a common reliability headache: estimating the **safe set** (inputs where success probability exceeds \\(p_R\\)) when your probability model is misspecified. Their modeling-then-calibration approach is appealingly pragmatic: fit whatever model you want, then use a held-out calibration set to pick a decision threshold that is **guaranteed not to be worse** (in their risk sense) than the naive plug-in. Add conformal-style risk control and you get finite-sample guarantees on false inclusion—exactly what safety cases need. Bonus: their adaptive sampling focuses effort near the boundary, where mistakes matter.\n\nMahato et al. (ProxyGuard) is about **reliability of randomized data release mechanisms** when many releases get judged against one sealed target dataset. If you’ve ever worried about “we tried 200 variants and one passed,” this is a serious attempt to quantify mechanism-level reliability without requiring multiple targets. The key move is correcting for “false passes” induced by reuse of the same target—directly, with a contamination subtraction that they show you can’t just wish away.\n\nYao et al. take service reliability in metro systems and ask for causal effects, not correlations, using panel DML with operator fixed effects. The actionable read: demand pressure and utilization push incident rates up; supply adequacy and operational intensity push them down—and the fixed effects matter a lot for the supply-side story. If you’re benchmarking plants/lines/operators, it’s a good template for “learn the lever, not the leaderboard.”\n\n### Forward look\n\nA theme is emerging: **we’re moving from point estimates to guarantees about decisions**—optimal design tied to explicit QoIs, calibration that protects against misspecification, certificates that survive adaptive reuse. The question to sit with: in your own reliability work, what’s the “atom” you’re ignoring (zero-failure mass, censored events, pass/fail thresholds) that could be quietly breaking your inference or your OED?",
+  "synthesis": "The most “quality engineering” idea this week: stop pretending your data are independent just because you chopped them into windows. If you’re doing longitudinal ML (wearables, manufacturing sensor streams, repeated inspections), Alve et al. show you can get *spectacularly* wrong p-values—70–80% false rejections at a nominal 5%—unless your inference matches the unit you actually care about: the participant (or machine, line, lot).\n\n### When correlated data masquerades as sample size\n\nAlve et al. tackle a problem most of us have seen in the wild: you have 40 people (or 40 tools), but 40,000 windows. If you test at the window level, you’re essentially “counting the same subject 1000 times.” Their fix is refreshingly concrete:\n\n1) Define a *participant-level estimand* (aggregate window predictions into one score per participant, then compute participant AUROC or similar).\n\n2) For inference, run an *analysis-matched permutation test* that replays the entire label-dependent workflow under each permutation—folding, preprocessing, tuning, calibration, even pipeline selection if you did it.\n\nThat last bit matters. Leaving model selection outside the permutation null inflates Type I error fast (with 8 candidate pipelines, rejection jumps to 0.240 vs 0.040 when selection is properly rerun). Practically: if you’re shipping a “significant” model from a small cohort study, this paper is a checklist for what “honest inference” looks like.\n\n### Auditing scoring reliability with an Ising model… powered by embeddings\n\nDavier et al. do something I didn’t expect to work as cleanly as it does: they turn semantic similarity between constructed responses into *pairwise coupling* in an Ising model. Imagine each response’s score is a spin (0/1). Responses that are semantically close (cosine similarity of sentence embeddings) “want” to agree. Fit two parameters—temperature β and bias μ—using maximum pseudo-likelihood (so you avoid the nasty partition function), and you get:\n\n- uncertainty quantification around scores,\n- missing-label imputation,\n- and a principled view of when a weighted-majority vote (their LiRA method) is actually approximating a coherent probabilistic model.\n\nIn simulation they hit accuracy 0.922 and κ 0.835 with only two fitted parameters, which is strong for a diagnostic layer. The practitioner catch: computing all pairwise similarities is \\(K(K-1)/2\\). They report scaling to ~6000 responses, but if you’re thinking “district-wide writing assessment,” you’ll want approximate neighbors or blocking.\n\n### LLMs as causal-edge detectors: great recall, dangerous confidence\n\nKumar et al. deliver a needed cold shower for anyone tempted to use an LLM as a direct causal discovery oracle. Across models/prompts/graphs, edge predictions are overwhelmingly recall-dominant: precision suffers, graphs get dense, and false positives cluster where we most hate them—indirect paths and reversed directions. Worse, the model often sounds *very sure* while being wrong (80–100% verbal confidence on the majority of those false positives).\n\nIf you *must* use LLM judgments, agreement-based confidence (across prompts or models) behaves better than verbal or logit confidence for calibration and for throttling sparsity. The right mental model here is “soft prior that needs validation,” not “evidence.”\n\n### DOE is having a moment in ML—and it’s not just hype\n\nTwo DOE-flavored pieces connect nicely:\n\n- Mao et al. reframe LLM pretraining data mixing as a classical **mixture experiment**. Fit sparse second-order Scheffé surfaces, reveal interaction structure (web text complements lots of domains), and then design proxy runs with **model-robust I-optimal designs**. Net: recover mixture rankings with ~25% fewer proxy runs than Dirichlet sampling. If you’ve ever said “we’ll just sample a bunch of mixes,” this is the counterproposal: design it like we mean it.\n\n- Eduku et al. make the equally practical point that surrogate choice should follow the **mathematical object**: MLPs for scalar responses, POD–SINDy for fields/dynamics. Even with only 5 CFD cases, they get meaningful spacing guidance (sweet spot near μ≈8) and quantify how much error is POD truncation vs SINDy rollout—exactly the kind of decomposition reliability engineers appreciate.\n\n### Forward look\n\nA theme ties the week together: *match the model—and the inference—to the unit and structure that generates the data.* Windows aren’t subjects. Similar texts aren’t independent labels. Proxy runs aren’t random draws if you can design them.\n\nQuestion to chew on: where in our own workflows are we still “getting significance” or “getting agreement” mainly by accidentally multiplying correlated evidence?",
   "papers": [
     {
-      "id": "2608.21182v1",
-      "title": "Matching Urban Flood Sensor Placement to Monitoring Objectives Using Bayesian Optimal Experimental Design",
-      "authors": "Chen Cheng|Vinh Ngoc Tran|Jiayuan Dong|Sarah Whitaker|Shannon Bergt|John Ziker|Valeriy Y. Ivanov|Xun Huan",
-      "submitted": "2026-08-21",
-      "track": "exp_design",
-      "link": "https://arxiv.org/pdf/2608.21182v1"
-    },
-    {
-      "id": "2608.21148v1",
-      "title": "Statistical and Deep Learning Approaches for Predicting Degradation of Polymeric Materials in Photovoltaics",
-      "authors": "Yili Hong|Xiaohong Gu",
-      "submitted": "2026-08-21",
+      "id": "2608.26790v1",
+      "title": "Integrating Network Psychometrics and LLMs: The Ising-Embeddings-Model applied to Reliability Auditing",
+      "authors": "Matthias von Davier",
+      "submitted": "2026-08-27",
       "track": "reliability",
-      "link": "https://arxiv.org/pdf/2608.21148v1"
+      "link": "https://arxiv.org/pdf/2608.26790v1"
     },
     {
-      "id": "2608.19631v1",
-      "title": "Variational Goal-Oriented Optimal Experimental Design for Mixed-Distribution Quantities of Interest: Application to Ship Roll Safety",
-      "authors": "Chen Cheng|Xun Huan|Yulin Pan",
-      "submitted": "2026-08-20",
+      "id": "2608.26064v1",
+      "title": "Neural-Network and Reduced-order Modeling Workflows for AI-Driven CFD: Fast Response Surfaces, Reduced Dynamics and Jet in Cross-flow Examples",
+      "authors": "Kaku E. Eduku|Pavel P. Popov|Gustaaf Jacobs",
+      "submitted": "2026-08-26",
       "track": "exp_design",
-      "link": "https://arxiv.org/pdf/2608.19631v1"
+      "link": "https://arxiv.org/pdf/2608.26064v1"
     },
     {
-      "id": "2608.19815v1",
-      "title": "Trustworthy Decisions in Reliability Set Estimation under Insufficient Model Information",
-      "authors": "Holger Dette|Zhengfu Liu|Jun Yu",
-      "submitted": "2026-08-20",
+      "id": "2608.26205v1",
+      "title": "Beyond Participant-Level Cross-Validation: Reliable Inference for Longitudinal Machine Learning",
+      "authors": "Shahran Rahman Alve",
+      "submitted": "2026-08-26",
       "track": "reliability",
-      "link": "https://arxiv.org/pdf/2608.19815v1"
+      "link": "https://arxiv.org/pdf/2608.26205v1"
     },
     {
-      "id": "2608.18712v1",
-      "title": "Sensitivity of the ECMWF seasonal forecast model to CO2 and anthropogenic aerosol forcings: Experimental design and impact on climate trends",
-      "authors": "Michael Mayer|Daniel J. Befort|Jacob Maddison|Antje Weisheimer",
-      "submitted": "2026-08-19",
+      "id": "2608.23922v1",
+      "title": "Data Mixing as Mixture Experiment: Response Surface Methodology and Optimal Design for Large Language Model Pretraining",
+      "authors": "Yicheng Mao|Hongru Du",
+      "submitted": "2026-08-24",
       "track": "exp_design",
-      "link": "https://arxiv.org/pdf/2608.18712v1"
+      "link": "https://arxiv.org/pdf/2608.23922v1"
     },
     {
-      "id": "2608.18643v1",
-      "title": "ProxyGuard: Direct Reliability Inference for Randomized Data Release Mechanisms with Shared Targets",
-      "authors": "Dipesh Tharu Mahato|Pramod Dhungana",
-      "submitted": "2026-08-19",
+      "id": "2608.23660v1",
+      "title": "From Causal Plausibility to Causal Reliability: Evaluating LLMs as Calibrated Direct Causal-Edge Classifiers",
+      "authors": "Amit Kumar|Elnur Adl Zarabi|Suranjana Trivedy|Zhiqian Chen|Lei Zhang|Kaiqun Fu|Taoran Ji",
+      "submitted": "2026-08-24",
       "track": "reliability",
-      "link": "https://arxiv.org/pdf/2608.18643v1"
-    },
-    {
-      "id": "2608.18057v1",
-      "title": "The Limits of Experimental Design: Covariate Balance Beyond Low Dimension",
-      "authors": "Max Cytrynbaum",
-      "submitted": "2026-08-18",
-      "track": "exp_design",
-      "link": "https://arxiv.org/pdf/2608.18057v1"
-    },
-    {
-      "id": "2608.17901v1",
-      "title": "Quantifying the Causal Operational Determinants of Service Reliability in Urban Rail Transit: Evidence from Panel Double/Debiased Machine Learning",
-      "authors": "Ying Yao|Nan Zhang|Daniel J. Graham",
-      "submitted": "2026-08-18",
-      "track": "reliability",
-      "link": "https://arxiv.org/pdf/2608.17901v1"
+      "link": "https://arxiv.org/pdf/2608.23660v1"
     }
   ]
 }
