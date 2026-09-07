@@ -1,59 +1,35 @@
 {
   "metadata": {
-    "generated_at": "2026-08-31T12:10:29Z",
-    "week_start": "2026-08-24",
-    "week_end": "2026-08-31",
+    "generated_at": "2026-09-07T12:09:19Z",
+    "week_start": "2026-08-31",
+    "week_end": "2026-09-07",
     "version": "3.1.0"
   },
   "summary": {
-    "total_papers": 5,
+    "total_papers": 2,
     "papers_by_track": {
       "spc": 0,
-      "exp_design": 2,
-      "reliability": 3
+      "exp_design": 1,
+      "reliability": 1
     }
   },
-  "synthesis": "The most “quality engineering” idea this week: stop pretending your data are independent just because you chopped them into windows. If you’re doing longitudinal ML (wearables, manufacturing sensor streams, repeated inspections), Alve et al. show you can get *spectacularly* wrong p-values—70–80% false rejections at a nominal 5%—unless your inference matches the unit you actually care about: the participant (or machine, line, lot).\n\n### When correlated data masquerades as sample size\n\nAlve et al. tackle a problem most of us have seen in the wild: you have 40 people (or 40 tools), but 40,000 windows. If you test at the window level, you’re essentially “counting the same subject 1000 times.” Their fix is refreshingly concrete:\n\n1) Define a *participant-level estimand* (aggregate window predictions into one score per participant, then compute participant AUROC or similar).\n\n2) For inference, run an *analysis-matched permutation test* that replays the entire label-dependent workflow under each permutation—folding, preprocessing, tuning, calibration, even pipeline selection if you did it.\n\nThat last bit matters. Leaving model selection outside the permutation null inflates Type I error fast (with 8 candidate pipelines, rejection jumps to 0.240 vs 0.040 when selection is properly rerun). Practically: if you’re shipping a “significant” model from a small cohort study, this paper is a checklist for what “honest inference” looks like.\n\n### Auditing scoring reliability with an Ising model… powered by embeddings\n\nDavier et al. do something I didn’t expect to work as cleanly as it does: they turn semantic similarity between constructed responses into *pairwise coupling* in an Ising model. Imagine each response’s score is a spin (0/1). Responses that are semantically close (cosine similarity of sentence embeddings) “want” to agree. Fit two parameters—temperature β and bias μ—using maximum pseudo-likelihood (so you avoid the nasty partition function), and you get:\n\n- uncertainty quantification around scores,\n- missing-label imputation,\n- and a principled view of when a weighted-majority vote (their LiRA method) is actually approximating a coherent probabilistic model.\n\nIn simulation they hit accuracy 0.922 and κ 0.835 with only two fitted parameters, which is strong for a diagnostic layer. The practitioner catch: computing all pairwise similarities is \\(K(K-1)/2\\). They report scaling to ~6000 responses, but if you’re thinking “district-wide writing assessment,” you’ll want approximate neighbors or blocking.\n\n### LLMs as causal-edge detectors: great recall, dangerous confidence\n\nKumar et al. deliver a needed cold shower for anyone tempted to use an LLM as a direct causal discovery oracle. Across models/prompts/graphs, edge predictions are overwhelmingly recall-dominant: precision suffers, graphs get dense, and false positives cluster where we most hate them—indirect paths and reversed directions. Worse, the model often sounds *very sure* while being wrong (80–100% verbal confidence on the majority of those false positives).\n\nIf you *must* use LLM judgments, agreement-based confidence (across prompts or models) behaves better than verbal or logit confidence for calibration and for throttling sparsity. The right mental model here is “soft prior that needs validation,” not “evidence.”\n\n### DOE is having a moment in ML—and it’s not just hype\n\nTwo DOE-flavored pieces connect nicely:\n\n- Mao et al. reframe LLM pretraining data mixing as a classical **mixture experiment**. Fit sparse second-order Scheffé surfaces, reveal interaction structure (web text complements lots of domains), and then design proxy runs with **model-robust I-optimal designs**. Net: recover mixture rankings with ~25% fewer proxy runs than Dirichlet sampling. If you’ve ever said “we’ll just sample a bunch of mixes,” this is the counterproposal: design it like we mean it.\n\n- Eduku et al. make the equally practical point that surrogate choice should follow the **mathematical object**: MLPs for scalar responses, POD–SINDy for fields/dynamics. Even with only 5 CFD cases, they get meaningful spacing guidance (sweet spot near μ≈8) and quantify how much error is POD truncation vs SINDy rollout—exactly the kind of decomposition reliability engineers appreciate.\n\n### Forward look\n\nA theme ties the week together: *match the model—and the inference—to the unit and structure that generates the data.* Windows aren’t subjects. Similar texts aren’t independent labels. Proxy runs aren’t random draws if you can design them.\n\nQuestion to chew on: where in our own workflows are we still “getting significance” or “getting agreement” mainly by accidentally multiplying correlated evidence?",
+  "synthesis": "If you’ve ever picked an “optimal” experiment (or a fancy synthetic-data pipeline) and later wondered why reality didn’t get the memo, this week’s papers hit that nerve from two angles. One argues we’ve been optimizing the wrong objective under nuisance variation. The other shows you can make your synthetic data *closer* in distribution and still not get better models. In both cases, the headline is the same: **validity under the conditions you’ll actually face beats elegance under the conditions you wish you had.**\n\n### When “more information” gives you *less* usable resolution (DOE)\n\nFotias et al. drop a pretty sharp critique of expected information gain (EIG) when the system is only *partially identifiable* and nuisance variables don’t wash out. Think: mechanism discrimination, well testing, or any setting where multiple structural explanations remain plausible and nuisance states (operating regimes, unmeasured boundary conditions, calibration drift) persist.\n\nTheir proposed fix—Resolution-Aware Experimental Design (RAED)—isn’t “maximize info.” It’s **minimize the expected size of the surviving candidate set**, while explicitly controlling the familywise probability that you incorrectly throw out the true structure (false exclusion) at level α.\n\nThe move I like: they let you choose what kind of “validity” you care about with a single knob δ.\n\n- δ = 0: **pointwise** validity (works for every nuisance state)\n- δ = 1: validity **on average** over nuisance\n- 0 < δ < 1: **tail-protected** validity (CVaR / worst δ-fraction of nuisance states)\n\nWhy this matters in practice: we often design for the average case and then get burned in the corners—rare operating regimes, atypical feeds, weird ambient conditions. RAED bakes that into the design criterion rather than treating it as an afterthought.\n\nThey also prove an uncomfortable separation result: an experiment can look strictly better by structural EIG, full-latent EIG, and even nuisance-averaged Blackwell dominance—and still have arbitrarily worse *valid structural resolution* due to cross-nuisance aliasing. Translation: you can be “more informative” yet end up with a bigger, less actionable set of surviving explanations once you enforce error control.\n\nIf you’re wondering “can I actually run this?”, they operationalize RAED with a learned candidate-set scoring rule plus nested finite-sample calibration to certify nuisance-average or tail validity. The catch is honest: **tail guarantees can be sample-hungry** (rare adverse nuisance states are hard to calibrate).\n\nEmpirically, RAED and EIG disagree on experiment choice in a meaningful fraction of constrained-sensing settings, and RAED yields modest but consistent reductions in held-out candidate-set size. In methane oxidation, they even get nontrivial certified 5% tail guarantees—at the cost of large calibration (10k nuisance states per mechanism).\n\n**Practitioner takeaway:** If your goal is *decision resolution with guardrails* (not just “learn the parameters”), RAED is a compelling north star—especially when you need robustness to nasty but plausible nuisance regimes.\n\n### Synthetic data reliability isn’t the same as model performance (Reliability)\n\nAbeykoon et al. take on a question we all face now: “Can I trust generative augmentation for imbalanced classification?” They model augmentation as mixing real and generated data, \\(P_\\alpha = (1-\\alpha)P + \\alpha P_G\\), and derive a stability bound where the risk distortion scales with (i) how hard you lean on augmentation (α) and (ii) how far the class-conditional generated distribution is from reality, measured by **Wasserstein-1 distance**.\n\nThis is a useful framing for reliability engineers because it separates two failure modes:\n\n1. **Finite-sample estimation noise** (classic generalization)\n2. **Augmentation bias** (you trained on the wrong distribution)\n\nThey back it with experiments where CWGAN-GP generates samples that are *much* closer in Wasserstein distance than a CGAN. Yet downstream Macro-F1 / Macro-Recall don’t reliably improve—and sometimes classical ROS/SMOTE win. Even more pointed: the “more faithful” generator can be worse for predictive performance, and the CGAN vs CWGAN-GP performance differences aren’t statistically significant across seeds.\n\n**Practitioner takeaway:** Treat Wasserstein discrepancy as a *reliability metric* for synthetic data, not a promise of better KPIs. If you adopt generative augmentation, you should monitor distributional fidelity *and* downstream utility—and be prepared for those to disagree.\n\n### The connecting thread\n\nBoth papers are pushing us toward the same habit: **optimize what you actually need to be true under the messy conditions you actually face.** For DOE, that’s certified resolution under nuisance tails. For augmentation, that’s separating “looks realistic” from “improves decisions.”\n\nForward-looking question for the week: if you had to certify one thing in your workflow—*tail-safe mechanism exclusion* or *bounded augmentation bias*—which would reduce more real-world risk in your current projects?",
   "papers": [
     {
-      "id": "2608.26790v1",
-      "title": "Integrating Network Psychometrics and LLMs: The Ising-Embeddings-Model applied to Reliability Auditing",
-      "authors": "Matthias von Davier",
-      "submitted": "2026-08-27",
-      "track": "reliability",
-      "link": "https://arxiv.org/pdf/2608.26790v1"
-    },
-    {
-      "id": "2608.26064v1",
-      "title": "Neural-Network and Reduced-order Modeling Workflows for AI-Driven CFD: Fast Response Surfaces, Reduced Dynamics and Jet in Cross-flow Examples",
-      "authors": "Kaku E. Eduku|Pavel P. Popov|Gustaaf Jacobs",
-      "submitted": "2026-08-26",
+      "id": "2609.03686v1",
+      "title": "Resolution-Aware Experimental Design under Partial Identifiability",
+      "authors": "Sofianos Panagiotis Fotias",
+      "submitted": "2026-09-03",
       "track": "exp_design",
-      "link": "https://arxiv.org/pdf/2608.26064v1"
+      "link": "https://arxiv.org/pdf/2609.03686v1"
     },
     {
-      "id": "2608.26205v1",
-      "title": "Beyond Participant-Level Cross-Validation: Reliable Inference for Longitudinal Machine Learning",
-      "authors": "Shahran Rahman Alve",
-      "submitted": "2026-08-26",
+      "id": "2609.01410v1",
+      "title": "On the Reliability of Generative Augmentation: A Wasserstein-Based Theoretical and Empirical Study",
+      "authors": "Chathurika S Abeykoon|Mathias Nthiani Muia|Mallory Goldstein",
+      "submitted": "2026-09-01",
       "track": "reliability",
-      "link": "https://arxiv.org/pdf/2608.26205v1"
-    },
-    {
-      "id": "2608.23922v1",
-      "title": "Data Mixing as Mixture Experiment: Response Surface Methodology and Optimal Design for Large Language Model Pretraining",
-      "authors": "Yicheng Mao|Hongru Du",
-      "submitted": "2026-08-24",
-      "track": "exp_design",
-      "link": "https://arxiv.org/pdf/2608.23922v1"
-    },
-    {
-      "id": "2608.23660v1",
-      "title": "From Causal Plausibility to Causal Reliability: Evaluating LLMs as Calibrated Direct Causal-Edge Classifiers",
-      "authors": "Amit Kumar|Elnur Adl Zarabi|Suranjana Trivedy|Zhiqian Chen|Lei Zhang|Kaiqun Fu|Taoran Ji",
-      "submitted": "2026-08-24",
-      "track": "reliability",
-      "link": "https://arxiv.org/pdf/2608.23660v1"
+      "link": "https://arxiv.org/pdf/2609.01410v1"
     }
   ]
 }
