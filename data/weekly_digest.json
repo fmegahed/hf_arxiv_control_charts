@@ -1,35 +1,59 @@
 {
   "metadata": {
-    "generated_at": "2026-09-07T12:09:19Z",
-    "week_start": "2026-08-31",
-    "week_end": "2026-09-07",
+    "generated_at": "2026-09-14T12:09:33Z",
+    "week_start": "2026-09-07",
+    "week_end": "2026-09-14",
     "version": "3.1.0"
   },
   "summary": {
-    "total_papers": 2,
+    "total_papers": 5,
     "papers_by_track": {
       "spc": 0,
-      "exp_design": 1,
-      "reliability": 1
+      "exp_design": 3,
+      "reliability": 2
     }
   },
-  "synthesis": "If you’ve ever picked an “optimal” experiment (or a fancy synthetic-data pipeline) and later wondered why reality didn’t get the memo, this week’s papers hit that nerve from two angles. One argues we’ve been optimizing the wrong objective under nuisance variation. The other shows you can make your synthetic data *closer* in distribution and still not get better models. In both cases, the headline is the same: **validity under the conditions you’ll actually face beats elegance under the conditions you wish you had.**\n\n### When “more information” gives you *less* usable resolution (DOE)\n\nFotias et al. drop a pretty sharp critique of expected information gain (EIG) when the system is only *partially identifiable* and nuisance variables don’t wash out. Think: mechanism discrimination, well testing, or any setting where multiple structural explanations remain plausible and nuisance states (operating regimes, unmeasured boundary conditions, calibration drift) persist.\n\nTheir proposed fix—Resolution-Aware Experimental Design (RAED)—isn’t “maximize info.” It’s **minimize the expected size of the surviving candidate set**, while explicitly controlling the familywise probability that you incorrectly throw out the true structure (false exclusion) at level α.\n\nThe move I like: they let you choose what kind of “validity” you care about with a single knob δ.\n\n- δ = 0: **pointwise** validity (works for every nuisance state)\n- δ = 1: validity **on average** over nuisance\n- 0 < δ < 1: **tail-protected** validity (CVaR / worst δ-fraction of nuisance states)\n\nWhy this matters in practice: we often design for the average case and then get burned in the corners—rare operating regimes, atypical feeds, weird ambient conditions. RAED bakes that into the design criterion rather than treating it as an afterthought.\n\nThey also prove an uncomfortable separation result: an experiment can look strictly better by structural EIG, full-latent EIG, and even nuisance-averaged Blackwell dominance—and still have arbitrarily worse *valid structural resolution* due to cross-nuisance aliasing. Translation: you can be “more informative” yet end up with a bigger, less actionable set of surviving explanations once you enforce error control.\n\nIf you’re wondering “can I actually run this?”, they operationalize RAED with a learned candidate-set scoring rule plus nested finite-sample calibration to certify nuisance-average or tail validity. The catch is honest: **tail guarantees can be sample-hungry** (rare adverse nuisance states are hard to calibrate).\n\nEmpirically, RAED and EIG disagree on experiment choice in a meaningful fraction of constrained-sensing settings, and RAED yields modest but consistent reductions in held-out candidate-set size. In methane oxidation, they even get nontrivial certified 5% tail guarantees—at the cost of large calibration (10k nuisance states per mechanism).\n\n**Practitioner takeaway:** If your goal is *decision resolution with guardrails* (not just “learn the parameters”), RAED is a compelling north star—especially when you need robustness to nasty but plausible nuisance regimes.\n\n### Synthetic data reliability isn’t the same as model performance (Reliability)\n\nAbeykoon et al. take on a question we all face now: “Can I trust generative augmentation for imbalanced classification?” They model augmentation as mixing real and generated data, \\(P_\\alpha = (1-\\alpha)P + \\alpha P_G\\), and derive a stability bound where the risk distortion scales with (i) how hard you lean on augmentation (α) and (ii) how far the class-conditional generated distribution is from reality, measured by **Wasserstein-1 distance**.\n\nThis is a useful framing for reliability engineers because it separates two failure modes:\n\n1. **Finite-sample estimation noise** (classic generalization)\n2. **Augmentation bias** (you trained on the wrong distribution)\n\nThey back it with experiments where CWGAN-GP generates samples that are *much* closer in Wasserstein distance than a CGAN. Yet downstream Macro-F1 / Macro-Recall don’t reliably improve—and sometimes classical ROS/SMOTE win. Even more pointed: the “more faithful” generator can be worse for predictive performance, and the CGAN vs CWGAN-GP performance differences aren’t statistically significant across seeds.\n\n**Practitioner takeaway:** Treat Wasserstein discrepancy as a *reliability metric* for synthetic data, not a promise of better KPIs. If you adopt generative augmentation, you should monitor distributional fidelity *and* downstream utility—and be prepared for those to disagree.\n\n### The connecting thread\n\nBoth papers are pushing us toward the same habit: **optimize what you actually need to be true under the messy conditions you actually face.** For DOE, that’s certified resolution under nuisance tails. For augmentation, that’s separating “looks realistic” from “improves decisions.”\n\nForward-looking question for the week: if you had to certify one thing in your workflow—*tail-safe mechanism exclusion* or *bounded augmentation bias*—which would reduce more real-world risk in your current projects?",
+  "synthesis": "If you’ve ever wished you could *design experiments around the decision you actually need to make* (not the parameter you happen to estimate), this week’s batch is your jam. Across DOE and reliability, the theme is the same: stop optimizing surrogate metrics and start optimizing the thing you’ll be judged on—policy regret, predictive risk, multi-level guarantees, or “how bad is disagreement really?”\n\n### Designing experiments for what we’ll *do next* (not what we’ll *know next*)\n\nTwo DOE papers basically call out a familiar trap: we run a clean experiment, get tight confidence intervals… and still make a suboptimal decision because we didn’t learn the *right* thing.\n\nHigbee et al. tackle “second-wave” design when wave 2 exists to support a constrained policy choice. Imagine you already ran a first experiment, and now you get one more shot—but the goal isn’t better parameter MSE, it’s lower Bayes regret under real policy constraints. Their trick is to approximate the welfare surface locally (quadratic near the estimated optimum) and treat the second-wave design as choosing Fisher information. In the Progresa-style subsidy problem, the optimized wave-2 design doesn’t look like “repeat what worked”; it concentrates effort where the marginal welfare gradients live (e.g., more focus on secondary school and high subsidies for a smaller treated group). Reported regret drops are big—often 50–70% versus re-running the original design at the same sample size. For practitioners: this is a blueprint for “adaptive DOE for decisions,” especially when leadership cares about *regret* not *R²*.\n\nJakeman et al. push the same idea into Bayesian OED for predictions (QoIs), then add risk preferences in three layers. You can be average-case vs worst-case across QoI components (I-optimal vs G-optimal), and you can also be conservative about rare ugly datasets (not just rare ugly parameters). The punchline is practical: parameter-focused criteria like EIG/KL can be almost indistinguishable from random sensor allocations when the real goal is predictive uncertainty in downstream QoIs. If you’ve ever placed sensors because “information gain said so” and later found prediction performance underwhelming—this explains why.\n\n### DOE meets uncertainty geometry: “inconsistency” as a response surface\n\nMäkelburg et al. reframe consistency checking across interacting CPS models as a response surface: choose an intervention vector θ (changing uncertainty geometry), observe an inconsistency probability \\(I(\\theta)\\). They generate datasets with Saltelli sampling and Monte Carlo labeling, then speed everything up with two ideas that feel very QE-friendly:\n\n1) **Multi-fidelity Monte Carlo** (control variates) that lands nearly on the MC reference at far lower cost (MAE ~0.006-ish versus ~0.05 for crude geometric proxies like AABB).\n\n2) A learned surrogate (a Product-Set Transformer) that predicts inconsistency directly from post-intervention zonotope-set geometry—microsecond inference, i.e., “scan the response surface like it’s cheap.”\n\nOnce you can evaluate \\(I(\\theta)\\) fast, the fun starts: Sobol sensitivity indices to identify dominant uncertainty drivers (center shift tends to dominate), and “recourse” search (gradient-based or evolutionary) for minimal interventions that restore consistency. In practice, this is a template for turning expensive verification-ish questions into something you can actually explore and optimize.\n\n### Reliability: from single guarantees to *hierarchies* of guarantees, plus better agreement audits\n\nFarzaneh et al. ask a question reliability teams increasingly face: what if one policy must satisfy *multiple* outage targets simultaneously (think gold/silver/bronze SLAs, or multiple customers with different risk tolerances)? Their RA-DPO formulation maximizes weighted “utility certificates” subject to lower-tail constraints at several reliability levels, and they connect the structure to nested conformal prediction. The bounds are intuitive (a shared policy can’t generally match separately optimized single-level policies), and the dual decomposition suggests a computational path: solve pointwise problems parameterized by one multiplier per service level. If you’re building risk-averse decision layers on top of ML predictions, this gives a principled way to avoid “we tuned for p95 and broke p99.”\n\nDavier et al. bring reliability thinking to multi-category scoring: a Potts/Ising-style rater agreement model where category-to-category “closeness” is weighted using LLM/SBERT embedding similarities. The practical payoff is you stop pretending category spacing is uniform or strictly ordinal—you model agreement directly, and “off by one category” can be treated as less severe (and empirically, it often is). Their near-agreement numbers are the eye-opener: exact accuracy can be mediocre while ±1-category agreement is high, which is often what operational stakeholders actually care about.\n\n### What to ponder this week\n\nIf we accept the premise that *decision-quality* is the objective, are we still comfortable running experiments optimized for parameter precision by default? Or should “regret / QoI risk / multi-level reliability” become the standard design target—especially now that surrogates and risk-aware objectives make it computationally feasible?",
   "papers": [
     {
-      "id": "2609.03686v1",
-      "title": "Resolution-Aware Experimental Design under Partial Identifiability",
-      "authors": "Sofianos Panagiotis Fotias",
-      "submitted": "2026-09-03",
+      "id": "2609.11331v1",
+      "title": "Estimating Inconsistency Response Surfaces under Uncertainty in Cyber-Physical System Development",
+      "authors": "Johannes Mäkelburg|Tim Schwabe|Maribel Acosta",
+      "submitted": "2026-09-10",
       "track": "exp_design",
-      "link": "https://arxiv.org/pdf/2609.03686v1"
+      "link": "https://arxiv.org/pdf/2609.11331v1"
     },
     {
-      "id": "2609.01410v1",
-      "title": "On the Reliability of Generative Augmentation: A Wasserstein-Based Theoretical and Empirical Study",
-      "authors": "Chathurika S Abeykoon|Mathias Nthiani Muia|Mallory Goldstein",
-      "submitted": "2026-09-01",
+      "id": "2609.10971v1",
+      "title": "Experimental Design for Policy Choice",
+      "authors": "Samuel D. Higbee",
+      "submitted": "2026-09-10",
+      "track": "exp_design",
+      "link": "https://arxiv.org/pdf/2609.10971v1"
+    },
+    {
+      "id": "2609.11524v1",
+      "title": "Risk-Averse Decision Making with Multi-Level Reliability Guarantees",
+      "authors": "Amirmohammad Farzaneh|Osvaldo Simeone",
+      "submitted": "2026-09-10",
       "track": "reliability",
-      "link": "https://arxiv.org/pdf/2609.01410v1"
+      "link": "https://arxiv.org/pdf/2609.11524v1"
+    },
+    {
+      "id": "2609.08797v1",
+      "title": "The Rater Ising-Potts Model with LLM-Derived Weights: An Application to Multi-Category Scoring Reliability",
+      "authors": "Matthias von Davier",
+      "submitted": "2026-09-08",
+      "track": "reliability",
+      "link": "https://arxiv.org/pdf/2609.08797v1"
+    },
+    {
+      "id": "2609.08023v1",
+      "title": "Risk-Aware Goal-Oriented Bayesian Optimal Experimental Design",
+      "authors": "John D. Jakeman|Rebekah White|Bart van Bloemen Waanders|Drew P. Kouri|Alen Alexanderian",
+      "submitted": "2026-09-07",
+      "track": "exp_design",
+      "link": "https://arxiv.org/pdf/2609.08023v1"
     }
   ]
 }
