@@ -1,59 +1,51 @@
 {
   "metadata": {
-    "generated_at": "2026-09-14T12:09:33Z",
-    "week_start": "2026-09-07",
-    "week_end": "2026-09-14",
+    "generated_at": "2026-09-21T12:09:12Z",
+    "week_start": "2026-09-14",
+    "week_end": "2026-09-21",
     "version": "3.1.0"
   },
   "summary": {
-    "total_papers": 5,
+    "total_papers": 4,
     "papers_by_track": {
       "spc": 0,
-      "exp_design": 3,
-      "reliability": 2
+      "exp_design": 0,
+      "reliability": 4
     }
   },
-  "synthesis": "If you’ve ever wished you could *design experiments around the decision you actually need to make* (not the parameter you happen to estimate), this week’s batch is your jam. Across DOE and reliability, the theme is the same: stop optimizing surrogate metrics and start optimizing the thing you’ll be judged on—policy regret, predictive risk, multi-level guarantees, or “how bad is disagreement really?”\n\n### Designing experiments for what we’ll *do next* (not what we’ll *know next*)\n\nTwo DOE papers basically call out a familiar trap: we run a clean experiment, get tight confidence intervals… and still make a suboptimal decision because we didn’t learn the *right* thing.\n\nHigbee et al. tackle “second-wave” design when wave 2 exists to support a constrained policy choice. Imagine you already ran a first experiment, and now you get one more shot—but the goal isn’t better parameter MSE, it’s lower Bayes regret under real policy constraints. Their trick is to approximate the welfare surface locally (quadratic near the estimated optimum) and treat the second-wave design as choosing Fisher information. In the Progresa-style subsidy problem, the optimized wave-2 design doesn’t look like “repeat what worked”; it concentrates effort where the marginal welfare gradients live (e.g., more focus on secondary school and high subsidies for a smaller treated group). Reported regret drops are big—often 50–70% versus re-running the original design at the same sample size. For practitioners: this is a blueprint for “adaptive DOE for decisions,” especially when leadership cares about *regret* not *R²*.\n\nJakeman et al. push the same idea into Bayesian OED for predictions (QoIs), then add risk preferences in three layers. You can be average-case vs worst-case across QoI components (I-optimal vs G-optimal), and you can also be conservative about rare ugly datasets (not just rare ugly parameters). The punchline is practical: parameter-focused criteria like EIG/KL can be almost indistinguishable from random sensor allocations when the real goal is predictive uncertainty in downstream QoIs. If you’ve ever placed sensors because “information gain said so” and later found prediction performance underwhelming—this explains why.\n\n### DOE meets uncertainty geometry: “inconsistency” as a response surface\n\nMäkelburg et al. reframe consistency checking across interacting CPS models as a response surface: choose an intervention vector θ (changing uncertainty geometry), observe an inconsistency probability \\(I(\\theta)\\). They generate datasets with Saltelli sampling and Monte Carlo labeling, then speed everything up with two ideas that feel very QE-friendly:\n\n1) **Multi-fidelity Monte Carlo** (control variates) that lands nearly on the MC reference at far lower cost (MAE ~0.006-ish versus ~0.05 for crude geometric proxies like AABB).\n\n2) A learned surrogate (a Product-Set Transformer) that predicts inconsistency directly from post-intervention zonotope-set geometry—microsecond inference, i.e., “scan the response surface like it’s cheap.”\n\nOnce you can evaluate \\(I(\\theta)\\) fast, the fun starts: Sobol sensitivity indices to identify dominant uncertainty drivers (center shift tends to dominate), and “recourse” search (gradient-based or evolutionary) for minimal interventions that restore consistency. In practice, this is a template for turning expensive verification-ish questions into something you can actually explore and optimize.\n\n### Reliability: from single guarantees to *hierarchies* of guarantees, plus better agreement audits\n\nFarzaneh et al. ask a question reliability teams increasingly face: what if one policy must satisfy *multiple* outage targets simultaneously (think gold/silver/bronze SLAs, or multiple customers with different risk tolerances)? Their RA-DPO formulation maximizes weighted “utility certificates” subject to lower-tail constraints at several reliability levels, and they connect the structure to nested conformal prediction. The bounds are intuitive (a shared policy can’t generally match separately optimized single-level policies), and the dual decomposition suggests a computational path: solve pointwise problems parameterized by one multiplier per service level. If you’re building risk-averse decision layers on top of ML predictions, this gives a principled way to avoid “we tuned for p95 and broke p99.”\n\nDavier et al. bring reliability thinking to multi-category scoring: a Potts/Ising-style rater agreement model where category-to-category “closeness” is weighted using LLM/SBERT embedding similarities. The practical payoff is you stop pretending category spacing is uniform or strictly ordinal—you model agreement directly, and “off by one category” can be treated as less severe (and empirically, it often is). Their near-agreement numbers are the eye-opener: exact accuracy can be mediocre while ±1-category agreement is high, which is often what operational stakeholders actually care about.\n\n### What to ponder this week\n\nIf we accept the premise that *decision-quality* is the objective, are we still comfortable running experiments optimized for parameter precision by default? Or should “regret / QoI risk / multi-level reliability” become the standard design target—especially now that surrogates and risk-aware objectives make it computationally feasible?",
+  "synthesis": "## QE ArXiv Watch Weekly — Week ending Sep 21, 2026 (4 papers)\n\nIf you’ve ever tried to “validate” a gen‑AI workflow with the same instincts you use for gage R&R or reliability growth, this week has a satisfying theme: **stop treating evaluation as a leaderboard exercise and start treating it as an evidence-and-uncertainty problem**. That shows up in enterprise LLM rollouts, medical forecasting, and rare-event probability estimation.\n\n### When “it looks good” isn’t decision-grade: enterprise GenAI gets a reliability-style eval frame\n\nAli et al.’s *EnterpriseVal* is the closest thing I’ve seen to an attempt at bringing **engineering qualification thinking** to enterprise generative AI. The move I like: the “evaluation object” isn’t a model—it’s a **frozen socio-technical configuration** (model + prompts + retrieval/tools + guardrails + human review) tied to a specific use case and local ground truth. That’s exactly how these systems fail in practice.\n\nThey also introduce an autonomy × consequence matrix to scale evaluation intensity. That’s basically a risk-based control plan for AI.\n\nWhere it gets very QE-friendly is the metric set: not just “accuracy,” but things like **pass^k across repeated runs** (stability), reviewer catch rate and false acceptance (oversight effectiveness), and explicit time/cost per successful task (value). The grading protocol—blinded experts plus LLM-as-judge corrected with prediction-powered inference—aims at making human evaluation cheaper without pretending it’s free.\n\nSkeptical note: their pilot numbers (e.g., citation precision 88%, hallucination rate 1.6% in a credit memo workflow; big estimated hours saved in procedure transformation) are intriguing, but they themselves admit the uncomfortable part: **no sample sizes, CIs, inter-rater agreement, or repeated-run rigor** were recorded. So treat it as a strong framework with an illustrative pilot—not yet a qualification report.\n\n### Sparse longitudinal forecasting: accuracy is easy; reliable intervals are the real product\n\nKong et al. build a carefully QC’d benchmark for lesion-size forecasting with sparse CT follow-ups—five visits per trajectory, patient-level splits, and a fixed horizon design (predicting the same visit-to-visit change). That design choice matters: it prevents “easy horizons” from masquerading as model skill.\n\nTwo practitioner takeaways:\n\n1. **Most of the value is in the most recent extra observation.** RMSE improves from m=1 to m=2, then flattens (and even worsens slightly). If you’re designing a monitoring schedule, that’s the kind of result you can act on.\n\n2. **Interval reliability isn’t the same as probabilistic calibration.** Methods had near-perfect raw 95% coverage (some essentially 1.00), but PIT errors and NLL still varied. Conformal calibration helps coverage, but it doesn’t magically make the distribution “right.” If you’re using forecasts to trigger interventions, you want both coverage and sensible sharpness/likelihood behavior.\n\nAlso worth noting: their Gompertz-inspired regularizer mostly didn’t help; CV picked λ=0. A nice reminder that “biologically inspired” constraints can become accuracy taxes.\n\n### Rare-event reliability: importance sampling meets flows, with a “don’t collapse” mechanism\n\nHelal et al. push adaptive importance sampling using **mixtures of normalizing flows** (FAMIS) for tiny failure probabilities. The clever bit is engineering around what usually breaks these methods: multimodal failure regions and mode collapse.\n\nThey combine (i) a defensive heavy-tailed exploration component (good early coverage), (ii) an annealed surrogate for the failure indicator (so you can learn without seeing failures), and (iii) a repulsion term (JSD) to keep mixture components from piling onto one mode. Reported results show stability and accuracy even into high dimensions where some baselines degrade, with a predictable evaluation budget \\(N_{call}=KT+K_{est}\\). If you’re spending money on limit-state calls, that budget predictability is a feature, not a footnote.\n\n### A “reliability” paper that’s really about label noise (still useful)\n\nAkhtar et al.’s Barge isn’t reliability-of-systems, but it *is* about reliability of supervision: imbalanced classification under noisy labels. The bounded, redescending loss is the practical idea—when a label looks confidently wrong, it stops dominating training. If you’ve got inspection labels, field-return codes, or human dispositions with known contamination, that’s directly relevant.\n\n### What to ponder this week\n\nAcross domains, the trend is the same: **we’re moving from point performance to decision reliability**—repeatability, calibrated uncertainty, oversight effectiveness, and cost-to-evidence. The open question for us: *What’s the gen‑AI equivalent of an MSA report with confidence bounds and ongoing stability monitoring—and who in the org owns it?*",
   "papers": [
     {
-      "id": "2609.11331v1",
-      "title": "Estimating Inconsistency Response Surfaces under Uncertainty in Cyber-Physical System Development",
-      "authors": "Johannes Mäkelburg|Tim Schwabe|Maribel Acosta",
-      "submitted": "2026-09-10",
-      "track": "exp_design",
-      "link": "https://arxiv.org/pdf/2609.11331v1"
-    },
-    {
-      "id": "2609.10971v1",
-      "title": "Experimental Design for Policy Choice",
-      "authors": "Samuel D. Higbee",
-      "submitted": "2026-09-10",
-      "track": "exp_design",
-      "link": "https://arxiv.org/pdf/2609.10971v1"
-    },
-    {
-      "id": "2609.11524v1",
-      "title": "Risk-Averse Decision Making with Multi-Level Reliability Guarantees",
-      "authors": "Amirmohammad Farzaneh|Osvaldo Simeone",
-      "submitted": "2026-09-10",
+      "id": "2609.21841v1",
+      "title": "EnterpriseVal: Quantifying the Efficacy, Reliability and Value of Generative AI in the Enterprise",
+      "authors": "Abbas Raza Ali|Muhammad Ajmal Siddiqui|Moona Zahid",
+      "submitted": "2026-09-18",
       "track": "reliability",
-      "link": "https://arxiv.org/pdf/2609.11524v1"
+      "link": "https://arxiv.org/pdf/2609.21841v1"
     },
     {
-      "id": "2609.08797v1",
-      "title": "The Rater Ising-Potts Model with LLM-Derived Weights: An Application to Multi-Category Scoring Reliability",
-      "authors": "Matthias von Davier",
-      "submitted": "2026-09-08",
+      "id": "2609.21197v1",
+      "title": "Reliability-Centered Evaluation of Sparse Longitudinal CT Lesion-Size Forecasting with Conformal Interval Calibration and Gompertz-Inspired Regularization",
+      "authors": "Lingfei Kong",
+      "submitted": "2026-09-18",
       "track": "reliability",
-      "link": "https://arxiv.org/pdf/2609.08797v1"
+      "link": "https://arxiv.org/pdf/2609.21197v1"
     },
     {
-      "id": "2609.08023v1",
-      "title": "Risk-Aware Goal-Oriented Bayesian Optimal Experimental Design",
-      "authors": "John D. Jakeman|Rebekah White|Bart van Bloemen Waanders|Drew P. Kouri|Alen Alexanderian",
-      "submitted": "2026-09-07",
-      "track": "exp_design",
-      "link": "https://arxiv.org/pdf/2609.08023v1"
+      "id": "2609.21160v1",
+      "title": "Repulsive normalizing flow mixtures for adaptive importance sampling: reliability analysis of complex systems",
+      "authors": "Sara Helal|Victor Elvira",
+      "submitted": "2026-09-18",
+      "track": "reliability",
+      "link": "https://arxiv.org/pdf/2609.21160v1"
+    },
+    {
+      "id": "2609.16380v1",
+      "title": "Bounded Adjustment with Reliability-Guided Embedding for Imbalanced Learning with Noisy Labels",
+      "authors": "Mushir Akhtar|Akarsh J.|M. Tanveer|Mohd. Arshad",
+      "submitted": "2026-09-14",
+      "track": "reliability",
+      "link": "https://arxiv.org/pdf/2609.16380v1"
     }
   ]
 }
