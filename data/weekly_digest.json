@@ -1,51 +1,27 @@
 {
   "metadata": {
-    "generated_at": "2026-09-21T12:09:12Z",
-    "week_start": "2026-09-14",
-    "week_end": "2026-09-21",
+    "generated_at": "2026-09-28T12:11:07Z",
+    "week_start": "2026-09-21",
+    "week_end": "2026-09-28",
     "version": "3.1.0"
   },
   "summary": {
-    "total_papers": 4,
+    "total_papers": 1,
     "papers_by_track": {
       "spc": 0,
       "exp_design": 0,
-      "reliability": 4
+      "reliability": 1
     }
   },
-  "synthesis": "## QE ArXiv Watch Weekly — Week ending Sep 21, 2026 (4 papers)\n\nIf you’ve ever tried to “validate” a gen‑AI workflow with the same instincts you use for gage R&R or reliability growth, this week has a satisfying theme: **stop treating evaluation as a leaderboard exercise and start treating it as an evidence-and-uncertainty problem**. That shows up in enterprise LLM rollouts, medical forecasting, and rare-event probability estimation.\n\n### When “it looks good” isn’t decision-grade: enterprise GenAI gets a reliability-style eval frame\n\nAli et al.’s *EnterpriseVal* is the closest thing I’ve seen to an attempt at bringing **engineering qualification thinking** to enterprise generative AI. The move I like: the “evaluation object” isn’t a model—it’s a **frozen socio-technical configuration** (model + prompts + retrieval/tools + guardrails + human review) tied to a specific use case and local ground truth. That’s exactly how these systems fail in practice.\n\nThey also introduce an autonomy × consequence matrix to scale evaluation intensity. That’s basically a risk-based control plan for AI.\n\nWhere it gets very QE-friendly is the metric set: not just “accuracy,” but things like **pass^k across repeated runs** (stability), reviewer catch rate and false acceptance (oversight effectiveness), and explicit time/cost per successful task (value). The grading protocol—blinded experts plus LLM-as-judge corrected with prediction-powered inference—aims at making human evaluation cheaper without pretending it’s free.\n\nSkeptical note: their pilot numbers (e.g., citation precision 88%, hallucination rate 1.6% in a credit memo workflow; big estimated hours saved in procedure transformation) are intriguing, but they themselves admit the uncomfortable part: **no sample sizes, CIs, inter-rater agreement, or repeated-run rigor** were recorded. So treat it as a strong framework with an illustrative pilot—not yet a qualification report.\n\n### Sparse longitudinal forecasting: accuracy is easy; reliable intervals are the real product\n\nKong et al. build a carefully QC’d benchmark for lesion-size forecasting with sparse CT follow-ups—five visits per trajectory, patient-level splits, and a fixed horizon design (predicting the same visit-to-visit change). That design choice matters: it prevents “easy horizons” from masquerading as model skill.\n\nTwo practitioner takeaways:\n\n1. **Most of the value is in the most recent extra observation.** RMSE improves from m=1 to m=2, then flattens (and even worsens slightly). If you’re designing a monitoring schedule, that’s the kind of result you can act on.\n\n2. **Interval reliability isn’t the same as probabilistic calibration.** Methods had near-perfect raw 95% coverage (some essentially 1.00), but PIT errors and NLL still varied. Conformal calibration helps coverage, but it doesn’t magically make the distribution “right.” If you’re using forecasts to trigger interventions, you want both coverage and sensible sharpness/likelihood behavior.\n\nAlso worth noting: their Gompertz-inspired regularizer mostly didn’t help; CV picked λ=0. A nice reminder that “biologically inspired” constraints can become accuracy taxes.\n\n### Rare-event reliability: importance sampling meets flows, with a “don’t collapse” mechanism\n\nHelal et al. push adaptive importance sampling using **mixtures of normalizing flows** (FAMIS) for tiny failure probabilities. The clever bit is engineering around what usually breaks these methods: multimodal failure regions and mode collapse.\n\nThey combine (i) a defensive heavy-tailed exploration component (good early coverage), (ii) an annealed surrogate for the failure indicator (so you can learn without seeing failures), and (iii) a repulsion term (JSD) to keep mixture components from piling onto one mode. Reported results show stability and accuracy even into high dimensions where some baselines degrade, with a predictable evaluation budget \\(N_{call}=KT+K_{est}\\). If you’re spending money on limit-state calls, that budget predictability is a feature, not a footnote.\n\n### A “reliability” paper that’s really about label noise (still useful)\n\nAkhtar et al.’s Barge isn’t reliability-of-systems, but it *is* about reliability of supervision: imbalanced classification under noisy labels. The bounded, redescending loss is the practical idea—when a label looks confidently wrong, it stops dominating training. If you’ve got inspection labels, field-return codes, or human dispositions with known contamination, that’s directly relevant.\n\n### What to ponder this week\n\nAcross domains, the trend is the same: **we’re moving from point performance to decision reliability**—repeatability, calibrated uncertainty, oversight effectiveness, and cost-to-evidence. The open question for us: *What’s the gen‑AI equivalent of an MSA report with confidence bounds and ongoing stability monitoring—and who in the org owns it?*",
+  "synthesis": "The most useful reminder from this week’s lone submission: **when you’re chasing failure probabilities like 10⁻⁶, “just run more Monte Carlo” isn’t a plan — it’s a budget bonfire.** Sharma et al. pull together 10–15 years of structural reliability work and, in the process, give us a very pragmatic map of *which rare‑event tool to reach for* depending on geometry, dimension, and whether time is part of the failure definition.\n\nIf you do reliability work in any domain (structures, aerospace, energy, complex mechanical systems), the storyline will feel familiar: we’re trying to estimate vanishingly small failure probabilities under messy nonlinear limit states, often with high-dimensional uncertainty. Practitioners care because these are exactly the regimes where qualification-by-testing breaks down and naive simulation becomes impossible. The review even puts a number on the pain: to estimate \\(P_F \\approx 10^{-6}\\) with ~10% relative error, crude Monte Carlo can push you toward **~10⁸ samples**. That’s not “overnight on the cluster”; that’s “rethink the method.”\n\nWhat’s nice is how the review organizes the ecosystem:\n\n**1) Fast approximations (FORM/SORM) still matter — but only when they’re honest.**  \nFor time-invariant problems with relatively smooth limit states, FORM/SORM remain attractive as a first pass: cheap, interpretable, and often good enough for screening or sensitivity. But the review doesn’t oversell them: weird failure-domain geometry, multiple disjoint failure regions, or strong nonlinearity can make “a single most probable failure point” a brittle assumption.\n\n**2) Importance sampling is your scalpel — if you can aim it.**  \nThe survey walks through adaptive IS, cross-entropy (CE) tuning, directional IS, and (for stochastic dynamics) Girsanov-based changes of measure. The subtext: IS works beautifully when you can learn a good proposal distribution, and it struggles when the failure set is multi-modal or hard to discover. If you’ve ever “improved” Monte Carlo only to discover you aimed at the wrong failure mode, you’ll feel seen.\n\n**3) Splitting / Subset Simulation is the workhorse for ugly rare events.**  \nSubset Simulation and cousins get highlighted as particularly practical when failure is rare and geometry is complicated. A detail worth stealing: the typical intermediate conditional probability choice \\(p_0 \\approx 0.1\\)–0.3 shows up again, with literature suggesting **\\(p_0 \\approx 0.2\\)** is near-optimal for coefficient of variation. That’s the kind of rule-of-thumb engineers actually use.\n\n**4) ML surrogates are moving from “speed trick” to “search strategy.”**  \nSurrogate modeling + active learning is framed less as “replace physics with a black box” and more as “spend expensive evaluations only where they change the failure probability estimate.” There’s also a nod to generative models for load simulation — early days, but aligned with the trend we’re seeing: learning realistic extremes without handcrafting distributions.\n\nOne thread I’d love to see QE folks borrow more aggressively: **embedding variance reduction into experimental qualification**, not just computation. The review cites prior work estimating probabilities as low as ~\\(5 \\times 10^{-5}\\) with ~1750 controlled shake-table samples — basically, “design the experiment like an importance sampler.”\n\nThe question to sit with this week: *In your reliability workflow, are we still treating rare-event estimation as a simulation problem, when it’s really a search-and-allocation problem?* The methods that win aren’t just faster — they’re better at finding where failure actually lives.",
   "papers": [
     {
-      "id": "2609.21841v1",
-      "title": "EnterpriseVal: Quantifying the Efficacy, Reliability and Value of Generative AI in the Enterprise",
-      "authors": "Abbas Raza Ali|Muhammad Ajmal Siddiqui|Moona Zahid",
-      "submitted": "2026-09-18",
+      "id": "2609.26440v1",
+      "title": "Engineering safe structures: recent advances in structural reliability modelling",
+      "authors": "Adwait Sharma|Oindrila Kanjilal|C S Manohar",
+      "submitted": "2026-09-22",
       "track": "reliability",
-      "link": "https://arxiv.org/pdf/2609.21841v1"
-    },
-    {
-      "id": "2609.21197v1",
-      "title": "Reliability-Centered Evaluation of Sparse Longitudinal CT Lesion-Size Forecasting with Conformal Interval Calibration and Gompertz-Inspired Regularization",
-      "authors": "Lingfei Kong",
-      "submitted": "2026-09-18",
-      "track": "reliability",
-      "link": "https://arxiv.org/pdf/2609.21197v1"
-    },
-    {
-      "id": "2609.21160v1",
-      "title": "Repulsive normalizing flow mixtures for adaptive importance sampling: reliability analysis of complex systems",
-      "authors": "Sara Helal|Victor Elvira",
-      "submitted": "2026-09-18",
-      "track": "reliability",
-      "link": "https://arxiv.org/pdf/2609.21160v1"
-    },
-    {
-      "id": "2609.16380v1",
-      "title": "Bounded Adjustment with Reliability-Guided Embedding for Imbalanced Learning with Noisy Labels",
-      "authors": "Mushir Akhtar|Akarsh J.|M. Tanveer|Mohd. Arshad",
-      "submitted": "2026-09-14",
-      "track": "reliability",
-      "link": "https://arxiv.org/pdf/2609.16380v1"
+      "link": "https://arxiv.org/pdf/2609.26440v1"
     }
   ]
 }
