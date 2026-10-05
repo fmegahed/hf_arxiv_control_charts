@@ -1,27 +1,59 @@
 {
   "metadata": {
-    "generated_at": "2026-09-28T12:11:07Z",
-    "week_start": "2026-09-21",
-    "week_end": "2026-09-28",
+    "generated_at": "2026-10-05T12:10:48Z",
+    "week_start": "2026-09-28",
+    "week_end": "2026-10-05",
     "version": "3.1.0"
   },
   "summary": {
-    "total_papers": 1,
+    "total_papers": 5,
     "papers_by_track": {
       "spc": 0,
-      "exp_design": 0,
-      "reliability": 1
+      "exp_design": 2,
+      "reliability": 3
     }
   },
-  "synthesis": "The most useful reminder from this week’s lone submission: **when you’re chasing failure probabilities like 10⁻⁶, “just run more Monte Carlo” isn’t a plan — it’s a budget bonfire.** Sharma et al. pull together 10–15 years of structural reliability work and, in the process, give us a very pragmatic map of *which rare‑event tool to reach for* depending on geometry, dimension, and whether time is part of the failure definition.\n\nIf you do reliability work in any domain (structures, aerospace, energy, complex mechanical systems), the storyline will feel familiar: we’re trying to estimate vanishingly small failure probabilities under messy nonlinear limit states, often with high-dimensional uncertainty. Practitioners care because these are exactly the regimes where qualification-by-testing breaks down and naive simulation becomes impossible. The review even puts a number on the pain: to estimate \\(P_F \\approx 10^{-6}\\) with ~10% relative error, crude Monte Carlo can push you toward **~10⁸ samples**. That’s not “overnight on the cluster”; that’s “rethink the method.”\n\nWhat’s nice is how the review organizes the ecosystem:\n\n**1) Fast approximations (FORM/SORM) still matter — but only when they’re honest.**  \nFor time-invariant problems with relatively smooth limit states, FORM/SORM remain attractive as a first pass: cheap, interpretable, and often good enough for screening or sensitivity. But the review doesn’t oversell them: weird failure-domain geometry, multiple disjoint failure regions, or strong nonlinearity can make “a single most probable failure point” a brittle assumption.\n\n**2) Importance sampling is your scalpel — if you can aim it.**  \nThe survey walks through adaptive IS, cross-entropy (CE) tuning, directional IS, and (for stochastic dynamics) Girsanov-based changes of measure. The subtext: IS works beautifully when you can learn a good proposal distribution, and it struggles when the failure set is multi-modal or hard to discover. If you’ve ever “improved” Monte Carlo only to discover you aimed at the wrong failure mode, you’ll feel seen.\n\n**3) Splitting / Subset Simulation is the workhorse for ugly rare events.**  \nSubset Simulation and cousins get highlighted as particularly practical when failure is rare and geometry is complicated. A detail worth stealing: the typical intermediate conditional probability choice \\(p_0 \\approx 0.1\\)–0.3 shows up again, with literature suggesting **\\(p_0 \\approx 0.2\\)** is near-optimal for coefficient of variation. That’s the kind of rule-of-thumb engineers actually use.\n\n**4) ML surrogates are moving from “speed trick” to “search strategy.”**  \nSurrogate modeling + active learning is framed less as “replace physics with a black box” and more as “spend expensive evaluations only where they change the failure probability estimate.” There’s also a nod to generative models for load simulation — early days, but aligned with the trend we’re seeing: learning realistic extremes without handcrafting distributions.\n\nOne thread I’d love to see QE folks borrow more aggressively: **embedding variance reduction into experimental qualification**, not just computation. The review cites prior work estimating probabilities as low as ~\\(5 \\times 10^{-5}\\) with ~1750 controlled shake-table samples — basically, “design the experiment like an importance sampler.”\n\nThe question to sit with this week: *In your reliability workflow, are we still treating rare-event estimation as a simulation problem, when it’s really a search-and-allocation problem?* The methods that win aren’t just faster — they’re better at finding where failure actually lives.",
+  "synthesis": "The most quietly radical idea this week: stop pretending your *estimator* is smooth and your *measurement plan* is “information-matrix optimal.”\n\nIf you’re selecting sensors, test points, pixels, or inspections *because downstream you’ll run Lasso / elastic net / TV denoising*, then classical A- and D-optimality can be aiming at the wrong target. Marques et al. basically say: design for what you actually deploy, not for a Gaussian-linear fairy tale.\n\n### Designing measurements for nonsmooth reality (and doing it without pain)\n\nMarques et al. tackle a practitioner-shaped problem: we want a *small* subset of measurements, but our inference pipeline is nonsmooth. In that world, “maximize det(Fisher info)” can be like optimizing a car for top speed when you’re actually driving in snow.\n\nTheir move is bilevel experimental design: the lower level solves the exact nonsmooth estimator you’ll use; the upper level chooses which measurements to buy by minimizing a validation-style prediction risk—without needing ground-truth signals. Sparsity comes from continuous acquisition weights in \\([0,1]^M\\) plus a concave “price” penalty, and they trace the whole budget–performance frontier via a price homotopy (multiple usable designs per run, not one design per budget).\n\nWhat’s nice for us: they avoid the usual “differentiate through an argmin that’s nonsmooth” trap with a value-function penalty and a single-loop proximal-gradient method, with an \\(O(1/K)\\) stationarity guarantee under reasonable conditions.\n\nThe results are the kind that matter when budgets are tight: in sparse regression with <40 sensors, median test NMSE drops ~40% versus D-/A-optimal; in Fashion-MNIST pixel selection with ≤32 pixels, they beat every baseline in every paired comparison—massively. At high budgets they converge toward “random is fine,” which is also useful guidance: don’t over-engineer when you’ve already bought plenty of signal.\n\n### Zero-label “design,” but for eliciting priors from an LLM\n\nTeng et al. isn’t DOE in the traditional sense, but the vibe is familiar: choose a small set of *queries* to efficiently learn a response surface. MARS builds a tabular classifier with zero task labels by asking an LLM for feature-level log-odds at representative “anchor” values (quantiles/categories), then interpolating into per-feature response functions. After that, prediction is just an additive score—no test-time LLM calls.\n\nIf you’re doing quality triage with weak/no labels and you can articulate domain priors in language (“higher vibration RMS strongly increases failure odds after X”), MARS is an intriguing bridge. It’s also refreshingly cost-aware: reported API spend is ~10% of a heavier baseline, with modest gains from repeated elicitation (R=1→5).\n\n### Reliability: the claim is the product\n\nTwo reliability papers land the same punch from different angles: reliability isn’t a number, it’s a *statement with assumptions*.\n\nHardy et al. show why “just add more tasks” doesn’t necessarily fix agent benchmark noise. Using Generalizability Theory with Bayesian mixed models, they separate what you *think* you’re measuring (model quality) from what you’re often measuring (model+scaffold system quality). System ranking reliability is very high; underlying-model ranking reliability can be awful—and scaffold choice can reorder models. The practical takeaway for anyone running internal leaderboards: if your evaluation pipeline (prompting/tooling/scaffold) varies, you may be ranking your harness more than your model. Also: pooling diverse benchmarks can buy more reliability per dollar than deepening one benchmark.\n\nBoland et al. make the analogous point for power-system adequacy: expected unserved energy (USE) misses tail risk when renewables correlate. They propose a modular “metric factory” (transform + time aggregation + risk functional) that produces interpretable standards like CVaR of USE, tail probability of max outage, outage duration distributions, etc. If you manage reliability risk, you want more than one lens—especially one that can see the tail.\n\nPan et al. zoom out and argue for an AI reliability engineering program built around a “reliability triangle”: failure definition, operational envelope, and evidence. The useful bit for QE folks is how classical tools map over: exposure-adjusted recurrent-event models (don’t rank by raw counts), overdispersion handling, accelerated/adversarial testing framed as reliability growth, and controls aligned to where failures live (component vs operational loop vs agentic conduct vs governance).\n\n### One question to sit with\n\nAcross sensors, benchmarks, grids, and agents, the trend is the same: **optimize and report against the thing you actually claim**—not the convenient proxy.  \n\nSo: in your world, what’s the proxy you’ve been optimizing because it was easy to compute—and what would change if you optimized the deployed decision rule instead?",
   "papers": [
     {
-      "id": "2609.26440v1",
-      "title": "Engineering safe structures: recent advances in structural reliability modelling",
-      "authors": "Adwait Sharma|Oindrila Kanjilal|C S Manohar",
-      "submitted": "2026-09-22",
+      "id": "2610.01237v1",
+      "title": "Sparse Experimental Design for Nonsmooth Estimators via Bilevel Optimization",
+      "authors": "Antonio G. Marques|Samuel Rey",
+      "submitted": "2026-10-01",
+      "track": "exp_design",
+      "link": "https://arxiv.org/pdf/2610.01237v1"
+    },
+    {
+      "id": "2609.39639v1",
+      "title": "Marginal Response Surface Elicitation for Zero-Label Tabular Learning",
+      "authors": "Liangyu Teng|Yicheng Ding|Jing Liu|Hengsong Liu|Juncen Guo|Hongru Li|Jingyu Zhang|Liang Song",
+      "submitted": "2026-09-30",
+      "track": "exp_design",
+      "link": "https://arxiv.org/pdf/2609.39639v1"
+    },
+    {
+      "id": "2610.00651v1",
+      "title": "Agent Evaluation Reliability: More Tasks Won't (Always) Fix An Agent Leaderboard",
+      "authors": "Michael Hardy|Ruhana Azam|Anka Reuel|Mykel Kochenderfer|Sanmi Koyejo",
+      "submitted": "2026-09-30",
       "track": "reliability",
-      "link": "https://arxiv.org/pdf/2609.26440v1"
+      "link": "https://arxiv.org/pdf/2610.00651v1"
+    },
+    {
+      "id": "2609.36751v1",
+      "title": "Measures of Reliability Risk for the Australian Energy Sector",
+      "authors": "John Boland|Matthias Fresacher|David Hill|Shijia Jin|Ya Li|Graham Mills|Kihun Nam|Craig Oakeshotte|Andriy Olenko",
+      "submitted": "2026-09-29",
+      "track": "reliability",
+      "link": "https://arxiv.org/pdf/2609.36751v1"
+    },
+    {
+      "id": "2609.35316v1",
+      "title": "Reliability Engineering for AI Systems: Challenges, Methods, and Directions",
+      "authors": "Rong Pan|Yili Hong|Min Xie",
+      "submitted": "2026-09-28",
+      "track": "reliability",
+      "link": "https://arxiv.org/pdf/2609.35316v1"
     }
   ]
 }
