@@ -141,3 +141,23 @@ test_that("chart fields come from the spec for the scope", {
   expect_false("assumes_normality" %in% chartable_fields(TEST_SPEC, "spc"))
   expect_equal(default_chart_fields(TEST_SPEC, TEST_SETTINGS, "exp_design"), c("design_type", "design_objective"))
 })
+
+test_that("the rising chart names the field only when several fields share it, and gives wrapped labels room", {
+  one <- rising_tags(rising_fixture(), c(Tag = "tag"), 2025L)
+  labels_one <- chart_rising(one, "#1b9e77")$x$attrs[[1]]$y
+  plot_one <- plotly::plotly_build(chart_rising(one, "#1b9e77"))
+  expect_false(any(grepl("[", plot_one$x$data[[1]]$y, fixed = TRUE)))
+
+  two <- rbind(one, transform(one, field = "Other field"))
+  plot_two <- plotly::plotly_build(chart_rising(two, "#1b9e77"))
+  expect_true(all(grepl("[", plot_two$x$data[[1]]$y, fixed = TRUE)))
+
+  long <- one
+  long$value <- paste(long$value, "with a much longer label that wraps over several lines in the chart axis")
+  plot_long <- plotly::plotly_build(chart_rising(long, "#1b9e77"))
+  expect_gt(plot_long$x$layout$height, plot_one$x$layout$height)
+})
+
+test_that("rising tags with no field selected give an empty result, not an error", {
+  expect_equal(nrow(rising_tags(rising_fixture()[0, ], character(0), 2025L)), 0L)
+})

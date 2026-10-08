@@ -134,10 +134,18 @@ chart_gap_map <- function(gap, source = NULL, max_values = GAP_MAP_MAX_VALUES) {
     colorscale = HEAT_SCALE, zmin = 0, zmax = top, xgap = 2, ygap = 2,
     hovertext = hover, hoverinfo = "text",
     colorbar = list(title = "Papers", thickness = 10, len = 0.6))
-  plot <- plotly::add_annotations(
-    plot, x = rep(b_labels, each = length(a_labels)), y = rep(a_labels, times = length(b_labels)),
-    text = ifelse(as.vector(z) == 0L, "", as.vector(z)), showarrow = FALSE,
-    font = list(size = 11, color = ifelse(as.vector(z) > 0.55 * top, "#ffffff", CHART_INK)))
+  # Counts are drawn in two passes because an annotation call takes one font
+  # colour: white on the dark cells, ink on the light ones.
+  cell_x <- rep(b_labels, each = length(a_labels))
+  cell_y <- rep(a_labels, times = length(b_labels))
+  cell_n <- as.vector(z)
+  dark <- cell_n > 0.55 * top
+  for (pass in list(list(keep = dark, color = "#ffffff"), list(keep = !dark & cell_n > 0L, color = CHART_INK))) {
+    if (!any(pass$keep)) next
+    plot <- plotly::add_annotations(
+      plot, x = cell_x[pass$keep], y = cell_y[pass$keep], text = cell_n[pass$keep], showarrow = FALSE,
+      font = list(size = 11, color = pass$color))
+  }
   plot <- plotly::layout(
     plot,
     xaxis = list(title = "", side = "top", tickangle = -40, fixedrange = TRUE, automargin = TRUE,
@@ -158,10 +166,15 @@ chart_rising <- function(rising, accent, max_each = 8L) {
   up <- utils::head(rising[rising$change > 0, , drop = FALSE], max_each)
   down <- utils::tail(rising[rising$change < 0, , drop = FALSE], max_each)
   df <- rbind(up, down)
-  df$label <- wrap_label(paste0(tidy_value(df$value), " [", df$field, "]"), 34L)
+  # The field is named when labels from several fields share the chart.
+  several_fields <- length(unique(df$field)) > 1L
+  df$label <- wrap_label(paste0(tidy_value(df$value), if (several_fields) paste0(" [", df$field, "]") else ""), 34L)
   df$points <- 100 * df$change
+  # Row height follows the tallest wrapped label so neighbouring labels never touch.
+  label_lines <- max(lengths(strsplit(df$label, "<br>", fixed = TRUE)), 1L)
+  row_height <- 22 + 15 * label_lines
   plot <- plotly::plot_ly(
-    df, x = ~points, y = ~label, type = "bar", orientation = "h", height = max(200, 34 * nrow(df) + 70),
+    df, x = ~points, y = ~label, type = "bar", orientation = "h", height = max(200, row_height * nrow(df) + 70),
     marker = list(color = ifelse(df$change > 0, accent, CHART_NEUTRAL)),
     text = paste0(ifelse(df$points > 0, "+", ""), formatC(df$points, format = "f", digits = 1), " pts: ",
                   df$n_recent, "/", df$papers_recent, " vs ", df$n_earlier, "/", df$papers_earlier),

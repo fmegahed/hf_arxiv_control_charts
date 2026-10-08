@@ -93,7 +93,8 @@ add_filter_ui <- function() {
 track_view_ui <- function(deps) {
   shiny::tagList(
     shiny::uiOutput("header"),
-    logo_row("logo-container"),
+    # The institution logos are on the landing page only, so the results start
+    # higher on the track pages.
     shiny::div(
       class = "main-content",
       shiny::div(

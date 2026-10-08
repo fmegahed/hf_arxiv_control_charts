@@ -38,6 +38,8 @@ landscape_ui <- function(id, deps) {
                plot("gap", "auto")),
     chart_card(shiny::textOutput(ns("rising_title"), inline = TRUE), shiny::uiOutput(ns("rising_help"), inline = TRUE),
                note = shiny::textOutput(ns("rising_note"), inline = TRUE),
+               shiny::div(class = "chart-controls",
+                          shiny::selectInput(ns("rising_field"), "Field", choices = NULL, width = "240px")),
                plot("rising", "auto")),
     shiny::div(
       class = "chart-grid",
@@ -138,6 +140,7 @@ landscape_server <- function(id, app, deps) {
       shiny::updateSelectInput(session, "trend_field", choices = choices, selected = defaults[1])
       shiny::updateSelectInput(session, "gap_a", choices = choices, selected = defaults[1])
       shiny::updateSelectInput(session, "gap_b", choices = choices, selected = defaults[2])
+      shiny::updateSelectInput(session, "rising_field", choices = choices, selected = defaults[1])
     }, ignoreNULL = FALSE)
 
     valid_field <- function(name) {
@@ -203,14 +206,20 @@ landscape_server <- function(id, app, deps) {
 
     # ---- what is rising ----
     latest_year <- as.integer(deps$data$year_range[2])
+    # One field at a time: the labels of a field answer the same question, so
+    # their rises and falls can be read against each other.
+    rising_field <- shiny::reactive(valid_field(input$rising_field))
     rising <- shiny::reactive({
-      choices <- chartable_fields(spec, track())
-      exclude <- unique(unlist(lapply(choices, function(name) null_values(field_of(name)))))
-      rising_tags(papers(), choices, latest_year, exclude = exclude)
+      field <- rising_field()
+      if (is.null(field)) return(rising_tags(papers()[0, , drop = FALSE], character(0), latest_year))
+      rising_tags(papers(), stats::setNames(field$name, field$label), latest_year, exclude = null_values(field))
     })
-    output$rising_title <- shiny::renderText(paste0(
-      "What is rising: change in the share of papers carrying a label, ", latest_year - RISING_RECENT_YEARS + 1L,
-      " to ", latest_year, " against earlier years"))
+    output$rising_title <- shiny::renderText({
+      field <- rising_field()
+      paste0("What is rising", if (is.null(field)) "" else paste0(" in ", field$label),
+             ": change in the share of papers carrying a label, ", latest_year - RISING_RECENT_YEARS + 1L,
+             " to ", latest_year, " against earlier years")
+    })
     output$rising_note <- shiny::renderText({
       rows <- rising()
       if (nrow(rows) == 0L) return("")
@@ -218,7 +227,8 @@ landscape_server <- function(id, app, deps) {
              " earlier. Each bar gives the counts behind the two shares. Labels on fewer than ",
              RISING_MIN_PAPERS, " papers are left out.")
     })
-    output$rising_help <- shiny::renderUI(help_button("rising", "About this chart"))
+    output$rising_help <- shiny::renderUI(
+      help_button(help_topic_with_fields("rising", track(), input$rising_field %||% character(0)), "About this chart"))
     output$rising <- plotly::renderPlotly({
       need_papers()
       shiny::validate(shiny::need(
