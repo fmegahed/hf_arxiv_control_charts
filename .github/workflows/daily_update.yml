@@ -5,13 +5,25 @@ on:
     # Every Day at 10:00 UTC
     - cron: "0 10 * * *"
   workflow_dispatch:
+    inputs:
+      extraction_enabled:
+        description: "Extract factsheets (false refreshes metadata only)"
+        type: choice
+        options: ["true", "false"]
+        default: "true"
 
 permissions:
   contents: write
 
+# Jobs that write data never run at the same time.
+concurrency:
+  group: data-write
+  cancel-in-progress: false
+
 jobs:
   refresh:
     runs-on: ubuntu-latest
+    timeout-minutes: 330
 
     steps:
       - name: Checkout
@@ -31,18 +43,22 @@ jobs:
           sudo apt-get install -y \
             libcurl4-openssl-dev \
             libssl-dev \
-            libxml2-dev
+            libxml2-dev \
+            libjpeg-dev
 
       - name: Setup renv and restore packages
         uses: r-lib/actions/setup-renv@v2
 
-      - name: Run extraction
+      - name: Run daily update
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          EXTRACTION_ENABLED: ${{ inputs.extraction_enabled || vars.EXTRACTION_ENABLED || 'true' }}
         run: |
-          Rscript 01_extract_arxiv_papers.r
+          Rscript 01_daily_update.r
 
-      - name: Commit updated CSVs to GitHub
+      - name: Commit updated data to GitHub
+        id: commit
+        if: always()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -51,18 +67,21 @@ jobs:
           git add data/spc_arxiv_metadata.csv data/spc_factsheet.csv
           git add data/exp_design_arxiv_metadata.csv data/exp_design_factsheet.csv
           git add data/reliability_arxiv_metadata.csv data/reliability_factsheet.csv
+          if [ -d data/raw_v2 ]; then git add data/raw_v2; fi
 
           if git diff --cached --quiet; then
             echo "No changes to commit."
-            exit 0
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            git commit -m "Daily update: arXiv metadata + factsheets for all tracks"
+            git push
+            echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
 
-          git commit -m "Daily update: arXiv metadata + factsheets for all tracks"
-          git push
-
       - name: Push to Hugging Face Space
+        if: always() && steps.commit.outputs.changed == 'true'
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          git remote add space https://fmegahed:${HF_TOKEN}@huggingface.co/spaces/fmegahed/arxiv_control_charts
+          git remote add space https://fmegahed:${HF_TOKEN}@huggingface.co/spaces/fmegahed/arxiv_control_charts || true
           git push --force space HEAD:main
