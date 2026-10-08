@@ -33,3 +33,6 @@ renv/local/
 renv/lock/
 renv/python/
 renv/sandbox/
+
+# secrets
+.env

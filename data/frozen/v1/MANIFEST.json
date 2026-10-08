@@ -1,0 +1,85 @@
+{
+  "label": "v1",
+  "source_commit": "d5df0c545f0437a4c9938adb34ce2911452e542f",
+  "frozen_at": "2026-10-08T22:19:19Z",
+  "files": [
+    {
+      "file": "spc_arxiv_metadata.csv",
+      "bytes": 238689,
+      "sha256": "431604696d411a34181489c7f3e42d802159d438eb076375d6fabf8c495556aa",
+      "rows": 157,
+      "columns": ["id", "submitted", "updated", "title", "abstract", "authors", "affiliations", "link_abstract", "link_pdf", "link_doi", "comment", "journal_ref", "doi", "primary_category", "categories", "pdf_url"],
+      "distinct_ids": 157
+    },
+    {
+      "file": "spc_factsheet.csv",
+      "bytes": 865679,
+      "sha256": "f5100363a155b190bb1fd36273155854f39d171ac055a03e6fec2dbd60e898a2",
+      "rows": 165,
+      "columns": ["is_spc_paper", "chart_family", "chart_statistic", "phase", "application_domain", "assumes_normality", "handles_autocorrelation", "handles_missing_data", "evaluation_type", "performance_metrics", "sample_size_requirements", "code_used", "software_platform", "code_availability_source", "software_urls", "summary", "key_equations", "key_results", "limitations_stated", "limitations_unstated", "future_work_stated", "future_work_unstated", "id", "pdf_path", "llm_provider", "llm_model", "repeat_id", "extracted_at", "pdf_url"],
+      "distinct_ids": 165,
+      "relevance_field": "is_spc_paper",
+      "relevance_true": 147,
+      "relevance_false": 16,
+      "relevance_na": 2,
+      "failed_rows": 2,
+      "llm_models": [
+        "gpt-5.2-2025-12-11"
+      ]
+    },
+    {
+      "file": "exp_design_arxiv_metadata.csv",
+      "bytes": 1220032,
+      "sha256": "ace483efa2bdc035291f24958b5c723895d9ea5f37edae951287f73029fad24a",
+      "rows": 771,
+      "columns": ["id", "submitted", "updated", "title", "abstract", "authors", "affiliations", "link_abstract", "link_pdf", "link_doi", "comment", "journal_ref", "doi", "primary_category", "categories", "pdf_url"],
+      "distinct_ids": 771
+    },
+    {
+      "file": "exp_design_factsheet.csv",
+      "bytes": 4806428,
+      "sha256": "93f97948dde71264510c79512b3119b575bed10f94a1b9ba7b22c9f1bdad72e3",
+      "rows": 837,
+      "columns": ["is_exp_design_paper", "design_type", "design_objective", "optimality_criterion", "number_of_factors", "application_domain", "evaluation_type", "code_used", "software_platform", "code_availability_source", "software_urls", "summary", "key_equations", "key_results", "limitations_stated", "limitations_unstated", "future_work_stated", "future_work_unstated", "id", "pdf_url", "pdf_path", "llm_provider", "llm_model", "repeat_id", "extracted_at"],
+      "distinct_ids": 837,
+      "relevance_field": "is_exp_design_paper",
+      "relevance_true": 737,
+      "relevance_false": 99,
+      "relevance_na": 1,
+      "failed_rows": 1,
+      "llm_models": [
+        "2026-01-30T03:01:03Z",
+        "gpt-5.2-2025-12-11"
+      ]
+    },
+    {
+      "file": "reliability_arxiv_metadata.csv",
+      "bytes": 1146083,
+      "sha256": "6fe7917c7741be5d8c94f6e2467c8eadc3ec25be065153e15bd6e589f57ea6e6",
+      "rows": 704,
+      "columns": ["id", "submitted", "updated", "title", "abstract", "authors", "affiliations", "link_abstract", "link_pdf", "link_doi", "comment", "journal_ref", "doi", "primary_category", "categories", "pdf_url"],
+      "distinct_ids": 704
+    },
+    {
+      "file": "reliability_factsheet.csv",
+      "bytes": 4195387,
+      "sha256": "f6dc0c1949ba0a3f61769d76727b1eef8e13d2350ad91b4a02e18b859e91d5d2",
+      "rows": 756,
+      "columns": ["is_reliability_paper", "reliability_topic", "modeling_approach", "data_type", "maintenance_policy", "application_domain", "evaluation_type", "code_used", "software_platform", "code_availability_source", "software_urls", "summary", "key_equations", "key_results", "limitations_stated", "limitations_unstated", "future_work_stated", "future_work_unstated", "id", "pdf_url", "pdf_path", "llm_provider", "llm_model", "repeat_id", "extracted_at"],
+      "distinct_ids": 756,
+      "relevance_field": "is_reliability_paper",
+      "relevance_true": 327,
+      "relevance_false": 416,
+      "relevance_na": 13,
+      "failed_rows": 13,
+      "llm_models": [
+        "gpt-5.2-2025-12-11"
+      ]
+    },
+    {
+      "file": "tracks.json",
+      "bytes": 1605,
+      "sha256": "84f1ca5853596ba7839991b5d6fb58b2957209d180f913f83c529e89d86ef169"
+    }
+  ]
+}

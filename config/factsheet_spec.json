@@ -1,0 +1,517 @@
+{
+  "schema_version": "2.0.0",
+  "prompt_version": "2.0.0",
+  "models": {
+    "extraction": "gpt-6-luna",
+    "chat": "gpt-6-luna",
+    "question": "gpt-6-luna"
+  },
+  "limits": {
+    "max_additional_labels": 2,
+    "max_pdf_pages": 80,
+    "max_attempts": 5
+  },
+  "tracks": {
+    "spc": {
+      "label": "Statistical Process Monitoring (SPM)",
+      "short_label": "SPM",
+      "topic_name": "statistical process monitoring",
+      "query": "(ti:\"control chart\" OR abs:\"control chart\")",
+      "icon": "chart-line",
+      "color": "#1b9e77",
+      "description": "Control charts and statistical process monitoring methods.",
+      "metadata_csv": "spc_arxiv_metadata.csv",
+      "factsheet_csv": "spc_factsheet.csv",
+      "core_filters": {"topic": "chart_family", "method": "chart_statistic"},
+      "scope": {
+        "include": "The paper proposes, extends, compares or applies a control chart or another procedure that monitors a process over time and signals when it changes.",
+        "exclude": "Control charts are only mentioned as background or used once as a minor tool; or 'control chart' means a flow diagram; or the paper is general time-series forecasting, anomaly detection or change-point analysis with no process-monitoring procedure.",
+        "example_in": "A nonparametric EWMA control chart for monitoring process location.",
+        "example_out": "A deep-learning forecasting model that cites control charts in its introduction."
+      },
+      "narrative": {
+        "summary": "Say what is monitored, what kind of change the method detects, how the chart signals, and the main finding.",
+        "key_results": "Report run-length or detection results with the shift sizes and in-control settings they refer to.",
+        "key_equations": "The charting statistic, the control limits, and any run-length expression.",
+        "limitations_unstated": "Consider effects of estimating parameters, autocorrelation, non-normality, which competing charts were left out, and how realistic the simulations are.",
+        "future_work_unstated": "Consider relaxing assumptions, other data structures, diagnosis after a signal, software, and validation on real processes."
+      }
+    },
+    "exp_design": {
+      "label": "Experimental Design (DOE)",
+      "short_label": "DOE",
+      "topic_name": "design of experiments",
+      "query": "(ti:\"experimental design\" OR ti:\"designed experiment\" OR ti:\"design of experiment\" OR ti:\"response surface\" OR ti:\"supersaturated design\")",
+      "icon": "flask",
+      "color": "#d95f02",
+      "description": "Design and analysis of experiments.",
+      "metadata_csv": "exp_design_arxiv_metadata.csv",
+      "factsheet_csv": "exp_design_factsheet.csv",
+      "core_filters": {"topic": "design_type", "method": "design_objective"},
+      "scope": {
+        "include": "The paper proposes, constructs, compares or studies how to choose the runs, points or allocations of an experiment (physical, computer or online), or analyses data from a designed experiment as its main subject.",
+        "exclude": "'Experimental design' only names the setup section of an empirical study in another field; or a standard design is used once as a minor tool; or the paper is about observational data only.",
+        "example_in": "Construction of D-optimal split-plot designs for mixture experiments.",
+        "example_out": "A psychology study whose 'experimental design' section describes how participants were recruited."
+      },
+      "narrative": {
+        "summary": "Say what is being designed, for which model and objective, how the design is constructed, and the main finding.",
+        "key_results": "Report efficiency, run-size, estimation or prediction results, with the designs they are compared against.",
+        "key_equations": "The assumed model, the design criterion, and the construction or algorithm.",
+        "limitations_unstated": "Consider model misspecification, practicality of the run size, restrictions on randomization, computational cost, and how broadly the comparisons were made.",
+        "future_work_unstated": "Consider other models or criteria, constraints met in practice, sequential use, software, and validation in real experiments."
+      }
+    },
+    "reliability": {
+      "label": "Reliability Engineering",
+      "short_label": "Reliability",
+      "topic_name": "reliability engineering",
+      "query": "((ti:reliability OR ti:degradation OR ti:maintenance OR ti:\"remaining useful life\" OR ti:\"failure analysis\") AND (cat:stat.ME OR cat:stat.AP OR cat:stat.ML))",
+      "icon": "cogs",
+      "color": "#7570b3",
+      "description": "Reliability, degradation and maintenance of engineered systems.",
+      "metadata_csv": "reliability_arxiv_metadata.csv",
+      "factsheet_csv": "reliability_factsheet.csv",
+      "core_filters": {"topic": "reliability_topic", "method": "model_family"},
+      "scope": {
+        "include": "The object of study is the failure, lifetime, degradation, maintenance or failure probability of engineered systems, components, structures or software.",
+        "exclude": "'Reliable' or 'reliability' describes an estimator, a statistical method, a machine-learning prediction, a measurement instrument or a rating (for example inter-rater or test-retest reliability, or trustworthy AI); or 'degradation' or 'maintenance' refers to something other than engineered equipment.",
+        "example_in": "Bayesian analysis of Weibull-distributed bearing lifetimes under accelerated testing.",
+        "example_out": "Reliability of deep ensembles under distribution shift."
+      },
+      "narrative": {
+        "summary": "Say what fails or degrades, what is modelled or optimized, what data are used, and the main finding.",
+        "key_results": "Report estimation accuracy, prediction error, failure probability or cost results, with what they are compared against.",
+        "key_equations": "The lifetime or degradation model, the likelihood or estimator, and any reliability or cost function.",
+        "limitations_unstated": "Consider censoring and independence assumptions, extrapolation from accelerated conditions, validation on field data, and computational cost.",
+        "future_work_unstated": "Consider other failure mechanisms, covariates and operating conditions, system-level effects, decision making, and validation on field data."
+      }
+    }
+  },
+  "scope_categories": [
+    ["in_scope", "The paper belongs in this database."],
+    ["different_meaning_of_keyword", "The search keyword is used in another sense."],
+    ["keyword_in_passing", "The topic is mentioned only as background."],
+    ["method_used_as_minor_tool", "A standard method from the topic is applied once; it is not what the paper is about."],
+    ["other_field_entirely", "The paper is about another field."],
+    ["not_a_research_paper", "Erratum, comment, book review, or similar."]
+  ],
+  "fields": {
+    "common_head": [
+      {
+        "name": "paper_type", "label": "Paper type", "kind": "single", "group": "Method", "filter": "more",
+        "question": "What kind of paper is this? Choose the one that best matches its main contribution.",
+        "values": [
+          ["New method", "Proposes a method that did not exist before."],
+          ["Extension of an existing method", "Modifies or generalizes a named existing method."],
+          ["Comparison or performance study", "Mainly compares existing methods or studies their properties."],
+          ["Review or tutorial", "Surveys or explains existing work."],
+          ["Software or package", "Mainly presents software."],
+          ["Application or case study", "Mainly applies existing methods to a specific problem."],
+          ["Theory", "Mainly proves theoretical results."]
+        ]
+      }
+    ],
+    "common_tail": [
+      {
+        "name": "application_domain", "label": "Application domain", "kind": "primary_additional", "other": true,
+        "group": "Data", "filter": "core",
+        "question": "Which application area does the paper target? Use the area of its real data or the area it names as its target. If the method is general and only illustrated with simulated data, choose 'No specific application (general methodology)'.",
+        "values": [
+          ["Manufacturing", "Discrete or general manufacturing."],
+          ["Semiconductor and electronics", "Chips, electronics, batteries."],
+          ["Healthcare and medical", "Clinical, hospital or public-health settings."],
+          ["Pharmaceutical", "Drug development or production."],
+          ["Chemical and process industry", "Continuous or batch chemical processes."],
+          ["Energy and utilities", "Power, wind, oil and gas, water."],
+          ["Transportation and logistics", "Automotive, rail, shipping, supply chains."],
+          ["Aerospace and defense", "Aircraft, spacecraft, military systems."],
+          ["Civil and structural infrastructure", "Bridges, buildings, pipelines, geotechnics."],
+          ["Software and IT", "Software systems, networks, online platforms."],
+          ["Finance and economics", "Financial or economic data."],
+          ["Environmental monitoring", "Air, water, climate."],
+          ["Food and agriculture", "Food production or farming."],
+          ["Service industry", "Call centres, retail, administration."],
+          ["No specific application (general methodology)", "A general method with no target area."]
+        ]
+      },
+      {
+        "name": "data_source", "label": "Data used", "kind": "multi", "sentinel": "No data (theory only)",
+        "group": "Data", "filter": "more",
+        "question": "Which kinds of data does the paper analyse? Select every kind it actually uses.",
+        "values": [
+          ["Real data: field or operational", "Data from equipment or processes in use."],
+          ["Real data: laboratory or designed test", "Data from experiments or tests run for the study."],
+          ["Public benchmark dataset", "A named public dataset used by many papers."],
+          ["Simulated data", "Data generated by the authors from a model."],
+          ["No data (theory only)", "The paper analyses no data."]
+        ]
+      },
+      {
+        "name": "code_used", "label": "Computation performed", "kind": "tristate", "group": "Software", "filter": "none",
+        "question": "Did the authors run computations (simulations, numerical studies or data analysis)?"
+      },
+      {
+        "name": "software_platform", "label": "Software", "kind": "multi", "sentinel": "Not stated",
+        "group": "Software", "filter": "more",
+        "question": "Which software or programming languages does the paper say it used? Select only those named in the paper.",
+        "values": [
+          ["R", null], ["Python", null], ["MATLAB", null], ["Julia", null], ["SAS", null],
+          ["C/C++", null], ["Fortran", null], ["JMP", null], ["Minitab", null],
+          ["Other software", "Any other named software."],
+          ["Not stated", "The paper names no software."]
+        ]
+      },
+      {
+        "name": "code_availability", "label": "Code availability", "kind": "single", "group": "Software", "filter": "core",
+        "question": "How can a reader obtain the authors' code? Choose the most accessible option the paper states. If computations were run but the paper does not say how to get the code, choose 'Not shared'.",
+        "values": [
+          ["Public repository", "A link to GitHub, GitLab, Zenodo, OSF or similar."],
+          ["Package registry", "A package on CRAN, PyPI, Bioconductor or similar."],
+          ["Supplementary material", "Code provided with the paper by the journal or arXiv."],
+          ["In the paper or appendix", "Code printed in the paper."],
+          ["Personal or lab website", "A link to the authors' own site."],
+          ["Available on request", "The paper says to contact the authors."],
+          ["Not shared", "Code was used but no way to obtain it is given."],
+          ["No code used", "No computations were run."]
+        ]
+      },
+      {
+        "name": "software_urls", "label": "Code links", "kind": "urls", "group": "Software", "filter": "none",
+        "question": "Every URL the paper gives for its code or software, copied exactly. Use an empty list if there are none."
+      }
+    ],
+    "spc": [
+      {
+        "name": "chart_family", "label": "Data structure", "kind": "single", "evidence": true, "other": true,
+        "group": "Method", "filter": "core",
+        "question": "What kind of data does the proposed or evaluated chart monitor? Choose one.",
+        "values": [
+          ["Univariate", "One scalar quality characteristic at a time."],
+          ["Multivariate", "A vector of a few to tens of correlated characteristics."],
+          ["High-dimensional", "The paper itself says the number of variables is large relative to the sample size, or uses sparsity or dimension reduction for that reason."],
+          ["Profile monitoring", "A relationship between a response and predictors (a curve or regression) observed at each time."],
+          ["Functional data", "Whole curves or functions treated with functional data analysis."],
+          ["Image or spatial data", "Images, video, point clouds or spatial fields."],
+          ["Network or graph data", "Networks or graphs observed over time."],
+          ["Not applicable", "The paper does not monitor a specific data structure, for example a broad review."]
+        ]
+      },
+      {
+        "name": "chart_approach", "label": "Approach", "kind": "multi", "sentinel": "None", "evidence": true,
+        "group": "Method", "filter": "more",
+        "question": "Which of these features define the proposed or evaluated chart? Select a feature only if it appears in the title or abstract, or the charting statistic is built on it. Most papers have none or one.",
+        "values": [
+          ["Nonparametric (distribution-free)", "In-control behaviour does not depend on the data distribution, for example rank or sign based."],
+          ["Bayesian", "The chart signals from a posterior or predictive distribution. Using a prior only in a simulation setting does not count."],
+          ["Adaptive", "Sampling interval, sample size or chart parameters change during monitoring."],
+          ["Robust", "Designed to resist outliers or contamination."],
+          ["Economic or economic-statistical design", "Chart parameters are chosen by minimizing cost."],
+          ["Risk-adjusted", "Adjusts for case mix or covariates, common in healthcare."],
+          ["None", "None of these features."]
+        ]
+      },
+      {
+        "name": "chart_statistic", "label": "Charting statistic", "kind": "primary_additional", "evidence": true, "other": true,
+        "group": "Method", "filter": "core",
+        "question": "Which charting statistic does the paper propose or evaluate with its own results? The primary one is the statistic the paper is about. Competitors that appear only in a comparison table are not labels.",
+        "values": [
+          ["Shewhart-type", "The signal uses only the current sample, whatever the type of limits."],
+          ["CUSUM", "Cumulative sum of deviations."],
+          ["EWMA", "Exponentially weighted moving average of a scalar."],
+          ["Hotelling T-squared", "Multivariate statistic using only the current sample."],
+          ["MEWMA", "Multivariate EWMA."],
+          ["MCUSUM", "Multivariate CUSUM."],
+          ["Likelihood ratio (GLR)", "Generalized likelihood ratio statistics."],
+          ["Change-point model", "Estimates when a change occurred as part of monitoring."],
+          ["Residual or model-based", "Charts applied to residuals of a fitted time-series or regression model."],
+          ["Machine learning-based", "A machine-learning model produces the monitoring statistic or the signal. Using machine learning only to diagnose causes after a signal does not count."]
+        ]
+      },
+      {
+        "name": "phase", "label": "Phase", "kind": "single", "evidence": true,
+        "group": "Method", "filter": "more",
+        "question": "Which phase does the paper's method address? Apply these tests in order and stop at the first that fits. (1) No separate reference sample is needed and estimates are updated with each new observation: 'Self-starting'. (2) The paper proposes or evaluates a method for analysing a fixed historical dataset (finding outliers, establishing control, retrospective change detection) AND a method for online monitoring: 'Phase I and Phase II'. (3) Only the historical-data method: 'Phase I'. (4) Online monitoring of new observations: 'Phase II'. (5) Otherwise: 'Not applicable'. Important: estimating the in-control mean or variance from a reference sample is NOT Phase I. Studying how estimation error affects a chart is NOT Phase I. Both are Phase II.",
+        "values": [
+          ["Phase I", "Retrospective analysis of a fixed historical dataset."],
+          ["Phase II", "Online monitoring of new observations."],
+          ["Phase I and Phase II", "The paper contributes a method for each phase."],
+          ["Self-starting", "Monitoring starts without a separate reference sample."],
+          ["Not applicable", "No phase applies, for example a broad review."]
+        ]
+      },
+      {
+        "name": "phase_parameters", "label": "In-control parameters", "kind": "single",
+        "group": "Method", "filter": "more",
+        "question": "How does the method treat the in-control parameters?",
+        "values": [
+          ["Known parameters assumed", "Parameters are treated as known."],
+          ["Estimated from a reference sample", "Parameters are estimated once from in-control data."],
+          ["Effect of estimation studied", "The paper studies how estimation error changes chart performance."],
+          ["Updated sequentially", "Estimates are updated as observations arrive."],
+          ["Not applicable", "No in-control parameters are involved."]
+        ]
+      },
+      {
+        "name": "assumes_normality", "label": "Assumes normality", "kind": "tristate", "group": "Method", "filter": "more",
+        "question": "Does the proposed method assume normally distributed data?"
+      },
+      {
+        "name": "handles_autocorrelation", "label": "Handles autocorrelation", "kind": "tristate", "group": "Method", "filter": "more",
+        "question": "Is the method designed for autocorrelated (serially dependent) observations?"
+      },
+      {
+        "name": "handles_missing_data", "label": "Handles missing data", "kind": "tristate", "group": "Method", "filter": "none",
+        "question": "Is the method designed for missing observations or irregular sampling?"
+      },
+      {
+        "name": "evaluation_type", "label": "How it is evaluated", "kind": "multi", "sentinel": "None",
+        "group": "Evaluation", "filter": "more",
+        "question": "How does the paper evaluate chart performance? Select every approach it actually uses.",
+        "values": [
+          ["Simulation study", "Monte Carlo simulation."],
+          ["Real-data example", "Applied to a real dataset."],
+          ["Markov chain", "Run-length properties from a Markov chain approximation."],
+          ["Integral equation", "Run-length properties from integral equations."],
+          ["Exact derivation", "Closed-form run-length or probability results."],
+          ["Analytical approximation", "Asymptotic or other analytical approximations."],
+          ["Economic or cost model", "Performance measured by cost."],
+          ["None", "The paper evaluates no chart performance."]
+        ]
+      },
+      {
+        "name": "performance_metrics", "label": "Performance measures", "kind": "multi", "sentinel": "None",
+        "group": "Evaluation", "filter": "more",
+        "question": "Which performance measures does the paper report in its own results?",
+        "values": [
+          ["Average run length (ARL)", null],
+          ["Standard deviation of run length (SDRL)", null],
+          ["Median or percentile run length", null],
+          ["Average time to signal (ATS)", null],
+          ["Expected detection delay", null],
+          ["Detection probability or power", null],
+          ["False alarm rate or probability", null],
+          ["Steady-state measures", "Steady-state ARL or delay."],
+          ["Cost", null],
+          ["None", "No performance measure is reported."]
+        ]
+      },
+      {
+        "name": "sample_size_requirements", "label": "Reference sample guidance", "kind": "text",
+        "group": "Method", "filter": "none",
+        "question": "One or two sentences on what the paper says about how much in-control (reference) data is needed, with numbers if given. Write 'Not discussed' if the paper says nothing."
+      }
+    ],
+    "exp_design": [
+      {
+        "name": "design_type", "label": "Design type", "kind": "primary_additional", "evidence": true, "other": true,
+        "group": "Method", "filter": "core",
+        "question": "Which type of experimental design does the paper propose, construct or evaluate with its own results? The primary one is the design the paper is about.",
+        "values": [
+          ["Full factorial", "All combinations of factor levels."],
+          ["Fractional factorial", "A subset of the factorial chosen by an aliasing structure."],
+          ["Screening design", "Finds the few important factors among many, including Plackett-Burman."],
+          ["Definitive screening design", "Three-level screening designs that also estimate curvature."],
+          ["Supersaturated design", "More factors than runs."],
+          ["Response surface design", "Second-order designs such as central composite or Box-Behnken."],
+          ["Mixture design", "Factors are proportions that sum to one."],
+          ["Split-plot or restricted randomization", "Hard-to-change factors, strip-plot, or other randomization restrictions."],
+          ["Block, crossover or row-column design", "Designs organized by blocking structure."],
+          ["Optimal design", "Constructed by optimizing a criterion for a stated model."],
+          ["Bayesian design", "Uses prior distributions or expected utility to choose the design."],
+          ["Sequential or adaptive design", "Later runs depend on earlier responses."],
+          ["Space-filling or computer experiment", "Latin hypercube and related designs for simulators."],
+          ["Active learning or Bayesian optimization", "Points chosen one at a time by an acquisition function."],
+          ["Randomized experiment or A/B test", "Online or field experiments comparing treatments."],
+          ["Clinical trial design", "Designs for clinical studies, including dose finding."],
+          ["Robust parameter design", "Control and noise factors, Taguchi-style."],
+          ["Not applicable", "The paper analyses experiments but concerns no design type."]
+        ]
+      },
+      {
+        "name": "design_objective", "label": "Design objective", "kind": "primary_additional", "other": true,
+        "group": "Method", "filter": "core",
+        "question": "What is the experiment designed to achieve? The primary one is the objective the paper states first or optimizes.",
+        "values": [
+          ["Parameter estimation", "Precise estimates of model parameters."],
+          ["Screening", "Identifying the important factors."],
+          ["Optimization", "Finding factor settings that give the best response."],
+          ["Prediction", "Accurate prediction over a region."],
+          ["Model discrimination", "Choosing between competing models."],
+          ["Treatment effect estimation", "Estimating the effect of a treatment or intervention."],
+          ["Information gain or uncertainty reduction", "Maximizing expected information."],
+          ["Robustness", "Insensitivity to noise factors or model misspecification."],
+          ["Cost reduction", "Fewer runs or lower experimental cost."]
+        ]
+      },
+      {
+        "name": "optimality_criterion", "label": "Optimality criterion", "kind": "multi", "sentinel": "Not applicable",
+        "group": "Method", "filter": "more",
+        "question": "Which design criteria does the paper use to construct or compare designs? Select only criteria it actually computes.",
+        "values": [
+          ["D-optimal", "Maximizes the determinant of the information matrix."],
+          ["A-optimal", "Minimizes the average variance of estimates."],
+          ["I- or V-optimal", "Minimizes average prediction variance."],
+          ["G-optimal", "Minimizes maximum prediction variance."],
+          ["E-optimal", "Maximizes the smallest eigenvalue of the information matrix."],
+          ["c- or L-optimal", "Minimizes the variance of chosen functions of the parameters."],
+          ["Bayesian alphabetic", "A D-, A- or similar criterion averaged over a prior."],
+          ["Expected information gain", "Expected reduction in entropy or a mutual-information utility."],
+          ["Minimum aberration or orthogonality", "Aliasing-based criteria for factorial designs."],
+          ["Space-filling", "Maximin, minimax, discrepancy or similar distance criteria."],
+          ["Compound criterion", "A weighted combination of criteria."],
+          ["Other criterion", "A criterion not listed."],
+          ["Not applicable", "No design criterion is used."]
+        ]
+      },
+      {
+        "name": "number_of_factors", "label": "Number of factors", "kind": "text", "group": "Method", "filter": "none",
+        "question": "A short phrase for how many factors the designs handle, for example '3 factors', '5 to 10 factors', 'up to 100 factors'. Write 'General' if the method is for any number, or 'Not specified'."
+      },
+      {
+        "name": "evaluation_type", "label": "How it is evaluated", "kind": "multi", "sentinel": "None",
+        "group": "Evaluation", "filter": "more",
+        "question": "How does the paper evaluate its designs or methods? Select every approach it actually uses.",
+        "values": [
+          ["Simulation study", "Monte Carlo simulation."],
+          ["Real experiment or real dataset", "A real experiment was run or real data analysed."],
+          ["Theoretical derivation", "Proofs or closed-form results."],
+          ["Numerical design comparison", "Efficiencies or criteria computed for competing designs."],
+          ["None", "No evaluation is reported."]
+        ]
+      }
+    ],
+    "reliability": [
+      {
+        "name": "reliability_topic", "label": "Reliability topic", "kind": "primary_additional", "evidence": true, "other": true,
+        "group": "Method", "filter": "core",
+        "question": "Which reliability topic does the paper address with its own results? The primary one is what the title and abstract are about.",
+        "values": [
+          ["Life distribution modeling", "Fitting or proposing distributions for time to failure."],
+          ["Degradation modeling", "Modelling gradual deterioration of a measured characteristic."],
+          ["RUL prediction and prognostics", "Predicting remaining useful life of a unit in service."],
+          ["Fault detection and diagnosis", "Detecting or classifying faults from condition data."],
+          ["Accelerated and reliability testing", "Accelerated life or degradation tests, test planning, demonstration tests."],
+          ["Maintenance optimization", "Choosing when and how to inspect, repair or replace."],
+          ["System and network reliability", "Reliability of systems of components or of networks."],
+          ["Structural reliability and rare-event estimation", "Failure probability of structures from a limit-state function."],
+          ["Reliability-based design optimization", "Design under reliability constraints."],
+          ["Repairable systems and recurrent events", "Repeated failures of the same unit."],
+          ["Software reliability", "Failure of software."],
+          ["Warranty and field data analysis", "Warranty claims or field return data."],
+          ["Reliability growth", "Improvement of reliability during development."],
+          ["Failure mode and risk analysis", "FMEA, fault trees, root cause, risk assessment."]
+        ]
+      },
+      {
+        "name": "model_family", "label": "Model family", "kind": "primary_additional", "evidence": true, "other": true,
+        "group": "Method", "filter": "core",
+        "question": "Which family of model does the paper propose or use for its main analysis?",
+        "values": [
+          ["Parametric lifetime distribution", "Weibull, lognormal, exponential and similar, including regression on their parameters."],
+          ["Semi- or nonparametric survival", "Cox model, Kaplan-Meier, nonparametric estimators."],
+          ["Stochastic degradation process", "Wiener, gamma or inverse Gaussian processes."],
+          ["Degradation path or mixed-effects model", "Unit-specific degradation curves with random effects."],
+          ["Point or counting process", "Poisson, renewal or other processes for repeated events."],
+          ["Markov or multi-state model", "Discrete states with transition rates, including semi-Markov."],
+          ["Physics-of-failure or limit-state model", "Derived from the failure mechanism or a structural limit state."],
+          ["Machine learning or deep learning", "Neural networks, tree ensembles and similar."],
+          ["Surrogate model", "Gaussian process, polynomial chaos or other emulators of an expensive model."],
+          ["Fault tree, Bayesian network or block diagram", "Structure-based system models."]
+        ]
+      },
+      {
+        "name": "inference_paradigm", "label": "Inference", "kind": "single", "group": "Method", "filter": "more",
+        "question": "How are the model's unknowns estimated?",
+        "values": [
+          ["Frequentist or likelihood-based", "Maximum likelihood, least squares, method of moments."],
+          ["Bayesian", "Priors and posterior distributions."],
+          ["Both", "The paper develops or compares both."],
+          ["Machine-learning training", "Parameters are fitted by minimizing a loss, with no formal statistical inference."],
+          ["Not applicable", "Nothing is estimated from data."]
+        ]
+      },
+      {
+        "name": "computation_method", "label": "Computation", "kind": "multi", "sentinel": "None",
+        "group": "Method", "filter": "more",
+        "question": "Which computational methods does the paper rely on for its main results?",
+        "values": [
+          ["Monte Carlo simulation", "Plain Monte Carlo sampling."],
+          ["Importance sampling or subset simulation", "Variance-reduction methods for rare events."],
+          ["MCMC or variational inference", "Posterior computation."],
+          ["FORM or SORM", "First- or second-order reliability methods."],
+          ["Dynamic programming or reinforcement learning", "Sequential decision methods."],
+          ["Numerical optimization", "EM, gradient or other optimization algorithms."],
+          ["Closed-form", "Results are available analytically."],
+          ["None", "None of these."]
+        ]
+      },
+      {
+        "name": "censoring", "label": "Censoring", "kind": "multi", "sentinel": "Not applicable (no lifetime data)",
+        "group": "Data", "filter": "more",
+        "question": "Which kinds of incomplete lifetime observation does the paper handle? Select only kinds present in its data or model.",
+        "values": [
+          ["Right-censored", "Some units had not failed when observation stopped."],
+          ["Left-censored", "Some failures happened before observation began."],
+          ["Interval-censored", "Failures are known only to lie in an interval."],
+          ["Truncated", "Units are observed only if their lifetime falls in a range."],
+          ["No censoring", "All lifetimes are observed exactly."],
+          ["Not applicable (no lifetime data)", "The paper does not analyse lifetimes."]
+        ]
+      },
+      {
+        "name": "measurement_kind", "label": "Measurements", "kind": "primary_additional", "other": true,
+        "group": "Data", "filter": "more",
+        "question": "What is measured on the units under study? The primary one is the main input to the paper's model.",
+        "values": [
+          ["Time-to-failure", "Lifetimes or failure times."],
+          ["Degradation measurements", "Repeated measurements of a deteriorating characteristic."],
+          ["Sensor or condition-monitoring signals", "Vibration, temperature or other monitored signals."],
+          ["Recurrent event or count data", "Repeated failures or counts per unit."],
+          ["Pass-fail or demand outcomes", "Success or failure per trial."],
+          ["Computational model outputs", "Outputs of a simulator or limit-state function."],
+          ["Not applicable", "No measurements are analysed."]
+        ]
+      },
+      {
+        "name": "maintenance_policy", "label": "Maintenance policy", "kind": "multi", "sentinel": "No maintenance policy",
+        "group": "Method", "filter": "more",
+        "question": "Which maintenance policies does the paper analyse or optimize? Most papers that are not about maintenance have none.",
+        "values": [
+          ["Age-based", "Replace at a given age or usage."],
+          ["Block replacement", "Replace at fixed calendar intervals."],
+          ["Condition-based", "Act when a monitored condition crosses a threshold."],
+          ["Predictive", "Act on a predicted future state or remaining life."],
+          ["Opportunistic or group", "Combine actions across components or use downtime."],
+          ["Imperfect maintenance", "Repair restores the unit only partly."],
+          ["Inspection scheduling", "Chooses when to inspect."],
+          ["Corrective (run-to-failure)", "Repair only after failure."],
+          ["No maintenance policy", "The paper does not analyse maintenance."]
+        ]
+      },
+      {
+        "name": "evaluation_type", "label": "How it is evaluated", "kind": "multi", "sentinel": "None",
+        "group": "Evaluation", "filter": "more",
+        "question": "How does the paper evaluate its methods? Select every approach it actually uses.",
+        "values": [
+          ["Simulation study", "Monte Carlo simulation."],
+          ["Real-data case study", "Applied to real data."],
+          ["Public benchmark dataset", "Evaluated on a named public dataset."],
+          ["Theoretical derivation", "Proofs or closed-form results."],
+          ["Numerical illustration", "A worked numerical example with assumed values."],
+          ["None", "No evaluation is reported."]
+        ]
+      }
+    ]
+  },
+  "narrative_fields": [
+    {"name": "glossary", "label": "Glossary"},
+    {"name": "summary", "label": "Summary"},
+    {"name": "key_results", "label": "Key results"},
+    {"name": "key_equations", "label": "Key equations"},
+    {"name": "limitations_stated", "label": "Limitations stated by the authors"},
+    {"name": "limitations_unstated", "label": "Possible limitations (model-identified)"},
+    {"name": "future_work_stated", "label": "Future work stated by the authors"},
+    {"name": "future_work_unstated", "label": "Possible future work (model-identified)"}
+  ]
+}
