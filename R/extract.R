@@ -105,6 +105,16 @@ postprocess_classification <- function(raw, spec, track) {
   list(columns = columns, flags = unique(flags))
 }
 
+# The model client returns an array of objects either as a list of lists or,
+# when it simplifies the result, as a data frame. Both become a list of lists.
+as_records <- function(x) {
+  if (is.null(x) || length(x) == 0L) return(list())
+  if (is.data.frame(x)) {
+    return(lapply(seq_len(nrow(x)), function(i) lapply(as.list(x[i, , drop = FALSE]), function(v) v[[1]])))
+  }
+  Filter(is.list, x)
+}
+
 postprocess_narrative <- function(raw) {
   flags <- character()
   clean <- function(x) {
@@ -113,13 +123,14 @@ postprocess_narrative <- function(raw) {
     if (is.na(out$text) || !nzchar(out$text)) NA_character_ else out$text
   }
 
-  glossary <- Filter(function(g) !is.null(g$term) && nzchar(trimws(g$term)), raw$glossary)
+  present <- function(value) !is.null(value) && !is.na(value) && nzchar(trimws(value))
+  glossary <- Filter(function(g) present(g$term), as_records(raw$glossary))
   glossary_terms <- vapply(glossary, function(g) trimws(g$term), character(1))
   glossary_text <- vapply(glossary, function(g) {
     paste0(trimws(g$term), " = ", gsub(LIST_SEP, "/", clean(g$meaning), fixed = TRUE))
   }, character(1))
 
-  equations <- Filter(function(e) !is.null(e$latex) && nzchar(trimws(e$latex)), raw$key_equations)
+  equations <- Filter(function(e) present(e$latex), as_records(raw$key_equations))
   if (any(!vapply(equations, function(e) sanitize_latex(e$latex)$ok, logical(1)))) {
     flags <- c(flags, "latex_invalid")
   }

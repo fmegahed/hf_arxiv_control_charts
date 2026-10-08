@@ -145,3 +145,19 @@ test_that("a paper with no equations stores 'Not applicable', and clean text rai
   expect_identical(out$columns$glossary, NA_character_)
   expect_identical(out$flags, character(0))
 })
+
+test_that("arrays of objects are accepted as data frames as well as lists", {
+  raw <- list(
+    glossary = data.frame(term = c("ARL", ""), meaning = c("average run length", "x"), stringsAsFactors = FALSE),
+    summary = "The average run length (ARL) is reported.", key_results = "r",
+    key_equations = data.frame(name = "Statistic", latex = "Z_t = \\lambda X_t",
+                               explanation = "Z_t is the statistic.", stringsAsFactors = FALSE),
+    limitations_stated = "None stated", limitations_unstated = "u",
+    future_work_stated = "None stated", future_work_unstated = "f")
+  out <- postprocess_narrative(raw)
+  expect_identical(out$columns$glossary, "ARL = average run length")
+  expect_match(out$columns$key_equations, "Statistic: \\[Z_t = \\lambda X_t\\]", fixed = TRUE)
+  expect_identical(as_records(NULL), list())
+  expect_identical(as_records(data.frame()), list())
+  expect_identical(length(as_records(list(list(term = "a"), "stray"))), 1L)
+})

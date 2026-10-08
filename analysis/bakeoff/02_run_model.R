@@ -11,6 +11,8 @@
 # paper goes through classify and narrate regardless of the screen decision,
 # which is what a like-for-like comparison of the PDF stages needs.
 # Resumable; outputs go to analysis/bakeoff/local/runs/<label>/.
+# Add --track spc|exp_design|reliability to run one track, so the three tracks
+# of a label can run as three processes at once.
 
 for (f in sort(list.files("R", pattern = "\\.R$", full.names = TRUE))) source(f)
 load_dotenv()
@@ -39,7 +41,8 @@ if (isTRUE(args$force_in_scope)) {
 fetch_pdf <- make_fetch_pdf(args$pdf_cache, max_pages = spec$limits$max_pdf_pages)
 budget <- as.numeric(args$max_spend_usd)
 
-for (track in TRACK_IDS) {
+tracks <- if (is.null(args$track)) TRACK_IDS else args$track
+for (track in tracks) {
   metadata <- sample[sample$track == track, , drop = FALSE]
   path <- file.path(run_dir, paste0(track, "_factsheet.csv"))
   existing <- read_factsheet(path)
