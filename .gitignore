@@ -36,3 +36,7 @@ renv/sandbox/
 
 # secrets
 .env
+
+# development data and local caches
+data/dev_v2/
+pdf_cache/

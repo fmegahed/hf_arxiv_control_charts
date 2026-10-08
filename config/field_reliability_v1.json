@@ -1,0 +1,241 @@
+{
+  "description": "Aggregate author ratings of factsheet fields (1 = completely incorrect, 5 = completely correct). Each paper was rated by one of its own authors.",
+  "measured_on": {
+    "schema_version": "1.0.0",
+    "model": "gpt-5.2-2025-12-11",
+    "collected": "2026-06-05 to 2026-07-23"
+  },
+  "papers": 45,
+  "authors": 21,
+  "by_track": {
+    "reliability": 14,
+    "exp_design": 5,
+    "spc": 26
+  },
+  "fields": [
+    {
+      "track": "all",
+      "field": "future_work_unstated",
+      "n": 45,
+      "mean": 4,
+      "pct_rated_4_or_5": 66.7,
+      "pct_rated_5": 40.0
+    },
+    {
+      "track": "all",
+      "field": "key_equations",
+      "n": 45,
+      "mean": 3.93,
+      "pct_rated_4_or_5": 77.8,
+      "pct_rated_5": 33.3
+    },
+    {
+      "track": "all",
+      "field": "key_results",
+      "n": 45,
+      "mean": 4.33,
+      "pct_rated_4_or_5": 93.3,
+      "pct_rated_5": 46.7
+    },
+    {
+      "track": "all",
+      "field": "summary",
+      "n": 45,
+      "mean": 4.78,
+      "pct_rated_4_or_5": 100.0,
+      "pct_rated_5": 77.8
+    },
+    {
+      "track": "exp_design",
+      "field": "design_objective",
+      "n": 5,
+      "mean": 3.8,
+      "pct_rated_4_or_5": 80.0,
+      "pct_rated_5": 20.0
+    },
+    {
+      "track": "exp_design",
+      "field": "design_type",
+      "n": 5,
+      "mean": 4,
+      "pct_rated_4_or_5": 80.0,
+      "pct_rated_5": 20.0
+    },
+    {
+      "track": "exp_design",
+      "field": "future_work_unstated",
+      "n": 5,
+      "mean": 4,
+      "pct_rated_4_or_5": 60.0,
+      "pct_rated_5": 40.0
+    },
+    {
+      "track": "exp_design",
+      "field": "key_equations",
+      "n": 5,
+      "mean": 4.6,
+      "pct_rated_4_or_5": 100.0,
+      "pct_rated_5": 60.0
+    },
+    {
+      "track": "exp_design",
+      "field": "key_results",
+      "n": 5,
+      "mean": 3.8,
+      "pct_rated_4_or_5": 80.0,
+      "pct_rated_5": 20.0
+    },
+    {
+      "track": "exp_design",
+      "field": "number_of_factors",
+      "n": 5,
+      "mean": 4,
+      "pct_rated_4_or_5": 80.0,
+      "pct_rated_5": 20.0
+    },
+    {
+      "track": "exp_design",
+      "field": "optimality_criterion",
+      "n": 5,
+      "mean": 4,
+      "pct_rated_4_or_5": 60.0,
+      "pct_rated_5": 40.0
+    },
+    {
+      "track": "exp_design",
+      "field": "summary",
+      "n": 5,
+      "mean": 4.8,
+      "pct_rated_4_or_5": 100.0,
+      "pct_rated_5": 80.0
+    },
+    {
+      "track": "reliability",
+      "field": "data_type",
+      "n": 14,
+      "mean": 3.29,
+      "pct_rated_4_or_5": 42.9,
+      "pct_rated_5": 28.6
+    },
+    {
+      "track": "reliability",
+      "field": "future_work_unstated",
+      "n": 14,
+      "mean": 3.93,
+      "pct_rated_4_or_5": 64.3,
+      "pct_rated_5": 28.6
+    },
+    {
+      "track": "reliability",
+      "field": "key_equations",
+      "n": 14,
+      "mean": 4.07,
+      "pct_rated_4_or_5": 92.9,
+      "pct_rated_5": 21.4
+    },
+    {
+      "track": "reliability",
+      "field": "key_results",
+      "n": 14,
+      "mean": 4.43,
+      "pct_rated_4_or_5": 100.0,
+      "pct_rated_5": 42.9
+    },
+    {
+      "track": "reliability",
+      "field": "maintenance_policy",
+      "n": 14,
+      "mean": 4.64,
+      "pct_rated_4_or_5": 100.0,
+      "pct_rated_5": 64.3
+    },
+    {
+      "track": "reliability",
+      "field": "modeling_approach",
+      "n": 14,
+      "mean": 3.71,
+      "pct_rated_4_or_5": 71.4,
+      "pct_rated_5": 28.6
+    },
+    {
+      "track": "reliability",
+      "field": "reliability_topic",
+      "n": 14,
+      "mean": 3.21,
+      "pct_rated_4_or_5": 57.1,
+      "pct_rated_5": 35.7
+    },
+    {
+      "track": "reliability",
+      "field": "summary",
+      "n": 14,
+      "mean": 4.71,
+      "pct_rated_4_or_5": 100.0,
+      "pct_rated_5": 71.4
+    },
+    {
+      "track": "spc",
+      "field": "application_domain",
+      "n": 26,
+      "mean": 4.38,
+      "pct_rated_4_or_5": 80.8,
+      "pct_rated_5": 57.7
+    },
+    {
+      "track": "spc",
+      "field": "chart_family",
+      "n": 26,
+      "mean": 4.46,
+      "pct_rated_4_or_5": 92.3,
+      "pct_rated_5": 65.4
+    },
+    {
+      "track": "spc",
+      "field": "chart_statistic",
+      "n": 26,
+      "mean": 4.27,
+      "pct_rated_4_or_5": 80.8,
+      "pct_rated_5": 61.5
+    },
+    {
+      "track": "spc",
+      "field": "future_work_unstated",
+      "n": 26,
+      "mean": 4.04,
+      "pct_rated_4_or_5": 69.2,
+      "pct_rated_5": 46.2
+    },
+    {
+      "track": "spc",
+      "field": "key_equations",
+      "n": 26,
+      "mean": 3.73,
+      "pct_rated_4_or_5": 65.4,
+      "pct_rated_5": 34.6
+    },
+    {
+      "track": "spc",
+      "field": "key_results",
+      "n": 26,
+      "mean": 4.38,
+      "pct_rated_4_or_5": 92.3,
+      "pct_rated_5": 53.8
+    },
+    {
+      "track": "spc",
+      "field": "phase",
+      "n": 26,
+      "mean": 4.31,
+      "pct_rated_4_or_5": 73.1,
+      "pct_rated_5": 69.2
+    },
+    {
+      "track": "spc",
+      "field": "summary",
+      "n": 26,
+      "mean": 4.81,
+      "pct_rated_4_or_5": 100.0,
+      "pct_rated_5": 80.8
+    }
+  ]
+}

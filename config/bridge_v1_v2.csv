@@ -1,0 +1,158 @@
+track,old_column,old_value,new_column,new_value
+all,application_domain,Manufacturing (general),application_domain,Manufacturing
+all,application_domain,Semiconductor/electronics,application_domain,Semiconductor and electronics
+all,application_domain,Healthcare/medical,application_domain,Healthcare and medical
+all,application_domain,Pharmaceutical,application_domain,Pharmaceutical
+all,application_domain,Finance/economics,application_domain,Finance and economics
+all,application_domain,Environmental monitoring,application_domain,Environmental monitoring
+all,application_domain,Network/cybersecurity,application_domain,Software and IT
+all,application_domain,Service industry,application_domain,Service industry
+all,application_domain,Food/agriculture,application_domain,Food and agriculture
+all,application_domain,Energy/utilities,application_domain,Energy and utilities
+all,application_domain,Transportation/logistics,application_domain,Transportation and logistics
+all,application_domain,Theoretical/simulation only,application_domain,No specific application (general methodology)
+all,application_domain,Theoretical/simulation only,data_source,Simulated data
+all,application_domain,Other,application_domain,None of the listed
+all,evaluation_type,Simulation study,data_source,Simulated data
+all,evaluation_type,Case study (real dataset),data_source,Real data: field or operational
+all,software_platform,R,software_platform,R
+all,software_platform,Python,software_platform,Python
+all,software_platform,MATLAB,software_platform,MATLAB
+all,software_platform,Julia,software_platform,Julia
+all,software_platform,SAS,software_platform,SAS
+all,software_platform,C/C++,software_platform,C/C++
+all,software_platform,Fortran,software_platform,Fortran
+all,software_platform,Other,software_platform,Other software
+all,software_platform,None / Not applicable,software_platform,Not stated
+all,code_availability_source,Public repository (GitHub/GitLab),code_availability,Public repository
+all,code_availability_source,Package registry (CRAN/PyPI),code_availability,Package registry
+all,code_availability_source,Supplementary material (Journal/Publisher),code_availability,Supplementary material
+all,code_availability_source,In text/Appendix,code_availability,In the paper or appendix
+all,code_availability_source,Personal website,code_availability,Personal or lab website
+all,code_availability_source,Upon request,code_availability,Available on request
+all,code_availability_source,Not provided,code_availability,Not shared
+all,code_availability_source,Not applicable (No code used),code_availability,No code used
+spc,chart_family,Univariate,chart_family,Univariate
+spc,chart_family,Multivariate,chart_family,Multivariate
+spc,chart_family,High-dimensional,chart_family,High-dimensional
+spc,chart_family,Profile monitoring,chart_family,Profile monitoring
+spc,chart_family,Functional data analysis,chart_family,Functional data
+spc,chart_family,Image-based monitoring,chart_family,Image or spatial data
+spc,chart_family,Other,chart_family,None of the listed
+spc,chart_family,Bayesian,chart_approach,Bayesian
+spc,chart_family,Nonparametric,chart_approach,Nonparametric (distribution-free)
+spc,chart_family,Self-starting,phase,Self-starting
+spc,chart_statistic,Shewhart,chart_statistic,Shewhart-type
+spc,chart_statistic,CUSUM,chart_statistic,CUSUM
+spc,chart_statistic,EWMA,chart_statistic,EWMA
+spc,chart_statistic,Hotelling T-squared,chart_statistic,Hotelling T-squared
+spc,chart_statistic,MEWMA,chart_statistic,MEWMA
+spc,chart_statistic,MCUSUM,chart_statistic,MCUSUM
+spc,chart_statistic,GLR (Generalized Likelihood Ratio),chart_statistic,Likelihood ratio (GLR)
+spc,chart_statistic,Change-point,chart_statistic,Change-point model
+spc,chart_statistic,Machine learning-based,chart_statistic,Machine learning-based
+spc,chart_statistic,Other,chart_statistic,None of the listed
+spc,phase,Both,phase,Phase I and Phase II
+spc,phase,Phase I,phase,Phase I
+spc,phase,Phase II,phase,Phase II
+spc,evaluation_type,Simulation study,evaluation_type,Simulation study
+spc,evaluation_type,Case study (real dataset),evaluation_type,Real-data example
+spc,evaluation_type,Markov chain,evaluation_type,Markov chain
+spc,evaluation_type,Integral equation,evaluation_type,Integral equation
+spc,evaluation_type,Exact distribution theory,evaluation_type,Exact derivation
+spc,evaluation_type,Approximation methods,evaluation_type,Analytical approximation
+spc,evaluation_type,Economic design,evaluation_type,Economic or cost model
+spc,performance_metrics,ARL (Average Run Length),performance_metrics,Average run length (ARL)
+spc,performance_metrics,SDRL (Standard Deviation of Run Length),performance_metrics,Standard deviation of run length (SDRL)
+spc,performance_metrics,MRL (Median Run Length),performance_metrics,Median or percentile run length
+spc,performance_metrics,ATS (Average Time to Signal),performance_metrics,Average time to signal (ATS)
+spc,performance_metrics,ANOS (Average Number of Observations to Signal),performance_metrics,Average run length (ARL)
+spc,performance_metrics,Detection probability,performance_metrics,Detection probability or power
+spc,performance_metrics,False alarm rate,performance_metrics,False alarm rate or probability
+spc,performance_metrics,Expected detection delay,performance_metrics,Expected detection delay
+spc,performance_metrics,Steady-state ARL,performance_metrics,Steady-state measures
+spc,performance_metrics,Conditional expected delay,performance_metrics,Expected detection delay
+exp_design,design_type,Factorial (full),design_type,Full factorial
+exp_design,design_type,Factorial (fractional),design_type,Fractional factorial
+exp_design,design_type,Response surface,design_type,Response surface design
+exp_design,design_type,Mixture,design_type,Mixture design
+exp_design,design_type,Split-plot,design_type,Split-plot or restricted randomization
+exp_design,design_type,Optimal design,design_type,Optimal design
+exp_design,design_type,Screening,design_type,Screening design
+exp_design,design_type,Definitive screening,design_type,Definitive screening design
+exp_design,design_type,Supersaturated,design_type,Supersaturated design
+exp_design,design_type,Robust parameter design,design_type,Robust parameter design
+exp_design,design_type,Sequential/adaptive,design_type,Sequential or adaptive design
+exp_design,design_type,Computer experiment,design_type,Space-filling or computer experiment
+exp_design,design_type,Bayesian design,design_type,Bayesian design
+exp_design,design_type,Other,design_type,None of the listed
+exp_design,design_objective,Parameter estimation,design_objective,Parameter estimation
+exp_design,design_objective,Screening,design_objective,Screening
+exp_design,design_objective,Optimization,design_objective,Optimization
+exp_design,design_objective,Model discrimination,design_objective,Model discrimination
+exp_design,design_objective,Prediction,design_objective,Prediction
+exp_design,design_objective,Robustness,design_objective,Robustness
+exp_design,design_objective,Cost reduction,design_objective,Cost reduction
+exp_design,design_objective,Other,design_objective,None of the listed
+exp_design,optimality_criterion,D-optimal,optimality_criterion,D-optimal
+exp_design,optimality_criterion,A-optimal,optimality_criterion,A-optimal
+exp_design,optimality_criterion,I-optimal (IV-optimal),optimality_criterion,I- or V-optimal
+exp_design,optimality_criterion,V-optimal,optimality_criterion,I- or V-optimal
+exp_design,optimality_criterion,G-optimal,optimality_criterion,G-optimal
+exp_design,optimality_criterion,E-optimal,optimality_criterion,E-optimal
+exp_design,optimality_criterion,Bayesian D-optimal,optimality_criterion,Bayesian alphabetic
+exp_design,optimality_criterion,Bayesian A-optimal,optimality_criterion,Bayesian alphabetic
+exp_design,optimality_criterion,Compound criterion,optimality_criterion,Compound criterion
+exp_design,optimality_criterion,Space-filling,optimality_criterion,Space-filling
+exp_design,optimality_criterion,Minimax/Maximin,optimality_criterion,Space-filling
+exp_design,optimality_criterion,Other,optimality_criterion,Other criterion
+exp_design,optimality_criterion,Not applicable,optimality_criterion,Not applicable
+exp_design,evaluation_type,Simulation study,evaluation_type,Simulation study
+exp_design,evaluation_type,Case study (real dataset),evaluation_type,Real experiment or real dataset
+exp_design,evaluation_type,Exact distribution theory,evaluation_type,Theoretical derivation
+exp_design,evaluation_type,Approximation methods,evaluation_type,Theoretical derivation
+reliability,reliability_topic,Life distribution modeling,reliability_topic,Life distribution modeling
+reliability,reliability_topic,Degradation modeling,reliability_topic,Degradation modeling
+reliability,reliability_topic,RUL prediction,reliability_topic,RUL prediction and prognostics
+reliability,reliability_topic,Failure mode analysis,reliability_topic,Failure mode and risk analysis
+reliability,reliability_topic,Accelerated testing,reliability_topic,Accelerated and reliability testing
+reliability,reliability_topic,Maintenance optimization,reliability_topic,Maintenance optimization
+reliability,reliability_topic,System reliability,reliability_topic,System and network reliability
+reliability,reliability_topic,Network/infrastructure reliability,reliability_topic,System and network reliability
+reliability,reliability_topic,Warranty analysis,reliability_topic,Warranty and field data analysis
+reliability,reliability_topic,Reliability growth,reliability_topic,Reliability growth
+reliability,reliability_topic,Software reliability,reliability_topic,Software reliability
+reliability,reliability_topic,Other,reliability_topic,None of the listed
+reliability,modeling_approach,"Parametric (Weibull, etc.)",model_family,Parametric lifetime distribution
+reliability,modeling_approach,Nonparametric/Semi-parametric,model_family,Semi- or nonparametric survival
+reliability,modeling_approach,Stochastic process,model_family,Stochastic degradation process
+reliability,modeling_approach,Physics-based,model_family,Physics-of-failure or limit-state model
+reliability,modeling_approach,ML-based,model_family,Machine learning or deep learning
+reliability,modeling_approach,Other,model_family,None of the listed
+reliability,modeling_approach,Bayesian,inference_paradigm,Bayesian
+reliability,modeling_approach,Simulation-based,computation_method,Monte Carlo simulation
+reliability,data_type,Complete lifetime data,censoring,No censoring
+reliability,data_type,Complete lifetime data,measurement_kind,Time-to-failure
+reliability,data_type,Right-censored,censoring,Right-censored
+reliability,data_type,Right-censored,measurement_kind,Time-to-failure
+reliability,data_type,Interval-censored,censoring,Interval-censored
+reliability,data_type,Interval-censored,measurement_kind,Time-to-failure
+reliability,data_type,Left-censored,censoring,Left-censored
+reliability,data_type,Left-censored,measurement_kind,Time-to-failure
+reliability,data_type,Degradation measurements,measurement_kind,Degradation measurements
+reliability,data_type,Event/count data,measurement_kind,Recurrent event or count data
+reliability,data_type,Sensor/condition monitoring,measurement_kind,Sensor or condition-monitoring signals
+reliability,data_type,Simulated only,data_source,Simulated data
+reliability,data_type,Other,measurement_kind,None of the listed
+reliability,maintenance_policy,Age-based,maintenance_policy,Age-based
+reliability,maintenance_policy,Block replacement,maintenance_policy,Block replacement
+reliability,maintenance_policy,Condition-based,maintenance_policy,Condition-based
+reliability,maintenance_policy,Predictive,maintenance_policy,Predictive
+reliability,maintenance_policy,Opportunistic,maintenance_policy,Opportunistic or group
+reliability,maintenance_policy,Group replacement,maintenance_policy,Opportunistic or group
+reliability,maintenance_policy,Imperfect maintenance,maintenance_policy,Imperfect maintenance
+reliability,maintenance_policy,Not applicable,maintenance_policy,No maintenance policy
+reliability,evaluation_type,Simulation study,evaluation_type,Simulation study
+reliability,evaluation_type,Case study (real dataset),evaluation_type,Real-data case study
+reliability,evaluation_type,Exact distribution theory,evaluation_type,Theoretical derivation
+reliability,evaluation_type,Approximation methods,evaluation_type,Theoretical derivation
