@@ -1,0 +1,27 @@
+{
+  "_comment": "Settings of the Shiny app that refer to values of config/factsheet_spec.json or to the outside world. tests/testthat/test-app-settings.R checks every value named here against the spec.",
+  "app_version": "4.0.0",
+  "paper_title": "What Quality Engineers Need to Know About Generative AI: Structured Data Extraction",
+  "authors": "Fadel M. Megahed, Ying-Ju Chen, Yamin Dahwich, Arthur Carvalho, L. Allison Jones-Farmer, Ibrahim Yousif, and Inez M. Zwetsloot",
+  "repo_url": "https://github.com/fmegahed/hf_arxiv_control_charts",
+  "issue_url": "https://github.com/fmegahed/hf_arxiv_control_charts/issues/new",
+  "feed_url": "https://huggingface.co/spaces/fmegahed/arxiv_control_charts/resolve/main/data/weekly_digest.xml",
+  "app_url": "https://huggingface.co/spaces/fmegahed/arxiv_control_charts",
+  "data_field": "data_source",
+  "real_data_values": [
+    "Real data: field or operational",
+    "Real data: laboratory or designed test",
+    "Public benchmark dataset"
+  ],
+  "simulated_data_value": "Simulated data",
+  "paper_type_field": "paper_type",
+  "review_paper_types": ["Review or tutorial"],
+  "domain_field": "application_domain",
+  "platform_field": "software_platform",
+  "code_field": "code_availability",
+  "evaluation_field": "evaluation_type",
+  "jev": {
+    "url": "https://api.typesafe.ai/v1/systemone",
+    "model": "jev-latest"
+  }
+}

@@ -31,33 +31,40 @@ library(ellmer)
 OPENAI_API_KEY <- Sys.getenv("OPENAI_API_KEY")
 get_openai_api_key <- function() { return(OPENAI_API_KEY) }
 
-# Track configuration (must match main app)
-tracks <- list(
-  spc = list(
-    id = "spc",
-    label = "Control Charts (SPC)",
-    short_label = "Control Charts",
-    metadata_csv = "data/spc_arxiv_metadata.csv",
-    factsheet_csv = "data/spc_factsheet.csv",
-    color = "#1b9e77"
-  ),
-  exp_design = list(
-    id = "exp_design",
-    label = "Experimental Design (DOE)",
-    short_label = "Experimental Design",
-    metadata_csv = "data/exp_design_arxiv_metadata.csv",
-    factsheet_csv = "data/exp_design_factsheet.csv",
-    color = "#d95f02"
-  ),
-  reliability = list(
-    id = "reliability",
-    label = "Reliability Engineering",
-    short_label = "Reliability",
-    metadata_csv = "data/reliability_arxiv_metadata.csv",
-    factsheet_csv = "data/reliability_factsheet.csv",
-    color = "#7570b3"
+# Tracks, their names and the model come from the factsheet specification
+# (config/factsheet_spec.json), the same source the app uses.
+for (helper in c("spec.R", "serialize.R", "ids.R")) source(file.path("R", helper))
+spec <- spec_load()
+DATA_DIR <- Sys.getenv("QEW_DATA_DIR", "data")
+SYNTHESIS_MODEL <- if (is.null(spec$models$synthesis)) spec$models$chat else spec$models$synthesis
+
+tracks <- lapply(stats::setNames(names(spec$tracks), names(spec$tracks)), function(track_id) {
+  track <- spec$tracks[[track_id]]
+  list(
+    id = track_id,
+    label = track$label,
+    short_label = track$short_label,
+    metadata_csv = file.path(DATA_DIR, track$metadata_csv),
+    factsheet_csv = file.path(DATA_DIR, track$factsheet_csv),
+    color = track$color
   )
-)
+})
+
+# "A, B, and C" from the track labels
+track_names_text <- function(tracks) {
+  labels <- vapply(tracks, function(track) track$label, character(1))
+  if (length(labels) < 2) return(paste(labels, collapse = ""))
+  paste0(paste(labels[-length(labels)], collapse = ", "), ", and ", labels[length(labels)])
+}
+
+# "3 in A, 1 in B, and 0 in C" for a set of papers
+track_counts_text <- function(papers, tracks) {
+  parts <- vapply(tracks, function(track) {
+    paste0(sum(papers$track_id == track$id), " in ", track$label)
+  }, character(1))
+  if (length(parts) < 2) return(paste(parts, collapse = ""))
+  paste0(paste(parts[-length(parts)], collapse = ", "), ", and ", parts[length(parts)])
+}
 
 # =============================================================================
 # System Prompt for Literature Synthesis
@@ -128,7 +135,17 @@ collect_weekly_papers <- function(tracks, days_back = 7) {
     metadata <- readr::read_csv(track$metadata_csv, show_col_types = FALSE)
     factsheet <- readr::read_csv(track$factsheet_csv, show_col_types = FALSE)
 
-    combined <- dplyr::left_join(metadata, factsheet, by = "id")
+    if ("paper_id" %in% names(factsheet)) {
+      # Version 2 layout: one factsheet row per paper, keyed by the base arXiv
+      # id. Papers screened out or not yet extracted are left out of the digest.
+      factsheet <- factsheet[factsheet$status %in% "ok", , drop = FALSE]
+      factsheet$id <- NULL
+      metadata <- keep_latest_version(metadata)
+      metadata$paper_id <- arxiv_base_id(metadata$id)
+      combined <- dplyr::inner_join(metadata, factsheet, by = "paper_id")
+    } else {
+      combined <- dplyr::left_join(metadata, factsheet, by = "id")
+    }
     combined$track_id <- track_id
     combined$track_label <- track$label
     combined$track_short <- track$short_label
@@ -232,15 +249,14 @@ generate_synthesis <- function(papers) {
       "around academic holidays or conference deadlines.\n\n",
       "**Looking Ahead:** We encourage you to explore our archives in the ",
       "[QE ArXiv Watch dashboard](https://huggingface.co/spaces/fmegahed/arxiv_control_charts) ",
-      "where you can browse over 1,000 papers across Control Charts, Experimental Design, ",
-      "and Reliability Engineering."
+      "where you can browse the papers in ", track_names_text(tracks), "."
     ))
   }
 
   # Create chat with synthesis model
   tryCatch({
     chat <- ellmer::chat_openai(
-      model = "gpt-5.2-2025-12-11",
+      model = SYNTHESIS_MODEL,
       system_prompt = WEEKLY_SYNTHESIS_SYSTEM_PROMPT,
       credentials = get_openai_api_key
     )
@@ -263,9 +279,7 @@ generate_synthesis <- function(papers) {
     paste0(
       "## This Week in Quality Engineering\n\n",
       "This week brought ", nrow(papers), " new papers across our research tracks: ",
-      sum(papers$track_id == "spc"), " in Control Charts, ",
-      sum(papers$track_id == "exp_design"), " in Experimental Design, and ",
-      sum(papers$track_id == "reliability"), " in Reliability Engineering.\n\n",
+      track_counts_text(papers, tracks), ".\n\n",
       "Visit the [QE ArXiv Watch dashboard](https://huggingface.co/spaces/fmegahed/arxiv_control_charts) ",
       "to explore each paper with AI summaries and interactive chat."
     )
@@ -486,7 +500,7 @@ generate_weekly_rss <- function(papers, synthesis, output_file = "data/weekly_di
     '  <channel>\n',
     '    <title>QE ArXiv Watch Weekly</title>\n',
     '    <link>https://huggingface.co/spaces/fmegahed/arxiv_control_charts</link>\n',
-    '    <description>Weekly AI-synthesized digest of quality engineering research from arXiv. Covering Control Charts, Experimental Design, and Reliability Engineering.</description>\n',
+    '    <description>Weekly AI-synthesized digest of quality engineering research from arXiv. Covering ', escape_xml(track_names_text(tracks)), '.</description>\n',
     '    <language>en-us</language>\n',
     '    <copyright>CC BY 4.0 - QE ArXiv Watch</copyright>\n',
     '    <managingEditor>noreply@example.com (QE ArXiv Watch)</managingEditor>\n',
@@ -517,11 +531,7 @@ generate_weekly_rss <- function(papers, synthesis, output_file = "data/weekly_di
 save_digest_json <- function(papers, synthesis, output_file = "data/weekly_digest.json") {
 
   # Get paper counts by track
-  track_counts <- list(
-    spc = sum(papers$track_id == "spc"),
-    exp_design = sum(papers$track_id == "exp_design"),
-    reliability = sum(papers$track_id == "reliability")
-  )
+  track_counts <- lapply(tracks, function(track) sum(papers$track_id == track$id))
 
   digest <- list(
     metadata = list(
@@ -570,9 +580,9 @@ papers <- collect_weekly_papers(tracks, days_back = 7)
 
 message("")
 message(sprintf("Papers by track:"))
-message(sprintf("  - Control Charts (SPC): %d", sum(papers$track_id == "spc")))
-message(sprintf("  - Experimental Design: %d", sum(papers$track_id == "exp_design")))
-message(sprintf("  - Reliability: %d", sum(papers$track_id == "reliability")))
+for (track in tracks) {
+  message(sprintf("  - %s: %d", track$label, sum(papers$track_id == track$id)))
+}
 
 # Step 2: Generate AI synthesis
 message("")
