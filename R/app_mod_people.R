@@ -196,7 +196,7 @@ library_server <- function(id, app, deps) {
           },
           " Model: ", shiny::tags$code(spec$models$chat), "."),
         shiny::div(class = "miami-chat-container collection-chat",
-                   shinychat::chat_ui(session$ns("chat"), placeholder = "Ask about these papers", height = "420px",
+                   shinychat::chat_ui(session$ns("chat"), placeholder = "Ask about these papers", width = "100%", height = "420px",
                                       fill = FALSE))))
     })
     shiny::observeEvent(input$chat_user_input, {
@@ -212,7 +212,7 @@ library_server <- function(id, app, deps) {
         } else current$session$stream_async(message)
         current$first <- FALSE
         chat(current)
-        promises::catch(shinychat::chat_append("chat", stream), fail)
+        promises::catch(shinychat::chat_append("chat", guard_math_stream(stream)), fail)
       }, error = fail)
     })
   })

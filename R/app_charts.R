@@ -51,7 +51,7 @@ chart_per_year <- function(counts, spec, accent, source = NULL) {
       hovertemplate = paste0("%{x}: %{y} papers<extra>", spec$tracks[[track]]$short_label, "</extra>"))
   }
   plot <- plotly::layout(
-    plot, barmode = "stack", showlegend = length(tracks) > 1L,
+    plot, barmode = "stack", showlegend = length(tracks) > 1L, hovermode = "x",
     legend = list(orientation = "h", x = 0, y = 1.12),
     xaxis = list(title = "Year first submitted to arXiv", dtick = if (length(unique(counts$year)) > 14L) 2 else 1,
                  fixedrange = TRUE),
@@ -77,7 +77,7 @@ chart_bars <- function(df, accent, source = NULL, show_share = TRUE, max_bars = 
                  range = c(0, max(df$n) * 1.3)),
     yaxis = list(title = "", categoryorder = "array", categoryarray = rev(df$wrapped), automargin = TRUE,
                  ticksuffix = " ", fixedrange = TRUE),
-    showlegend = FALSE)
+    showlegend = FALSE, hovermode = "y")   # the whole row is the click target, not only the bar
   chart_base(plot, source, margin = list(t = 5, r = 10, b = 10, l = 10))
 }
 
@@ -128,9 +128,8 @@ chart_gap_map <- function(gap, source = NULL, max_values = GAP_MAP_MAX_VALUES) {
   hover <- outer(seq_along(a_values), seq_along(b_values), function(i, j) {
     paste0(tidy_value(a_values[i]), " and ", tidy_value(b_values[j]), ": ", z[cbind(i, j)], " papers")
   })
-  custom <- outer(seq_along(a_values), seq_along(b_values), function(i, j) paste0(a_values[i], LIST_SEP, b_values[j]))
   plot <- plotly::plot_ly(
-    x = b_labels, y = a_labels, z = z, type = "heatmap", source = source, customdata = custom,
+    x = b_labels, y = a_labels, z = z, type = "heatmap", source = source,
     height = max(260, 34 * length(a_values) + 150),
     colorscale = HEAT_SCALE, zmin = 0, zmax = top, xgap = 2, ygap = 2,
     hovertext = hover, hoverinfo = "text",
@@ -209,9 +208,26 @@ darken <- function(color, factor = 0.75) {
 # The value attached to the last click on a chart (its customdata). Reads the
 # input that plotly sets, so nothing is needed before the chart is drawn.
 plotly_click_value <- function(session, source) {
-  raw <- session$rootScope()$input[[paste0("plotly_click-", source)]]
-  if (is.null(raw)) return(NULL)
-  event <- tryCatch(jsonlite::parse_json(raw, simplifyVector = TRUE), error = function(e) NULL)
+  event <- plotly_click_event(session, source)
   if (is.null(event) || is.null(event$customdata)) return(NULL)
   event$customdata[[1]]
+}
+
+# The first point of the last click on a chart, as a list.
+plotly_click_event <- function(session, source) {
+  raw <- session$rootScope()$input[[paste0("plotly_click-", source)]]
+  if (is.null(raw)) return(NULL)
+  points <- tryCatch(jsonlite::parse_json(raw, simplifyVector = FALSE), error = function(e) NULL)
+  if (length(points) == 0L) NULL else points[[1]]
+}
+
+# The two labels of a clicked heat-map cell. plotly reports the cell as zero-based
+# (row, column) positions; the rows and columns are the first values of the
+# gap map, in its order.
+gap_map_click <- function(event, gap, max_values = GAP_MAP_MAX_VALUES) {
+  position <- suppressWarnings(as.integer(unlist(event$pointNumber)))
+  if (length(position) != 2L || anyNA(position)) return(NULL)
+  a <- utils::head(gap$a_values, max_values)[position[1] + 1L]
+  b <- utils::head(gap$b_values, max_values)[position[2] + 1L]
+  if (is.na(a) || is.na(b)) NULL else c(a, b)
 }

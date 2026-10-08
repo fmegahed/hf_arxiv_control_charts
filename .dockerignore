@@ -1,0 +1,31 @@
+# Secrets and version control
+.env
+.env.*
+.git
+.github
+.gitattributes
+.gitignore
+
+# Not needed to run the app
+tests
+analysis
+tools
+pdf_cache
+logs
+local_papers
+.claude
+.playwright-mcp
+*.Rproj
+.Rproj.user
+.Rhistory
+
+# Development and archived data
+data/dev_v2
+data/frozen
+
+# renv's local library is rebuilt in the image from renv.lock
+renv/library
+renv/staging
+renv/local
+renv/cellar
+renv/sandbox

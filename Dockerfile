@@ -19,13 +19,19 @@ COPY renv/settings.json renv/settings.json
 RUN R -e "install.packages('renv', repos='https://cloud.r-project.org')" \
     && R -e "renv::restore()"
 
-# Copy application code (changes more frequently)
+# Copy application code (changes more frequently).
+# app.R needs R/ (all logic), config/ (factsheet specification, app settings,
+# field ratings), www/ (styles, scripts, logos) and data/ (factsheets, metadata).
 COPY app.R app.R
-COPY data/ data/
+COPY R/ R/
+COPY config/ config/
 COPY www/ www/
+COPY data/ data/
 
-# Verify critical package is available
-RUN R -e "stopifnot(requireNamespace('shiny', quietly = TRUE))"
+# Verify that the packages the app loads are available and that it can be built
+RUN R -e "for (p in c('shiny', 'shinychat', 'ellmer', 'plotly', 'DT', 'dplyr', 'readr', 'jsonlite', 'htmltools', 'httr2', 'promises', 'coro', 'withr')) stopifnot(requireNamespace(p, quietly = TRUE))"
+
+ENV QEW_DATA_DIR=data
 
 EXPOSE 7860
 

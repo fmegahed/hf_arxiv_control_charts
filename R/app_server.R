@@ -97,8 +97,8 @@ app_server <- function(deps) {
     shiny::observeEvent(query(), {
       in_browser <- encode_view(decode_view(shiny::isolate(session$clientData$url_search), spec, year_range))
       if (identical(query(), in_browser)) return()
-      target <- if (nzchar(query())) query() else (shiny::isolate(session$clientData$url_pathname) %||% "/")
-      shiny::updateQueryString(target, mode = "push", session = session)
+      # The landing page has no parameters; a bare "?" is the empty query string.
+      shiny::updateQueryString(if (nzchar(query())) query() else "?", mode = "push", session = session)
     }, ignoreInit = TRUE)
 
     # ---- tabs ----
@@ -189,7 +189,11 @@ app_server <- function(deps) {
       apply_view(new_view("browse", filters = result$state))
     }
     shiny::observeEvent(input$ask_go, ask(input$question, filters()$track))
-    shiny::observeEvent(input$ask_landing, ask(input$question_landing, NULL))
+    shiny::observeEvent(input$ask_landing, {
+      ask(input$question_landing, NULL)
+      # Carry the question over to the box of the view that opens.
+      shiny::updateTextInput(session, "question", value = input$question_landing)
+    })
 
     # ---- relevance ranking ----
     ranking_input <- shiny::debounce(shiny::reactive({

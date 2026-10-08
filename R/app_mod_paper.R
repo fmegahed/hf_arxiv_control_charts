@@ -19,7 +19,8 @@ paper_chat_panel <- function(ns, spec) {
                          `data-set-input` = ns("suggest"), `data-value` = text, text)
     })),
     shiny::div(class = "miami-chat-container",
-               shinychat::chat_ui(ns("chat"), placeholder = "Ask about this paper", height = "380px", fill = FALSE)))
+               shinychat::chat_ui(ns("chat"), placeholder = "Ask about this paper", width = "100%", height = "380px",
+                                  fill = FALSE)))
 }
 
 paper_server <- function(id, app, deps) {
@@ -62,7 +63,7 @@ paper_server <- function(id, app, deps) {
         stream <- if (first) current$stream_async(message, ellmer::content_pdf_url(paper$link_pdf))
                   else current$stream_async(message)
         chat(current)
-        promises::catch(shinychat::chat_append("chat", stream), fail)
+        promises::catch(shinychat::chat_append("chat", guard_math_stream(stream)), fail)
       }, error = fail)
     })
   })

@@ -5,14 +5,14 @@ test_that("the paper page has every section of an in-scope factsheet", {
   html <- view_html("2501.00001", chat = htmltools::tags$div(id = "chat-slot"))
   for (section in c("glance", "summary", "results", "equations", "methods", "evaluation", "software",
                     "limitations", "glossary", "abstract", "chat", "provenance")) {
-    expect_match(html, paste0("id=\"paper-", section, "\""), fixed = TRUE, info = section)
+    expect_match(html, paste0("id=\"factsheet-", section, "\""), fixed = TRUE, info = section)
   }
   expect_match(html, "id=\"chat-slot\"", fixed = TRUE)
   expect_match(html, "https://arxiv.org/abs/2501.00001", fixed = TRUE)
   expect_match(html, "https://arxiv.org/pdf/2501.00001v2", fixed = TRUE)
   expect_match(html, "https://example.org/code", fixed = TRUE)
   expect_match(html, "exponentially weighted moving average", fixed = TRUE)
-  expect_false(grepl("id=\"paper-future\"", html, fixed = TRUE))       # no future work recorded: no empty section
+  expect_false(grepl("id=\"factsheet-future\"", html, fixed = TRUE))       # no future work recorded: no empty section
 })
 
 test_that("paper text is escaped and math delimiters are left for the browser", {
@@ -84,8 +84,8 @@ test_that("a screened-out paper shows why and has no factsheet sections", {
   expect_match(html, "screened out and has no factsheet", fixed = TRUE)
   expect_match(html, "mentioned only as background", fixed = TRUE)
   expect_match(html, "Control charts are background.", fixed = TRUE)
-  expect_match(html, "id=\"paper-abstract\"", fixed = TRUE)
-  expect_false(grepl("id=\"paper-summary\"", html, fixed = TRUE))
+  expect_match(html, "id=\"factsheet-abstract\"", fixed = TRUE)
+  expect_false(grepl("id=\"factsheet-summary\"", html, fixed = TRUE))
 })
 
 test_that("the report link opens a prefilled issue in the right repository", {
@@ -178,4 +178,46 @@ test_that("chat prompts and limits come from the spec and named constants", {
   many <- fixture_papers()[rep(1:7, 3), ]
   expect_equal(nrow(collection_chat_papers(many)), COLLECTION_CHAT_MAX_PDFS)
   expect_match(chat_error_text("HTTP 429 insufficient quota"), "no credit")
+})
+
+test_that("section ids cannot collide with the ids of the paper module's inputs", {
+  # The chat element is "paper-chat" (module "paper", input "chat"); a section
+  # with the same id would swallow the messages sent to the chat.
+  html <- view_html("2501.00001", chat = paper_chat_panel(shiny::NS("paper"), TEST_SPEC))
+  ids <- regmatches(html, gregexpr("id=\"[^\"]+\"", html))[[1]]
+  expect_false(any(duplicated(ids)))
+  expect_true("id=\"paper-chat\"" %in% ids)
+  expect_true("id=\"factsheet-chat\"" %in% ids)
+})
+
+# What a markdown renderer does to backslash escapes: "\_" becomes "_".
+markdown_unescape <- function(x) gsub("\\\\([[:punct:]])", "\\1", x)
+
+test_that("math in a chat answer survives markdown: punctuation inside delimiters is escaped", {
+  answer <- "The statistic is \\(z_t = \\lambda x_t + (1-\\lambda) z_{t-1}\\) with *weights*. \\[a_i * b_j \\\\[2pt] c < d\\] Done_now."
+  guarded <- guard_math_text(answer)
+  expect_equal(markdown_unescape(guarded), answer)                    # the formula comes out exactly
+  expect_match(guarded, "with *weights*.", fixed = TRUE)              # text outside math is untouched
+  expect_match(guarded, "Done_now.", fixed = TRUE)
+  expect_match(guarded, "z\\_t", fixed = TRUE)                         # underscores cannot become emphasis
+  expect_match(guarded, "a\\_i \\* b\\_j", fixed = TRUE)
+  expect_match(guarded, "c \\< d", fixed = TRUE)                       # nor "<" a tag
+  expect_match(guarded, "\\\\\\(z", fixed = TRUE)                      # the delimiter keeps its backslash
+  plain <- "No math here, just (parentheses), a_b and [brackets]."
+  expect_equal(guard_math_text(plain), plain)
+  # a line break inside displayed math would end the paragraph and split the formula
+  expect_equal(markdown_unescape(guard_math_text("\\[\na = b\n\\]")), "\\[ a = b \\]")
+})
+
+test_that("the math guard gives the same result however the answer is cut into pieces", {
+  answer <- "Let \\(n\\) be the index and \\[T_{n} = \\frac{a_n}{b_n} \\\\ x\\] the statistic; \\(w\\) is the window."
+  whole <- guard_math_text(answer)
+  expect_equal(markdown_unescape(whole), answer)
+  for (size in c(1L, 2L, 3L, 7L)) {
+    starts <- seq(1L, nchar(answer), by = size)
+    pieces <- substring(answer, starts, pmin(starts + size - 1L, nchar(answer)))
+    guard <- math_guard()
+    streamed <- paste0(paste(vapply(pieces, guard, character(1)), collapse = ""), guard(NULL))
+    expect_equal(streamed, whole, info = paste("piece size", size))
+  }
 })

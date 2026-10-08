@@ -126,7 +126,7 @@ glossary_block <- function(glossary) {
 section <- function(id, title, ..., help = NULL) {
   content <- Filter(Negate(is.null), list(...))
   if (length(content) == 0L) return(NULL)
-  htmltools::tags$section(class = "paper-section", id = paste0("paper-", id),
+  htmltools::tags$section(class = "paper-section", id = paste0("factsheet-", id),
                           htmltools::tags$h4(title, help), content)
 }
 

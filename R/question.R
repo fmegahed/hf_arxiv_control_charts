@@ -59,7 +59,9 @@ build_question_type <- function(spec) {
                                      required = FALSE),
     year_to = ellmer::type_integer("Last submission year wanted. Leave empty if the question gives none.",
                                    required = FALSE),
-    public_code = ellmer::type_boolean("True only if the question asks for papers whose code is publicly available."),
+    public_code = ellmer::type_boolean(paste(
+      "True only if the question asks for papers whose code is publicly available.",
+      "Use this switch for that, not a condition on how the code is shared.")),
     real_data = ellmer::type_boolean("True only if the question asks for papers that analyse real data."),
     reviews_only = ellmer::type_boolean("True only if the question asks for reviews, surveys or tutorials."),
     conditions = do.call(ellmer::type_object, c(

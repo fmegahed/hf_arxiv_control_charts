@@ -93,6 +93,17 @@ const QEW = (function() {
     });
     $(document).on('shown.bs.modal', function(e) { typeset(e.target); });
 
+    // Chat answers arrive in pieces; typeset once a message has stopped changing.
+    let chatTimer = null;
+    new MutationObserver(function(mutations) {
+      const chat = mutations.map(function(m) {
+        return m.target.nodeType === 1 ? m.target.closest('.miami-chat-container') : null;
+      }).find(function(node) { return node; });
+      if (!chat || mutations.every(function(m) { return m.target.closest && m.target.closest('mjx-container'); })) return;
+      if (chatTimer) clearTimeout(chatTimer);
+      chatTimer = setTimeout(function() { typeset(chat); }, 700);
+    }).observe(document.body, { childList: true, subtree: true });
+
     // Tables inside a closed <details> are measured as zero wide; fix on opening.
     document.addEventListener('toggle', function(e) {
       if (e.target.tagName === 'DETAILS' && e.target.open && $.fn.dataTable) {

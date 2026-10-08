@@ -51,3 +51,64 @@ chat_error_text <- function(message) {
                    "the language model returned an error")
   paste0("The chat is unavailable: ", reason, ".")
 }
+
+# ---- Keeping math intact through the chat's markdown renderer ----------------
+#
+# The chat window renders answers as markdown, which would turn "\(" into "("
+# and read "_" and "*" inside formulas as emphasis. math_guard() returns a
+# function that is fed the answer piece by piece and gives back text in which
+# every punctuation character between math delimiters is backslash-escaped, so
+# the markdown renderer reproduces the formula exactly and the browser can
+# typeset it. Call it with NULL at the end to flush what is held back.
+
+MATH_TOKEN <- "\\\\\\\\|\\\\[()\\[\\]]"
+
+math_guard <- function() {
+  in_math <- FALSE
+  held <- ""
+  escape <- function(text) gsub("([[:punct:]])", "\\\\\\1", gsub("\\s*\n\\s*", " ", text))
+  function(chunk) {
+    final <- is.null(chunk)
+    text <- paste0(held, if (final) "" else chunk)
+    held <<- ""
+    if (!final && grepl("\\\\$", text)) {
+      # A trailing backslash may be the first half of a delimiter.
+      held <<- "\\"
+      text <- substr(text, 1L, nchar(text) - 1L)
+    }
+    if (!nzchar(text)) return("")
+    hits <- gregexpr(MATH_TOKEN, text, perl = TRUE)[[1]]
+    if (hits[1] == -1L) return(if (in_math) escape(text) else text)
+    tokens <- regmatches(text, list(hits))[[1]]
+    between <- regmatches(text, list(hits), invert = TRUE)[[1]]
+    out <- character(0)
+    for (i in seq_along(between)) {
+      out <- c(out, if (in_math) escape(between[i]) else between[i])
+      if (i > length(tokens)) next
+      token <- tokens[i]
+      opens <- token %in% c("\\(", "\\[")
+      closes <- token %in% c("\\)", "\\]")
+      if (opens && !in_math) in_math <<- TRUE
+      out <- c(out, if (in_math || closes) escape(token) else token)
+      if (closes && in_math) in_math <<- FALSE
+    }
+    paste(out, collapse = "")
+  }
+}
+
+# The same for a whole answer at once.
+guard_math_text <- function(text) {
+  guard <- math_guard()
+  paste0(guard(text), guard(NULL))
+}
+
+# Wrap a model's streamed answer (an async generator of text pieces).
+guard_math_stream <- coro::async_generator(function(stream) {
+  guard <- math_guard()
+  for (chunk in coro::await_each(stream)) {
+    piece <- guard(as.character(chunk))
+    if (nzchar(piece)) coro::yield(piece)
+  }
+  rest <- guard(NULL)
+  if (nzchar(rest)) coro::yield(rest)
+})

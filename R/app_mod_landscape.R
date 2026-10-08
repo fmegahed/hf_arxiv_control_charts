@@ -190,10 +190,11 @@ landscape_server <- function(id, app, deps) {
         shiny::need(nrow(gap()$cells) > 0L, "These two fields are not both recorded for any selected paper."))
       chart_gap_map(gap(), source = ns("gap"))
     })
-    shiny::observeEvent(clicked("gap"), {
-      values <- strsplit(clicked("gap"), LIST_SEP, fixed = TRUE)[[1]]
+    gap_click <- shiny::reactive(plotly_click_event(session, ns("gap")))
+    shiny::observeEvent(gap_click(), {
       fields <- gap_fields()
-      if (length(values) != 2L || is.null(fields$a) || is.null(fields$b)) return()
+      values <- if (!is.null(gap())) gap_map_click(gap_click(), gap())
+      if (is.null(values) || is.null(fields$a) || is.null(fields$b)) return()
       state <- shiny::isolate(app$filters())
       state <- set_condition(state, fields$a$name, values[1], condition_track(spec, fields$a$name, NULL, state$track))
       state <- set_condition(state, fields$b$name, values[2], condition_track(spec, fields$b$name, NULL, state$track))

@@ -43,6 +43,17 @@ test_that("the gap map counts papers that carry both labels", {
   expect_s3_class(chart_gap_map(gap), "plotly")
 })
 
+test_that("a click on a heat-map cell is read as the two labels of that cell", {
+  gap <- gap_map(in_scope("spc"), "chart_approach", "chart_statistic", exclude = "None")
+  # plotly reports zero-based (row, column)
+  expect_equal(gap_map_click(list(pointNumber = list(0L, 0L)), gap), c(gap$a_values[1], gap$b_values[1]))
+  expect_equal(gap_map_click(list(pointNumber = list(1L, 2L)), gap), c(gap$a_values[2], gap$b_values[3]))
+  expect_null(gap_map_click(list(pointNumber = list(9L, 0L)), gap))
+  expect_null(gap_map_click(list(pointNumber = 3L), gap))
+  expect_null(gap_map_click(list(), gap))
+  expect_null(gap_map_click(list(pointNumber = list(0L, 1L)), gap, max_values = 1L))
+})
+
 rising_fixture <- function() {
   data.frame(
     year = c(rep(2020L, 10), rep(2025L, 10)),
