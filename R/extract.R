@@ -192,53 +192,90 @@ base_record <- function(paper, track, spec, model, now = Sys.time()) {
 fail_record <- function(record, usage, error_class, error_message) {
   record$status <- "failed"
   record$error_class <- error_class
-  record$error_message <- substr(gsub("[\r\n]+", " ", error_message), 1L, 300L)
+  record$error_message <- substr(gsub("[\r\n]+", " ", paste(error_message, collapse = "; ")), 1L, 300L)
   c(record, usage)
 }
 
+# Attach usage totals and the raw model outputs to a finished record.
+finish_record <- function(record, usage, raw) {
+  record <- c(record, usage)
+  attr(record, "raw") <- raw
+  record
+}
+
 # Run the stages for one paper. `fetch_pdf(paper)` returns
-# list(ok, path, truncated, error_class, error_message).
+# list(ok, path, truncated, error_class, error_message). The returned record
+# carries the unprocessed model outputs in attr(, "raw") so a factsheet can be
+# rebuilt later without calling the model again.
 extract_paper <- function(paper, track, spec, llm, fetch_pdf, model, now = Sys.time()) {
   record <- base_record(paper, track, spec, model, now)
   usage <- empty_usage()
   flags <- character()
+  raw <- list()
 
   screen <- llm$screen(track, paper)
   usage <- add_usage(usage, screen$usage)
-  if (!screen$ok) return(fail_record(record, usage, screen$error_class, screen$error_message))
+  if (!screen$ok) {
+    return(finish_record(fail_record(record, list(), screen$error_class, screen$error_message), usage, raw))
+  }
+  raw$screen <- screen$data
   record$scope_decision <- screen$data$scope_decision
   record$scope_category <- screen$data$scope_category
   record$scope_reason <- clean_short_text(screen$data$scope_reason, 300L)
   if (identical(record$scope_decision, "out_of_scope")) {
     record$status <- "out_of_scope"
-    return(c(record, usage))
+    return(finish_record(record, usage, raw))
   }
 
   pdf <- fetch_pdf(paper)
-  if (!pdf$ok) return(fail_record(record, usage, pdf$error_class, pdf$error_message))
+  if (!pdf$ok) {
+    return(finish_record(fail_record(record, list(), pdf$error_class, pdf$error_message), usage, raw))
+  }
   if (isTRUE(pdf$truncated)) flags <- c(flags, "pdf_truncated")
 
   classify <- llm$classify(track, pdf$path)
   usage <- add_usage(usage, classify$usage)
-  if (!classify$ok) return(fail_record(record, usage, classify$error_class, classify$error_message))
+  if (!classify$ok) {
+    return(finish_record(fail_record(record, list(), classify$error_class, classify$error_message), usage, raw))
+  }
+  raw$classify <- classify$data
   labels <- postprocess_classification(classify$data, spec, track)
 
   narrate <- llm$narrate(track, pdf$path, labels_as_text(labels$columns, spec, track))
   usage <- add_usage(usage, narrate$usage)
-  if (!narrate$ok) return(fail_record(record, usage, narrate$error_class, narrate$error_message))
+  if (!narrate$ok) {
+    return(finish_record(fail_record(record, list(), narrate$error_class, narrate$error_message), usage, raw))
+  }
+  raw$narrate <- narrate$data
   narrative <- postprocess_narrative(narrate$data)
 
-  record <- c(record, labels$columns, narrative$columns)
-  record$status <- "ok"
-  flags <- unique(c(flags, labels$flags, narrative$flags))
-  record$qa_flags <- collapse_values(flags)
+  complete <- c(record, labels$columns, narrative$columns)
+  complete$status <- "ok"
+  complete$qa_flags <- collapse_values(unique(c(flags, labels$flags, narrative$flags)))
 
-  problems <- validate_record(record, spec, track)
+  problems <- validate_record(complete, spec, track)
   if (length(problems) > 0L) {
-    return(fail_record(record[names(base_record(paper, track, spec, model, now))], usage,
-                       "validation_error", problems))
+    return(finish_record(fail_record(record, list(), "validation_error", problems), usage, raw))
   }
-  c(record, usage)
+  finish_record(complete, usage, raw)
+}
+
+# Rebuild a record from stored raw model outputs (no model calls). Used to
+# re-apply post-processing after a sanitizer or rule change.
+record_from_raw <- function(entry, spec, track) {
+  replay <- function(data) list(ok = TRUE, data = data, usage = NULL)
+  missing_stage <- list(ok = FALSE, data = NULL, usage = NULL, error_class = "api_error",
+                        error_message = "stage output not stored")
+  llm <- list(
+    screen = function(track, paper) if (is.null(entry$raw$screen)) missing_stage else replay(entry$raw$screen),
+    classify = function(track, pdf_path) if (is.null(entry$raw$classify)) missing_stage else replay(entry$raw$classify),
+    narrate = function(track, pdf_path, labels_text) if (is.null(entry$raw$narrate)) missing_stage else replay(entry$raw$narrate)
+  )
+  fetch <- function(paper) list(ok = TRUE, path = NA_character_, truncated = isTRUE(entry$pdf_truncated))
+  record <- extract_paper(list(id = entry$id), track, spec, llm, fetch, entry$model,
+                          now = as.POSIXct(entry$at, format = "%Y-%m-%dT%H:%M:%SZ", tz = "UTC"))
+  for (key in names(entry$usage)) record[[key]] <- entry$usage[[key]]
+  record
 }
 
 # Every column of a v2 factsheet, in order.

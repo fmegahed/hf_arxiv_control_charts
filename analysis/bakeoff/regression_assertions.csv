@@ -1,0 +1,18 @@
+review_row,track,field,assertion,value,strength,basis
+11,spc,phase,equals,Phase II,hard,Author: the paper does not propose or assess a Phase I chart
+32,spc,phase,equals,Phase II,hard,Author: mostly Phase II
+33,spc,phase,equals,Phase II,hard,Author: Phase II where Both was extracted
+39,spc,phase,equals,Phase II,hard,Author: it is a Phase II monitoring paper
+43,spc,phase,equals,Phase II,hard,Author: Phase II where Both was extracted
+13,spc,phase,equals,Self-starting,hard,Author: self-starting chart with no Phase I/II separation
+11,spc,chart_approach,excludes,Bayesian,hard,Author: the method does not rely on any Bayesian approach
+43,spc,chart_approach,excludes,Bayesian,hard,Author: Bayesian charts were not investigated
+44,spc,chart_family,excludes,High-dimensional,hard,Author: would delete High-dimensional
+38,spc,chart_statistic,excludes,Machine learning-based,hard,Author: ML only classifies causes after a signal
+40,spc,chart_statistic,includes,MEWMA,hard,Author: multivariate EWMA charts
+2,reliability,scope,equals,out_of_scope,hard,Author: this is active learning or sequential optimization
+19,reliability,scope,equals,out_of_scope,hard,Author: explainability is the main topic
+1,reliability,scope,equals,out_of_scope,soft,v1 flagged out of scope; low author ratings on classification
+17,reliability,scope,equals,out_of_scope,soft,v1 flagged out of scope; topic rated 1
+36,reliability,scope,equals,out_of_scope,soft,v1 flagged out of scope; tags were shown as nan
+37,reliability,scope,equals,out_of_scope,soft,v1 flagged out of scope; tags were shown as nan
