@@ -23,7 +23,7 @@ args <- parse_cli_args(commandArgs(trailingOnly = TRUE),
                                        pdf_cache = "pdf_cache"))
 local_dir <- file.path("analysis", "bakeoff", "local")
 run_dir <- file.path(local_dir, "runs", args$label)
-sample <- read_factsheet(file.path(local_dir, "sample.csv"))
+sample <- read_factsheet(file.path(local_dir, if (is.null(args$sample)) "sample.csv" else args$sample))
 
 llm <- make_llm(spec, model = args$model,
                 screen_model = if (is.null(args$screen_model)) args$model else args$screen_model)
