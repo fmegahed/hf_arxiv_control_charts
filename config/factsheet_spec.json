@@ -1,6 +1,6 @@
 {
-  "schema_version": "2.1.0",
-  "prompt_version": "2.1.0",
+  "schema_version": "2.2.0",
+  "prompt_version": "2.2.0",
   "models": {
     "extraction": "gpt-6-luna",
     "second_reader": "jev-latest",
@@ -77,8 +77,8 @@
       "factsheet_csv": "reliability_factsheet.csv",
       "core_filters": {"topic": "reliability_topic", "method": "model_family"},
       "scope": {
-        "include": "The object of study is the failure, lifetime, degradation, maintenance or failure probability of engineered systems, components, structures or software.",
-        "exclude": "'Reliable' or 'reliability' describes an estimator, a statistical method, a machine-learning prediction, a measurement instrument or a rating (for example inter-rater or test-retest reliability, or trustworthy AI); or 'degradation' or 'maintenance' refers to something other than engineered equipment.",
+        "include": "The object of study is the failure, lifetime, degradation, maintenance or failure probability of engineered systems, components, structures or software. Also include statistical methods for lifetime or failure-time data that the paper presents for reliability use, such as life tests, censoring schemes, stress-strength models or lifetime distributions, even when the example data are not from engineering.",
+        "exclude": "'Reliable' or 'reliability' describes an estimator, a statistical method, a machine-learning prediction, a measurement instrument or a rating (for example inter-rater or test-retest reliability, or trustworthy AI); or 'degradation' or 'maintenance' refers to something other than engineered equipment; or the paper is survival analysis for medical or biological studies and does not present itself as reliability work.",
         "example_in": "Bayesian analysis of Weibull-distributed bearing lifetimes under accelerated testing.",
         "example_out": "Reliability of deep ensembles under distribution shift."
       },
@@ -194,8 +194,7 @@
           ["Univariate", "One scalar quality characteristic at a time."],
           ["Multivariate", "A vector of a few to tens of correlated characteristics."],
           ["High-dimensional", "The paper itself says the number of variables is large relative to the sample size, or uses sparsity or dimension reduction for that reason."],
-          ["Profile monitoring", "A relationship between a response and predictors (a curve or regression) observed at each time."],
-          ["Functional data", "Whole curves or functions treated with functional data analysis."],
+          ["Profile or functional data", "Each observation is a curve, a function or a fitted relationship between a response and predictors. Includes profile monitoring and functional data analysis."],
           ["Image or spatial data", "Images, video, point clouds or spatial fields."],
           ["Network or graph data", "Networks or graphs observed over time."],
           ["Not applicable", "The paper does not monitor a specific data structure, for example a broad review."]
@@ -228,6 +227,7 @@
           ["MCUSUM", "Multivariate CUSUM."],
           ["Likelihood ratio (GLR)", "Generalized likelihood ratio statistics."],
           ["Change-point model", "Estimates when a change occurred as part of monitoring."],
+          ["Run rules or scan statistic", "The signal comes from a pattern over several consecutive points: runs rules, synthetic charts, or a scan window."],
           ["Residual or model-based", "Charts applied to residuals of a fitted time-series or regression model."],
           ["Machine learning-based", "A machine-learning model produces the monitoring statistic or the signal. Using machine learning only to diagnose causes after a signal does not count."]
         ]
@@ -321,9 +321,9 @@
           ["Mixture design", "Factors are proportions that sum to one."],
           ["Split-plot or restricted randomization", "Hard-to-change factors, strip-plot, or other randomization restrictions."],
           ["Block, crossover or row-column design", "Designs organized by blocking structure."],
-          ["Optimal design", "Constructed by optimizing a criterion for a stated model."],
-          ["Bayesian design", "Uses prior distributions or expected utility to choose the design."],
-          ["Sequential or adaptive design", "Later runs depend on earlier responses."],
+          ["Optimal design", "All runs are chosen before the experiment by optimizing a criterion for a stated model, with no prior distribution on the parameters."],
+          ["Bayesian design", "All runs are chosen before the experiment, and a prior distribution or expected utility enters the criterion."],
+          ["Sequential or adaptive design", "Later runs depend on earlier responses, whether or not the criterion is Bayesian. Choose 'Active learning or Bayesian optimization' instead when points are chosen one at a time by an acquisition function."],
           ["Space-filling or computer experiment", "Latin hypercube and related designs for simulators."],
           ["Active learning or Bayesian optimization", "Points chosen one at a time by an acquisition function."],
           ["Randomized experiment or A/B test", "Online or field experiments comparing treatments."],

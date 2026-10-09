@@ -35,8 +35,8 @@ all,code_availability_source,Not applicable (No code used),code_availability,No 
 spc,chart_family,Univariate,chart_family,Univariate
 spc,chart_family,Multivariate,chart_family,Multivariate
 spc,chart_family,High-dimensional,chart_family,High-dimensional
-spc,chart_family,Profile monitoring,chart_family,Profile monitoring
-spc,chart_family,Functional data analysis,chart_family,Functional data
+spc,chart_family,Profile monitoring,chart_family,Profile or functional data
+spc,chart_family,Functional data analysis,chart_family,Profile or functional data
 spc,chart_family,Image-based monitoring,chart_family,Image or spatial data
 spc,chart_family,Other,chart_family,None of the listed
 spc,chart_family,Bayesian,chart_approach,Bayesian
