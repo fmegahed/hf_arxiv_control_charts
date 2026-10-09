@@ -122,6 +122,15 @@ filter_spec_to_state <- function(raw, spec) {
   state
 }
 
+# The model sometimes sets the public-code switch and also lists every public
+# way of sharing code. The two say the same thing, so the list is dropped.
+drop_redundant_code_condition <- function(state) {
+  if (!isTRUE(state$public_code)) return(state$conditions)
+  Filter(function(cond) {
+    !(identical(cond$field, "code_availability") && setequal(cond$values, PUBLIC_CODE_SOURCES))
+  }, state$conditions)
+}
+
 # Check a filled form against the specification. Returns the clean state, what
 # was dropped, and the model's one-sentence reading of the question.
 validate_filter_spec <- function(raw, spec, year_range, context_track = NULL) {
@@ -132,6 +141,7 @@ validate_filter_spec <- function(raw, spec, year_range, context_track = NULL) {
   # Inside a track, a question that names no track stays in that track.
   if (is.null(clean$track) && no_track_named && !is.null(context_track)) clean$track <- context_track
   if (nzchar(clean$residual)) clean$sort <- "relevance"
+  clean$conditions <- drop_redundant_code_condition(clean)
   clean <- normalize_state(clean)
   interpretation <- raw$interpretation
   list(state = clean, dropped = checked$dropped,

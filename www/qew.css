@@ -180,7 +180,13 @@ button.tag-chip:hover, button.tag-chip:focus { border-color: var(--track-color);
 .track-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
 a.track-card { min-height: 0; padding: 26px 22px; border-width: 2px; border-style: solid; text-decoration: none; }
 a.track-card:hover, a.track-card:focus { transform: none; box-shadow: 0 4px 16px rgba(0,0,0,0.14); text-decoration: none; outline: none; }
-a.track-card .track-card-count { background: #fff; border: 1px solid; font-weight: 500; }
+a.track-card .track-card-number { font-size: 2.6em; font-weight: 700; line-height: 1.1; margin-top: 6px; }
+a.track-card .track-card-count { background: none; border: 0; padding: 0; border-radius: 0; font-weight: 600; }
+a.track-card .track-card-breakdown { margin-top: 8px; font-size: 0.85em; color: #555; }
+.landing-scope-note { max-width: 860px; margin: 28px auto 0; padding: 18px 22px; text-align: left; background: #fff; border: 1px solid #d8d4c8; border-radius: 8px; }
+.landing-scope-note h3 { margin: 0 0 8px; font-size: 1.05em; }
+.landing-scope-note p, .landing-scope-note li { font-size: 0.95em; line-height: 1.5; }
+.landing-scope-note ul { margin: 0 0 10px; padding-left: 22px; }
 .landing-paper { font-size: 0.9em; }
 .app-footer .help-q { margin-left: 2px; }
 

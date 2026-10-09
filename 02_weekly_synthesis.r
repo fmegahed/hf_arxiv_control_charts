@@ -571,7 +571,7 @@ save_digest_json <- function(papers, synthesis, output_file = "data/weekly_diges
 message("=============================================================================")
 message("QE ArXiv Watch - Weekly Research Digest")
 message("=============================================================================")
-message(sprintf("Run date: %s (Monday)", format(Sys.Date(), "%B %d, %Y")))
+message(sprintf("Run date: %s", format(Sys.Date(), "%B %d, %Y (%A)")))
 message("")
 
 # Step 1: Collect papers from the past week

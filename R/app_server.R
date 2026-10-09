@@ -325,17 +325,10 @@ app_server <- function(deps) {
     # ---- landing ----
     output$landing_tracks <- shiny::renderUI({
       shiny::div(class = "track-cards", lapply(names(spec$tracks), function(id) {
-        info <- spec$tracks[[id]]
-        rows <- all_papers[all_papers$track == id, , drop = FALSE]
-        shiny::tags$a(
-          class = "track-card", href = paste0("?track=", id), `data-select-track` = id,
-          style = paste0("border-color: ", info$color, ";"),
-          shiny::tags$h3(style = paste0("color: ", info$color, ";"), info$label),
-          shiny::tags$p(info$description),
-          shiny::div(class = "track-card-count", style = paste0("border-color: ", info$color, ";"),
-                     format(sum(rows$status == "ok"), big.mark = ","), " papers in scope"))
+        landing_track_card(id, spec$tracks[[id]], all_papers[all_papers$track == id, , drop = FALSE])
       }))
     })
+    output$landing_scope <- shiny::renderUI(landing_scope_note(spec, all_papers))
 
     # ---- modules ----
     app <- list(

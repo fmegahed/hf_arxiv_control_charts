@@ -46,6 +46,50 @@ logo_row <- function(class) {
     shiny::tags$img(src = "uva-compacte-logo.png", alt = "University of Amsterdam"))
 }
 
+# One track card on the landing page: the in-scope count, then where it comes
+# from (papers the arXiv search found, papers the screen removed).
+landing_track_card <- function(id, info, rows) {
+  count <- function(n) format(n, big.mark = ",")
+  n_ok <- sum(rows$status == "ok")
+  n_out <- sum(rows$status == "out_of_scope")
+  n_failed <- sum(rows$status == "failed")
+  shiny::tags$a(
+    class = "track-card", href = paste0("?track=", id), `data-select-track` = id,
+    style = paste0("border-color: ", info$color, ";"),
+    shiny::tags$h3(style = paste0("color: ", info$color, ";"), info$label),
+    shiny::tags$p(info$description),
+    shiny::div(class = "track-card-number", style = paste0("color: ", info$color, ";"), count(n_ok)),
+    shiny::div(class = "track-card-count", "papers in scope"),
+    shiny::div(class = "track-card-breakdown",
+               paste0(count(nrow(rows)), " found by the arXiv search, ", count(n_out), " screened out",
+                      if (n_failed > 0L) paste0(", ", count(n_failed), " not processed") else "")))
+}
+
+# Explains the counts on the cards: what the screen is, an example per track,
+# how to see what was removed, and why the counts differ from the paper's.
+landing_scope_note <- function(spec, papers) {
+  n_out <- sum(papers$status == "out_of_scope")
+  share <- if (nrow(papers) > 0L) round(100 * n_out / nrow(papers)) else 0
+  shiny::div(
+    class = "landing-scope-note",
+    shiny::tags$h3("Why some papers are screened out ", help_button("scope", "Which papers are counted")),
+    shiny::tags$p(paste0(
+      "Each track starts from a keyword search on arXiv, and a keyword search also finds papers that use the words in another sense. ",
+      "A language model therefore reads the title and abstract of every paper found and screens out those that are not about the track's subject. ",
+      "Across the tracks this removes ", format(n_out, big.mark = ","), " of ", format(nrow(papers), big.mark = ","),
+      " papers (", share, "%). The counts above, and every table and chart, use the papers that remain.")),
+    shiny::tags$p("Examples of papers that are screened out:"),
+    shiny::tags$ul(lapply(names(spec$tracks), function(id) {
+      info <- spec$tracks[[id]]
+      shiny::tags$li(shiny::tags$strong(paste0(info$short_label %||% info$label, ": ")), info$scope$example_out)
+    })),
+    shiny::tags$p(
+      "The screen can be wrong, so nothing is deleted. Inside a track, tick \"Include screened-out papers\" to list them with the reason given for each. ",
+      if (any(papers$status == "failed")) "\"Not processed\" means that no factsheet could be written, usually because arXiv offers no PDF for the paper. ",
+      "The searches were also rebuilt after the paper was written, so these counts differ from the ones it reports. ",
+      changes_link()))
+}
+
 landing_ui <- function(deps) {
   settings <- deps$settings
   shiny::div(
@@ -61,7 +105,8 @@ landing_ui <- function(deps) {
     shiny::div(
       class = "track-selector-container",
       shiny::tags$h2("Or open a track"),
-      shiny::uiOutput("landing_tracks")),
+      shiny::uiOutput("landing_tracks"),
+      shiny::uiOutput("landing_scope")),
     shiny::div(
       class = "landing-footer",
       shiny::div(

@@ -303,3 +303,31 @@ test_that("the page layout has the question box, four tabs and no stat tiles", {
   broken$data <- list(papers = NULL, problems = "Data files were not found.", data_dir = "nowhere")
   expect_match(as.character(app_ui(broken)), "cannot start", fixed = TRUE)
 })
+
+test_that("a landing card shows the in-scope count and where it comes from", {
+  papers <- fixture_papers()
+  rows <- papers[papers$track == "spc", , drop = FALSE]
+  html <- as.character(landing_track_card("spc", TEST_SPEC$tracks$spc, rows))
+  expect_match(html, paste0("track-card-number[^>]*>[[:space:]]*", sum(rows$status == "ok"), "[[:space:]]*<"))
+  expect_match(html, paste0(nrow(rows), " found by the arXiv search, ", sum(rows$status == "out_of_scope"), " screened out"),
+               fixed = TRUE)
+  expect_match(html, "?track=spc", fixed = TRUE)
+  with_failed <- rows; with_failed$status[1] <- "failed"
+  expect_match(as.character(landing_track_card("spc", TEST_SPEC$tracks$spc, with_failed)),
+               paste0(", ", sum(with_failed$status == "failed"), " not processed"), fixed = TRUE)
+  none_failed <- rows[rows$status != "failed", , drop = FALSE]
+  expect_false(grepl("not processed", as.character(landing_track_card("spc", TEST_SPEC$tracks$spc, none_failed))))
+})
+
+test_that("the landing page explains the screen with the spec's examples and links to the help", {
+  papers <- fixture_papers()
+  html <- as.character(landing_scope_note(TEST_SPEC, papers))
+  expect_match(html, paste0(sum(papers$status == "out_of_scope"), " of ", nrow(papers), " papers"), fixed = TRUE)
+  for (id in names(TEST_SPEC$tracks)) {
+    expect_match(html, htmltools::htmlEscape(TEST_SPEC$tracks[[id]]$scope$example_out), fixed = TRUE, info = id)
+  }
+  expect_match(html, "data-help=\"scope\"", fixed = TRUE)
+  expect_match(html, "data-help=\"changes\"", fixed = TRUE)
+  expect_match(html, "Include screened-out papers", fixed = TRUE)
+  expect_match(as.character(landing_scope_note(TEST_SPEC, papers[0, ])), "0 of 0 papers", fixed = TRUE)
+})

@@ -174,3 +174,15 @@ test_that("questions are length-capped and rate-limited", {
   expect_false(rate_limit_ok(rep(now - 1, QUESTION_RATE_LIMIT), now))
   expect_true(rate_limit_ok(rep(now - QUESTION_RATE_WINDOW_SEC - 1, QUESTION_RATE_LIMIT), now))
 })
+
+test_that("a list of every public code source is dropped when the public-code switch is on", {
+  fields <- function(form) vapply(validate_filter_spec(form, TEST_SPEC, YEARS)$state$conditions,
+                                  function(cond) cond$field, character(1))
+  all_public <- list(code_availability = as.list(PUBLIC_CODE_SOURCES))
+  expect_false("code_availability" %in% fields(fake_form(public_code = TRUE, conditions = all_public)))
+  # without the switch the list is the only filter, so it stays
+  expect_true("code_availability" %in% fields(fake_form(conditions = all_public)))
+  # a narrower list says more than the switch, so it stays
+  one <- list(code_availability = as.list(PUBLIC_CODE_SOURCES[1]))
+  expect_true("code_availability" %in% fields(fake_form(public_code = TRUE, conditions = one)))
+})
