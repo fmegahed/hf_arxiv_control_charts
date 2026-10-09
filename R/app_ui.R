@@ -73,7 +73,8 @@ landing_ui <- function(deps) {
                                                "Source code"))),
         shiny::div(class = "landing-version",
                    paste0("Version ", settings$app_version, " | Data current as of ",
-                          format(deps$data$data_date, "%d %B %Y")))))
+                          format(deps$data$data_date, "%d %B %Y"), " | "),
+                   changes_link())))
   )
 }
 
@@ -120,7 +121,7 @@ track_view_ui <- function(deps) {
                help_button("factsheet", "How factsheets are made and how good they are"),
                " | ", shiny::tags$a(href = deps$settings$repo_url, target = "_blank", rel = "noopener noreferrer",
                                     "Source code"),
-               " | Version ", deps$settings$app_version))
+               " | Version ", deps$settings$app_version, " | ", changes_link()))
   )
 }
 

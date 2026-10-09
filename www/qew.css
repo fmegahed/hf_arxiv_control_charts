@@ -142,6 +142,8 @@ button.tag-chip:hover, button.tag-chip:focus { border-color: var(--track-color);
 .tag-chip.tag-muted { color: var(--ink-muted); border-style: dashed; }
 .tag-chip.tag-static { background: var(--miami-light-tan); }
 .not-recorded { color: var(--ink-muted); font-style: italic; }
+.changes-link { background: none; border: 0; padding: 0; font: inherit; color: inherit; text-decoration: underline; cursor: pointer; }
+.changes-link:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
 .label-check { display: block; margin-top: 2px; font-size: 0.88em; color: var(--ink-muted); }
 .label-check-changed, .label-check-disputed { font-style: italic; }
 .evidence { margin-top: 2px; font-size: 0.92em; }

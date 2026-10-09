@@ -104,6 +104,20 @@ test_that("the help control is a labelled button", {
   expect_match(html, "aria-label=\"How asking a question works\"", fixed = TRUE)
 })
 
+test_that("the app says it was updated since the paper, from the settings and the spec", {
+  text <- help_text("changes", help_ctx(), track = "spc")
+  for (value in c(TEST_SETTINGS$app_version, TEST_SETTINGS$paper_version$app_version,
+                  TEST_SETTINGS$paper_version$extraction_model, TEST_SETTINGS$paper_version$frozen_data_path,
+                  unlist(TEST_SPEC$models[c("extraction", "second_reader", "tie_break")]),
+                  TEST_SPEC$schema_version)) {
+    expect_match(text, value, fixed = TRUE)
+  }
+  expect_true(dir.exists(app_path(TEST_SETTINGS$paper_version$frozen_data_path)))
+  link <- as.character(changes_link())
+  expect_match(link, "data-help=\"changes\"", fixed = TRUE)
+  expect_match(link, "What changed?", fixed = TRUE)
+})
+
 test_that("help lists the readers that are configured, and only those", {
   ctx <- help_ctx()
   for (topic in c("factsheet", "label_check")) {

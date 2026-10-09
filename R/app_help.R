@@ -133,7 +133,7 @@ help_scope_rules <- function(ctx, track) {
     p("For example, kept: \"", info$scope$example_in, "\" Screened out: \"", info$scope$example_out, "\""))
 }
 
-HELP_TOPICS <- c("ask", "scope", "factsheet", "label_check", "chat", "relevance", "explore", "per_year", "composition",
+HELP_TOPICS <- c("changes", "ask", "scope", "factsheet", "label_check", "chat", "relevance", "explore", "per_year", "composition",
                  "trends", "gap_map", "rising", "reuse", "tested", "authors", "library")
 
 # Content of one help topic: list(title, body). `fields` are field
@@ -205,6 +205,24 @@ help_content <- function(topic, ctx, track = NULL, fields = list()) {
       htmltools::tags$h5("How good are these factsheets"),
       help_reliability(ctx, track),
       p("Each paper's own page shows the model, date and schema version of its factsheet, and has a link to report a problem."))),
+
+    changes = list(title = "What changed since the paper", body = htmltools::tagList(
+      p("This is version ", settings$app_version, " of the app (", settings$app_version_date, "). The paper describes version ",
+        settings$paper_version$app_version, ", in which one model (", htmltools::tags$code(settings$paper_version$extraction_model),
+        ") wrote each factsheet. If what you see here differs from the paper, that is why."),
+      htmltools::tags$h5("Who reads each paper now"),
+      help_readers(ctx, track),
+      htmltools::tags$h5("What else changed"),
+      htmltools::tags$ul(
+        htmltools::tags$li("The arXiv searches were rebuilt from what journals in the field publish, and each paper is screened for scope before it is read. Screened-out papers are not counted unless you ask for them."),
+        htmltools::tags$li("The fields were redefined (schema version ", spec$schema_version, "): one main label per question, with the passage the model relied on."),
+        htmltools::tags$li("You can ask a question in plain words; it is shown back as filters you can edit."),
+        htmltools::tags$li("Every extracted field can be used as a filter, and each paper has one page with its complete factsheet."),
+        htmltools::tags$li("The control chart track is now called ", spec$tracks$spc$label, ".")),
+      p("Authors of the papers reviewed the earlier factsheets, and their corrections drove these changes. The factsheets they saw are kept unchanged in ",
+        htmltools::tags$code(settings$paper_version$frozen_data_path), " of the ",
+        htmltools::tags$a(href = settings$repo_url, target = "_blank", rel = "noopener noreferrer", "source repository"), "."),
+      p("The difference is intentional. Language models are replaced often, and users find problems that only appear in use. An app built on a language model needs regular updating, and a paper can only describe it at one point in time."))),
 
     label_check = list(title = "How labels are checked", body = htmltools::tagList(
       help_readers(ctx, track),
@@ -290,6 +308,12 @@ help_text <- function(topic, ctx, track = NULL, fields = list()) {
 }
 
 # The "?" control: a real button, so it is reachable by keyboard.
+# Text link in the footers that opens the "What changed since the paper" help.
+changes_link <- function() {
+  htmltools::tags$button(type = "button", class = "changes-link", `data-help` = "changes",
+                         `aria-haspopup` = "dialog", "Updated since the paper. What changed?")
+}
+
 help_button <- function(topic, label = "Explain this") {
   htmltools::tags$button(type = "button", class = "help-q", `data-help` = topic, `aria-label` = label,
                          title = label, "?")

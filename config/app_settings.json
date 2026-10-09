@@ -1,6 +1,13 @@
 {
   "_comment": "Settings of the Shiny app that refer to values of config/factsheet_spec.json or to the outside world. tests/testthat/test-app-settings.R checks every value named here against the spec.",
   "app_version": "4.0.0",
+  "app_version_date": "October 2026",
+  "paper_version": {
+    "_comment": "The version of the app that the paper describes. A record of the past: nothing is sent to this model.",
+    "app_version": "3.3.0",
+    "extraction_model": "gpt-5.2",
+    "frozen_data_path": "data/frozen/v1"
+  },
   "paper_title": "What Quality Engineers Need to Know About Generative AI: Structured Data Extraction",
   "authors": "Fadel M. Megahed, Ying-Ju Chen, Yamin Dahwich, Arthur Carvalho, L. Allison Jones-Farmer, Ibrahim Yousif, and Inez M. Zwetsloot",
   "repo_url": "https://github.com/fmegahed/hf_arxiv_control_charts",
