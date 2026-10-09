@@ -89,8 +89,23 @@ if (!is.null(failures)) { say("Failures by class:"); say(""); table_md(failures)
 say("## Regression assertions from author feedback"); say("")
 assertions <- utils::read.csv(file.path("analysis", "bakeoff", "regression_assertions.csv"), stringsAsFactors = FALSE)
 assertions$paper_id <- sample$paper_id[match(assertions$review_row, as.integer(sample$review_row))]
+# With --force-in-scope every paper has status ok, so scope assertions are
+# checked against what the screen itself decided.
+with_screen_status <- function(run) {
+  said <- screen_decisions(run)
+  lapply(run$sheets, function(sheet) {
+    if (is.null(sheet)) return(sheet)
+    out <- said[sheet$paper_id] %in% "out_of_scope"
+    sheet$screen_out <- out
+    sheet
+  })
+}
 for (label in labels) {
+  sheets <- with_screen_status(runs[[label]])
+  scope_view <- lapply(sheets, function(sheet) { sheet$status[sheet$screen_out & sheet$status %in% "ok"] <- "out_of_scope"; sheet })
+  is_scope <- assertions$field == "scope"
   scored <- score_assertions(assertions, runs[[label]]$sheets)
+  scored$passed[is_scope] <- score_assertions(assertions[is_scope, ], scope_view)$passed
   assertions[[label]] <- scored$passed
   for (strength in c("hard", "soft")) {
     part <- scored$passed[scored$strength == strength]
@@ -132,6 +147,19 @@ if (length(labels) >= 2L) {
 }
 
 say("## Classification"); say("")
+# Labels are compared only on papers that no run's screen excluded: forcing an
+# out-of-scope paper through classification says nothing about label quality.
+excluded <- unique(unlist(lapply(c(runs, if (has_repeat) list(repeat_run)), function(run) {
+  said <- screen_decisions(run); names(said)[said %in% "out_of_scope"]
+})))
+in_scope_only <- function(run) {
+  run$sheets <- lapply(run$sheets, function(sheet) sheet[!sheet$paper_id %in% excluded, , drop = FALSE])
+  run
+}
+runs_all <- runs
+runs <- lapply(runs, in_scope_only)
+if (has_repeat) repeat_run <- in_scope_only(repeat_run)
+say(length(excluded), " papers were screened out by at least one run and are left out of this section."); say("")
 main_column <- function(field) if (field$kind == "primary_additional") paste0(field$name, "_primary") else field$name
 label_rows <- list(); disagreements <- list()
 for (track in TRACK_IDS) for (field in spec_fields(spec, track)) {
@@ -172,6 +200,16 @@ if (length(disagreements) > 0L) {
   say(nrow(d), " label disagreements written to label_disagreements.csv for adjudication against the PDFs."); say("")
 }
 
+say("### What the catch-all was used for"); say("")
+for (label in labels) for (track in TRACK_IDS) {
+  sheet <- runs[[label]]$sheets[[track]]
+  for (column in grep("_other_term$", names(sheet), value = TRUE)) {
+    terms <- stats::na.omit(sheet[[column]])
+    if (length(terms) > 0L) say("- ", label, " ", track, " ", sub("_other_term$", "", column), " (", length(terms), "): ",
+                                paste(utils::head(terms, 25), collapse = "; "))
+  }
+}
+say("")
 say("## Quality flags and evidence"); say("")
 flags <- c("truncated_additional", "other_term_missing", "math_repaired", "latex_invalid",
            "undefined_acronym", "pdf_truncated")

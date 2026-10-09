@@ -1,6 +1,6 @@
 {
   "schema_version": "2.0.0",
-  "prompt_version": "2.0.0",
+  "prompt_version": "2.0.1",
   "models": {
     "extraction": "gpt-6-luna",
     "chat": "gpt-6-luna",
@@ -231,7 +231,7 @@
       {
         "name": "phase", "label": "Phase", "kind": "single", "evidence": true,
         "group": "Method", "filter": "more",
-        "question": "Which phase does the paper's method address? Apply these tests in order and stop at the first that fits. (1) No separate reference sample is needed and estimates are updated with each new observation: 'Self-starting'. (2) The paper proposes or evaluates a method for analysing a fixed historical dataset (finding outliers, establishing control, retrospective change detection) AND a method for online monitoring: 'Phase I and Phase II'. (3) Only the historical-data method: 'Phase I'. (4) Online monitoring of new observations: 'Phase II'. (5) Otherwise: 'Not applicable'. Important: estimating the in-control mean or variance from a reference sample is NOT Phase I. Studying how estimation error affects a chart is NOT Phase I. Both are Phase II.",
+        "question": "Which phase does the paper's own contribution address? Many Phase II papers use the words 'Phase I' because they take an in-control reference sample to estimate parameters or to set control limits. That is NOT Phase I. Decide by what the proposed or studied method does, and apply these tests in order, stopping at the first that fits. (1) The method needs no separate reference sample and updates its estimates with each new observation: 'Self-starting'. (2) The method itself analyses a fixed historical dataset, to find outliers or changes in it or to establish that the process was in control, and the paper proposes no online monitoring method: 'Phase I'. (3) The paper proposes one method of each kind, a retrospective one and an online one: 'Phase I and Phase II'. (4) The method monitors new observations as they arrive: 'Phase II'. This includes papers that estimate parameters from Phase I data, papers that split an example dataset into a Phase I part and a Phase II part, and papers that study how estimation error affects a chart. (5) Otherwise: 'Not applicable'. Examples: 'the first 150 observations are used as Phase I data to estimate the parameters and the rest are monitored' is Phase II. 'A chart is proposed to detect outliers in the historical sample' is Phase I.",
         "values": [
           ["Phase I", "Retrospective analysis of a fixed historical dataset."],
           ["Phase II", "Online monitoring of new observations."],
