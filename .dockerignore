@@ -21,6 +21,8 @@ local_papers
 
 # Development and archived data
 data/dev_v2
+data/staging_v2
+data/raw_v2
 data/frozen
 
 # renv's local library is rebuilt in the image from renv.lock

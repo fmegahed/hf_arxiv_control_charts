@@ -1,38 +1,38 @@
 {
   "spc": {
     "id": "spc",
-    "label": "Control Charts (SPC)",
-    "short_label": "SPC",
-    "query": "(ti:\"control chart\" OR abs:\"control chart\")",
-    "icon": "chart-bar",
-    "color": "#C41230",
-    "description": "Statistical Process Control and control chart research",
-    "metadata_csv": "data/spc_arxiv_metadata.csv",
-    "factsheet_csv": "data/spc_factsheet.csv",
-    "relevance_field": "is_spc_paper"
+    "label": "Statistical Process Monitoring (SPM)",
+    "short_label": "SPM",
+    "query": "(((ti:\"control chart\" OR abs:\"control chart\") OR (ti:\"statistical process monitoring\" OR abs:\"statistical process monitoring\" OR ti:\"statistical process control\" OR abs:\"statistical process control\") OR ((ti:\"process monitoring\" OR abs:\"process monitoring\") AND (cat:stat.ME OR cat:stat.AP))) OR (ti:\"time between events\") OR ((abs:\"out-of-control\" OR abs:\"control limits\" OR abs:\"profile monitoring\" OR ti:\"profile monitoring\" OR ti:\"monitoring method\" OR abs:Shewhart OR abs:EWMA) AND (cat:stat.ME OR cat:stat.AP OR cat:stat.CO OR cat:stat.OT OR cat:stat.ML OR cat:math.ST)))",
+    "icon": "chart-line",
+    "color": "#1b9e77",
+    "description": "Control charts and statistical process monitoring methods.",
+    "metadata_csv": "spc_arxiv_metadata.csv",
+    "factsheet_csv": "spc_factsheet.csv",
+    "schema_version": "2.2.0"
   },
   "exp_design": {
     "id": "exp_design",
     "label": "Experimental Design (DOE)",
     "short_label": "DOE",
-    "query": "(ti:\"experimental design\" OR ti:\"designed experiment\" OR ti:\"design of experiment\" OR ti:\"response surface\" OR ti:\"supersaturated design\")",
+    "query": "((ti:\"experimental design\" OR ti:\"designed experiment\" OR ti:\"design of experiment\" OR ti:\"response surface\" OR ti:\"supersaturated design\") OR (abs:\"space-filling design\" OR ti:\"fractional factorial\" OR abs:\"split-plot\" OR abs:\"fractional factorial\" OR ti:\"D-optimal\" OR abs:\"response surface methodology\" OR ti:\"A/B tests\" OR ti:\"online experiments\" OR ti:Taguchi OR ti:rerandomization OR abs:rerandomization OR abs:\"sequential experimentation\" OR ti:\"orthogonal array\") OR ((abs:\"space-filling\" OR abs:\"D-optimal\" OR ti:\"optimal design\" OR abs:\"design construction\" OR abs:\"design criterion\" OR abs:\"screening experiment\" OR abs:\"latin hypercube\" OR abs:\"order-of-addition\" OR ti:\"block design\" OR abs:\"factorial design\" OR ti:factorial OR abs:\"online experiments\" OR abs:\"orthogonal array\" OR ti:\"controlled experiments\" OR abs:\"block design\" OR abs:\"choice experiments\" OR abs:\"uniform design\") AND (cat:stat.ME OR cat:stat.AP OR cat:stat.CO OR cat:stat.ML OR cat:math.ST)))",
     "icon": "flask",
-    "color": "#1B9E77",
-    "description": "Design of experiments and response surface methodology research",
-    "metadata_csv": "data/exp_design_arxiv_metadata.csv",
-    "factsheet_csv": "data/exp_design_factsheet.csv",
-    "relevance_field": "is_exp_design_paper"
+    "color": "#d95f02",
+    "description": "Design and analysis of experiments.",
+    "metadata_csv": "exp_design_arxiv_metadata.csv",
+    "factsheet_csv": "exp_design_factsheet.csv",
+    "schema_version": "2.2.0"
   },
   "reliability": {
     "id": "reliability",
     "label": "Reliability Engineering",
     "short_label": "Reliability",
-    "query": "((ti:reliability OR ti:degradation OR ti:maintenance OR ti:\"remaining useful life\" OR ti:\"failure analysis\") AND (cat:stat.ME OR cat:stat.AP OR cat:stat.ML))",
+    "query": "(((ti:reliability OR ti:degradation OR ti:maintenance OR ti:\"remaining useful life\" OR ti:\"failure analysis\") AND (abs:failure OR ti:failure OR abs:lifetime OR abs:maintenance OR abs:\"remaining useful life\" OR abs:\"reliability analysis\" OR abs:\"system reliability\" OR abs:\"structural reliability\" OR abs:\"reliability engineering\" OR abs:\"reliability assessment\" OR abs:\"reliability growth\" OR abs:\"reliability-based design\" OR abs:weibull OR abs:prognostics OR abs:repairable OR abs:\"life test\" OR abs:hazard OR abs:\"stress-strength\" OR abs:\"rare event\" OR abs:\"coherent system\" OR abs:\"series system\" OR abs:\"degradation model\" OR abs:\"degradation data\" OR abs:\"degradation process\" OR abs:\"degradation test\" OR ti:\"reliability analysis\" OR ti:\"system reliability\" OR ti:\"structural reliability\" OR ti:\"reliability assessment\" OR ti:\"reliability engineering\" OR ti:\"degradation model\" OR ti:\"degradation data\" OR ti:\"degradation test\" OR ti:\"stress-strength\") AND (cat:stat.ME OR cat:stat.AP OR cat:stat.ML)) OR ((abs:\"useful life\" OR ti:\"life test\" OR abs:\"one-shot device\" OR abs:\"accelerated life\" OR abs:\"step-stress\" OR ti:\"fault tree\" OR ti:warranty OR ti:\"maintenance policy\" OR ti:\"failure data\" OR abs:\"fault tree\" OR ti:\"software reliability\" OR ti:\"condition-based maintenance\" OR abs:\"progressive censoring\" OR ti:\"life prediction\" OR abs:\"prognostics and health management\" OR abs:\"condition-based maintenance\" OR abs:\"maintenance policy\" OR ti:\"failure probability\" OR abs:\"redundancy allocation\" OR ti:\"time to failure\" OR abs:\"failure data\" OR ti:\"lifetime prediction\" OR ti:\"predictive maintenance\" OR abs:\"preventive maintenance\" OR abs:\"reliability-based design\" OR ti:\"system reliability\" OR ti:\"reliability analysis\" OR ti:\"k-out-of-n\" OR ti:\"failure rate\" OR ti:\"reliability assessment\" OR ti:\"repairable system\" OR abs:\"life prediction\" OR ti:\"reliability engineering\" OR abs:\"stress-strength\" OR abs:\"life test\" OR abs:\"lifetime distribution\" OR abs:\"coherent system\" OR abs:\"reliability engineering\" OR abs:\"failure rate\" OR abs:\"structural reliability\") AND (cat:stat.ME OR cat:stat.AP OR cat:stat.ML OR cat:stat.CO OR cat:stat.OT)))",
     "icon": "cogs",
-    "color": "#D95F02",
-    "description": "Reliability engineering, degradation modeling, and maintenance optimization research",
-    "metadata_csv": "data/reliability_arxiv_metadata.csv",
-    "factsheet_csv": "data/reliability_factsheet.csv",
-    "relevance_field": "is_reliability_paper"
+    "color": "#7570b3",
+    "description": "Reliability, degradation and maintenance of engineered systems.",
+    "metadata_csv": "reliability_arxiv_metadata.csv",
+    "factsheet_csv": "reliability_factsheet.csv",
+    "schema_version": "2.2.0"
   }
 }

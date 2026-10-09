@@ -39,4 +39,5 @@ renv/sandbox/
 
 # development data and local caches
 data/dev_v2/
+data/staging_v2/
 pdf_cache/
