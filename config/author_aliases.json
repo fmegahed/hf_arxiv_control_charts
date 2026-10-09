@@ -1,0 +1,6 @@
+{
+  "_comment": "Spellings of an author's name that R/authors.R cannot merge by rule (typing errors, a changed family name, a first name given only as an initial). Key: the spelling found in arXiv. Value: the name to count it under.",
+  "aliases": {
+    "L. Allision Jones-Farmer": "L. Allison Jones-Farmer"
+  }
+}

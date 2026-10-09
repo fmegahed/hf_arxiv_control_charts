@@ -11,7 +11,7 @@
 #
 # Query keys: track (a track id, or "all"), tab, paper, ptrack, years ("from-to"),
 # f (repeated; "field.role.track:value|value"), code, real, reviews, screened,
-# q (residual), kw ("term|term"), sort.
+# au ("name|name"), jr, cat, id ("id|id"), ti, since, q (criteria), kw ("term|term"), sort.
 
 APP_TABS <- c("explore", "landscape", "authors", "library")
 ALL_TRACKS_KEY <- "all"
@@ -57,6 +57,12 @@ encode_view <- function(view) {
   if (isTRUE(state$real_data)) add("real", "1")
   if (isTRUE(state$reviews_only)) add("reviews", "1")
   if (isTRUE(state$include_screened)) add("screened", "1")
+  if (length(state$authors) > 0L) add("au", paste(state$authors, collapse = LIST_SEP))
+  if (nzchar(state$venue %||% "")) add("jr", state$venue)
+  if (nzchar(state$category %||% "")) add("cat", state$category)
+  if (length(state$ids) > 0L) add("id", paste(state$ids, collapse = LIST_SEP))
+  if (nzchar(state$title %||% "")) add("ti", state$title)
+  if (!is.null(state$since)) add("since", state$since)
   if (nzchar(state$residual %||% "")) add("q", state$residual)
   if (length(state$keywords) > 0L) add("kw", paste(state$keywords, collapse = LIST_SEP))
   if (!identical(state$sort, "newest")) add("sort", state$sort)
@@ -97,6 +103,12 @@ decode_view <- function(query, spec, year_range) {
   state$real_data <- identical(get("real"), "1")
   state$reviews_only <- identical(get("reviews"), "1")
   state$include_screened <- identical(get("screened"), "1")
+  state$authors <- split_values(get("au") %||% "")
+  state$venue <- get("jr") %||% ""
+  state$category <- get("cat") %||% ""
+  state$ids <- split_values(get("id") %||% "")
+  state$title <- get("ti") %||% ""
+  state$since <- get("since")
   state$residual <- get("q") %||% ""
   state$keywords <- split_values(get("kw") %||% "")
   state$sort <- get("sort") %||% "newest"

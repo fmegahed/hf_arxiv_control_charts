@@ -165,7 +165,7 @@ author_table <- function(papers) {
     return(data.frame(author = character(0), paper_id = character(0), year = integer(0),
                       stringsAsFactors = FALSE))
   }
-  names <- lapply(papers$authors, split_values)
+  names <- lapply(papers$authors_merged %||% papers$authors, split_values)
   data.frame(author = unlist(names, use.names = FALSE),
              paper_id = rep(papers$paper_id, lengths(names)),
              year = rep(papers$year, lengths(names)), stringsAsFactors = FALSE)

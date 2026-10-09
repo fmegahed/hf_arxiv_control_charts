@@ -35,8 +35,10 @@ test_that("the ellmer type and the system prompt are built from the spec", {
   type <- build_question_type(TEST_SPEC)
   expect_s3_class(type, "ellmer::TypeObject")
   expect_setequal(names(type@properties),
-                  c("interpretation", "track", "year_from", "year_to", "public_code", "real_data",
-                    "reviews_only", "conditions", "residual"))
+                  c("interpretation", "intent", "track", "year_from", "year_to", "public_code", "real_data",
+                    "reviews_only", "authors", "journal", "arxiv_category", "arxiv_ids", "title_words",
+                    "submitted_within_days", "similar_to", "conditions", "guessed", "criteria", "definition_of",
+                    "cannot_answer"))
   conditions <- type@properties$conditions@properties
   expect_setequal(names(conditions), names(question_fields(TEST_SPEC)))
   approach <- conditions$spc__chart_approach
@@ -185,4 +187,104 @@ test_that("a list of every public code source is dropped when the public-code sw
   # a narrower list says more than the switch, so it stays
   one <- list(code_availability = as.list(PUBLIC_CODE_SOURCES[1]))
   expect_true("code_availability" %in% fields(fake_form(public_code = TRUE, conditions = one)))
+})
+
+TODAY <- as.Date("2026-10-09")
+checked_form <- function(..., question = "", track = NULL) {
+  validate_filter_spec(fake_form(...), TEST_SPEC, YEARS, context_track = track, today = TODAY, question = question)
+}
+
+test_that("a person's name becomes an author filter and never a relevance criterion", {
+  out <- checked_form(authors = list("Fadel Megahed"), intent = "find_papers")
+  expect_equal(out$state$authors, "Fadel Megahed")
+  expect_equal(out$state$residual, "")
+  expect_equal(out$state$sort, "newest")
+  expect_match(as.character(build_question_type(TEST_SPEC)@properties$criteria@description), "Never put a person's name")
+})
+
+test_that("journal, category, title, identifiers and a recent period are read from the form", {
+  out <- checked_form(journal = "Technometrics", arxiv_category = "stat.ME", title_words = "control chart",
+                      arxiv_ids = list("2501.00001v2"), submitted_within_days = 31L,
+                      question = "also show 2502.00002 please")
+  expect_equal(out$state$venue, "Technometrics")
+  expect_equal(out$state$category, "stat.ME")
+  expect_equal(out$state$title, "control chart")
+  expect_equal(out$state$ids, c("2501.00001", "2502.00002"))     # the id typed in the question is added
+  expect_equal(out$state$since, "2026-09-08")
+  expect_null(checked_form(submitted_within_days = 5000L)$state$since)
+  expect_null(checked_form(submitted_within_days = NULL)$state$since)
+  expect_match(question_system_prompt(TEST_SPEC, today = TODAY), "Today is 2026-10-09", fixed = TRUE)
+})
+
+test_that("separate requirements become separate criteria, with exclusions and 'similar to'", {
+  out <- checked_form(criteria = list(list(text = "additive manufacturing", exclude = FALSE),
+                                      list(text = "machine learning; deep", exclude = TRUE)),
+                      similar_to = "2609.31338v1", arxiv_ids = list("2609.31338"))
+  expect_equal(out$state$residual, "additive manufacturing; -machine learning, deep; like:2609.31338")
+  expect_length(out$state$ids, 0L)                               # the reference paper is not a filter
+  expect_equal(out$state$sort, "relevance")
+  both <- checked_form(criteria = list(list(text = "wind", exclude = FALSE)), residual = "gearboxes")
+  expect_equal(both$state$residual, "wind; gearboxes")
+})
+
+test_that("a filter the model inferred is offered, not applied", {
+  out <- checked_form(conditions = list(spc__chart_approach = list("Nonparametric (distribution-free)"),
+                                        application_domain = list("Healthcare and medical")),
+                      guessed = list("application_domain"), track = "spc")
+  expect_equal(vapply(out$state$conditions, function(cond) cond$field, character(1)), "chart_approach")
+  expect_length(out$suggestions, 1L)
+  expect_equal(out$suggestions[[1]]$field, "application_domain")
+  expect_equal(out$suggestions[[1]]$values, "Healthcare and medical")
+  none <- checked_form(conditions = list(application_domain = list("Healthcare and medical")))
+  expect_length(none$suggestions, 0L)
+  expect_length(none$state$conditions, 1L)
+  invalid <- checked_form(conditions = list(application_domain = list("Imaginary")), guessed = list("application_domain"))
+  expect_length(invalid$suggestions, 0L)                          # a suggestion is checked like any filter
+})
+
+test_that("the intent chooses the tab, definitions come from the spec, and limits are reported", {
+  ask <- function(...) interpret_question("a question", TEST_SPEC, YEARS, context_track = "spc", today = TODAY,
+                                          model_fn = function(system_prompt, question) fake_form(...))
+  expect_equal(ask(intent = "find_papers")$tab, "explore")
+  expect_equal(ask(intent = "count_or_trend")$tab, "landscape")
+  expect_equal(ask(intent = "find_people")$tab, "authors")
+  expect_true(is.na(ask(intent = "definition")$tab))
+  expect_equal(ask(intent = "no such intent")$intent, "find_papers")
+  expect_equal(ask()$intent, "find_papers")
+
+  field <- spec_field(TEST_SPEC, "spc", "phase")
+  term <- field_values(field)[1]
+  found <- ask(intent = "definition", definition_of = tolower(term))$definitions
+  expect_true(any(grepl(unname(field_definitions(field)[term]), found, fixed = TRUE)))
+  expect_length(ask(intent = "find_papers", definition_of = term)$definitions, 0L)
+  expect_length(lookup_definitions(TEST_SPEC, "zz"), 0L)
+  expect_length(lookup_definitions(TEST_SPEC, "no such term anywhere"), 0L)
+
+  cannot <- ask(intent = "cannot_answer", cannot_answer = " The data hold no citation counts. ")
+  expect_equal(cannot$cannot_answer, "The data hold no citation counts.")
+  expect_equal(ask()$cannot_answer, "")
+})
+
+test_that("without the model, an arXiv identifier in the question still finds the paper", {
+  failing <- function(system_prompt, question) stop("HTTP 503")
+  out <- interpret_question("show me 2501.00001v2", TEST_SPEC, YEARS, model_fn = failing)
+  expect_equal(out$mode, "keyword")
+  expect_equal(out$state$ids, "2501.00001")
+  expect_length(out$state$keywords, 0L)
+})
+
+test_that("filters the second model rejects become suggestions, and a failed check changes nothing", {
+  form <- fake_form(conditions = list(spc__chart_approach = list("Nonparametric (distribution-free)"),
+                                      application_domain = list("Healthcare and medical")))
+  ask <- function(check_fn) interpret_question("nonparametric charts", TEST_SPEC, YEARS, context_track = "spc",
+                                               model_fn = function(system_prompt, question) form, check_fn = check_fn)
+  rejected <- ask(function(question, conditions) {
+    is_domain <- vapply(conditions, function(cond) cond$field == "application_domain", logical(1))
+    list(keep = conditions[!is_domain], demote = conditions[is_domain], checked = TRUE)
+  })
+  expect_equal(vapply(rejected$state$conditions, function(cond) cond$field, character(1)), "chart_approach")
+  expect_equal(rejected$suggestions[[1]]$field, "application_domain")
+  expect_length(ask(function(question, conditions) stop("down"))$state$conditions, 2L)
+  expect_length(ask(function(question, conditions) list(keep = list(), demote = list(), checked = FALSE))$state$conditions, 2L)
+  expect_length(ask(NULL)$state$conditions, 2L)
 })

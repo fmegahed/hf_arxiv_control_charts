@@ -7,11 +7,12 @@
 
 app_deps <- function(spec = spec_load(), settings = app_settings_load(), data = load_app_data(spec),
                      reliability = reliability_load(), question_fn = NULL, rank_fn = rank_papers,
+                     check_fn = function(question, conditions) check_question_filters(question, conditions, spec, settings),
                      chat_factory = function(system_prompt) create_chat("openai", spec$models$chat, system_prompt)) {
   if (is.null(question_fn)) question_fn <- question_model_fn(spec)
   list(spec = spec, settings = settings, data = data,
        ctx = if (!is.null(data$papers)) help_context(spec, settings, data, reliability),
-       question_model_fn = question_fn, rank_fn = rank_fn, chat_factory = chat_factory)
+       question_model_fn = question_fn, rank_fn = rank_fn, check_fn = check_fn, chat_factory = chat_factory)
 }
 
 # Choices of the "add filter" list: fields grouped as in the specification.
@@ -184,9 +185,15 @@ app_server <- function(deps) {
       asked(c(asked(), as.numeric(Sys.time())))
       busy <- shiny::showNotification("Reading the question", duration = NULL, closeButton = FALSE)
       on.exit(shiny::removeNotification(busy), add = TRUE)
-      result <- interpret_question(question, spec, year_range, context_track, model_fn = deps$question_model_fn)
-      note(list(kind = result$mode, text = result$message, dropped = result$dropped, question = trimws(question)))
-      apply_view(new_view("browse", filters = result$state))
+      result <- interpret_question(question, spec, year_range, context_track, model_fn = deps$question_model_fn,
+                                   check_fn = deps$check_fn)
+      note(list(kind = result$mode, text = result$message, dropped = result$dropped, question = trimws(question),
+                intent = result$intent, suggestions = result$suggestions, cannot_answer = result$cannot_answer,
+                definitions = result$definitions))
+      # A question about counts or people opens the tab that answers it.
+      tab <- result$tab
+      apply_view(new_view("browse", tab = if (isTRUE(tab %in% APP_TABS)) tab else "explore",
+                          filters = result$state))
     }
     shiny::observeEvent(input$ask_go, ask(input$question, filters()$track))
     shiny::observeEvent(input$ask_landing, {
@@ -206,7 +213,8 @@ app_server <- function(deps) {
       if (nzchar(state$residual)) {
         busy <- shiny::showNotification("Ranking papers by relevance", duration = NULL, closeButton = FALSE)
         on.exit(shiny::removeNotification(busy), add = TRUE)
-        updated <- ranking_update(score_cache(), papers, state$residual, settings, rank_fn = deps$rank_fn)
+        with_references <- c(settings, list(references = criteria_references(state$residual, all_papers)))
+        updated <- ranking_update(score_cache(), papers, state$residual, with_references, rank_fn = deps$rank_fn)
         score_cache(updated$cache)
         ranking(updated$ranking)
       } else if (length(state$keywords) > 0L) {
@@ -264,8 +272,29 @@ app_server <- function(deps) {
       current <- note()
       if (is.null(current)) return(NULL)
       label <- switch(current$kind, model = "How the question was read: ", keyword = "Keyword search: ", "")
+      tab_text <- switch(current$intent %||% "",
+                         count_or_trend = "The question asks for counts or trends, so the Landscape tab is open. The papers are on the Explore tab.",
+                         find_people = "The question asks who works on this, so the Authors tab is open. The papers are on the Explore tab.",
+                         definition = "This box finds papers; it does not explain terms. The \"?\" next to each field gives every definition.",
+                         NULL)
       shiny::div(class = paste("ask-note", paste0("ask-note-", current$kind)), role = "status",
                  shiny::tags$strong(label), current$text,
+                 if (!is.null(tab_text)) shiny::tags$div(class = "ask-extra", tab_text),
+                 if (length(current$definitions) > 0L) shiny::tags$ul(
+                   class = "ask-definitions", lapply(current$definitions, shiny::tags$li)),
+                 if (nzchar(current$cannot_answer %||% "")) shiny::tags$div(
+                   class = "ask-cannot", shiny::tags$strong("Not answered: "), current$cannot_answer),
+                 if (length(current$suggestions) > 0L) shiny::tags$div(
+                   class = "ask-suggestions",
+                   "Not applied, because the question does not ask for it. Click to add: ",
+                   lapply(current$suggestions, function(cond) {
+                     field <- spec_field_any(spec, cond$field, cond$track)
+                     lapply(cond$values, function(value) {
+                       shiny::tags$button(type = "button", class = "tag-chip", `data-field` = cond$field,
+                                          `data-value` = value, `data-track` = cond$track %||% "",
+                                          `data-role` = "any", paste0(field$label, ": ", value_label(value)))
+                     })
+                   })),
                  if (length(current$dropped) > 0L) shiny::tags$div(
                    class = "ask-dropped", "Ignored because it is not in the list of allowed values: ",
                    paste(current$dropped, collapse = "; "), "."))
@@ -280,6 +309,11 @@ app_server <- function(deps) {
                          " of ", format(n$total, big.mark = ","), " ", noun),
         if (has_active_filters(state)) shiny::actionLink("clear_all", "clear all", class = "clear-all"),
         help_button("scope", "Which papers are counted"),
+        if (has_active_filters(state) && n$hidden_matches > 0L) shiny::tags$span(
+          class = "scope-hidden",
+          paste0(n$hidden_matches, if (n$hidden_matches == 1L) " screened-out paper also matches. " else
+            " screened-out papers also match. "),
+          shiny::actionLink("show_screened", "Show them")),
         shiny::tags$details(
           class = "scope-details",
           shiny::tags$summary(paste0(
@@ -294,6 +328,12 @@ app_server <- function(deps) {
             n$failed, if (n$failed == 1L) " paper has" else " papers have",
             " no factsheet because extraction failed. They are not listed anywhere."),
           shiny::tags$p("To list the screened-out papers, tick \"Include screened-out papers\" on the Explore tab.")))
+    })
+
+    shiny::observeEvent(input$show_screened, {
+      state <- filters()
+      state$include_screened <- TRUE
+      set_filters(state)
     })
 
     # ---- add a filter ----

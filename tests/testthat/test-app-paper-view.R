@@ -112,7 +112,7 @@ test_that("text blocks keep paragraphs and never emit raw HTML", {
 test_that("the results table is plain text with the lean default columns", {
   papers <- apply_filters(fixture_papers(), new_filter_state("spc"), TEST_SPEC, TEST_SETTINGS)
   table <- results_table(papers, TEST_SPEC, "spc")
-  expect_equal(names(table), c("paper_id", "row_track", "status", "href", "Saved", "Title", "Year", "Authors",
+  expect_equal(names(table), c("paper_id", "row_track", "status", "href", "code_href", "code_kind", "Saved", "Title", "Year", "Authors",
                                "Data structure", "Charting statistic", "Code"))
   expect_equal(table$Code, c("Public", "Not public", "Not public"))
   expect_equal(table$href[1], "?track=spc&paper=2501.00001")

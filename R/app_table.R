@@ -23,6 +23,21 @@ code_status <- function(code_public) {
   ifelse(is.na(code_public), "Not recorded", ifelse(code_public, "Public", "Not public"))
 }
 
+# Where a click on the Code cell leads: the first code link the factsheet
+# records (a repository, CRAN, PyPI and so on), or the paper's arXiv page when
+# the code is public but only described or attached there. "" for no link.
+code_link <- function(papers) {
+  urls <- vapply(papers$software_urls %||% rep(NA_character_, nrow(papers)), function(cell) {
+    found <- grep("^https?://[^[:space:]\"<>]+$", trimws(split_values(cell)), value = TRUE)
+    if (length(found) > 0L) found[1] else ""
+  }, character(1), USE.NAMES = FALSE)
+  public <- !is.na(papers$code_public) & papers$code_public
+  in_paper <- public & !nzchar(urls)
+  href <- ifelse(nzchar(urls) & public, urls, ifelse(in_paper, papers$link_abstract, ""))
+  href[is.na(href) | papers$status != "ok"] <- ""
+  list(href = href, kind = ifelse(!nzchar(href), "", ifelse(in_paper, "paper", "code")))
+}
+
 column_as_text <- function(papers, column) {
   cells <- papers[[column]]
   if (is.null(cells)) return(rep(NA_character_, nrow(papers)))
@@ -38,15 +53,17 @@ column_as_text <- function(papers, column) {
   readable_list(cells)
 }
 
-# Display table: one row per paper, plain text. The first four columns
-# (paper_id, row_track, status, href) are hidden in the browser and used by
-# the renderers.
+# Display table: one row per paper, plain text. The first six columns
+# (paper_id, row_track, status, href, code_href, code_kind) are hidden in the
+# browser and used by the renderers.
 results_table <- function(papers, spec, track = NULL, extra = character(0), scores = NULL) {
   out <- data.frame(
     paper_id = papers$paper_id,
     row_track = papers$track,
     status = papers$status,
     href = if (nrow(papers) > 0L) paper_href(papers$paper_id, track, papers$track) else character(0),
+    code_href = code_link(papers)$href,
+    code_kind = code_link(papers)$kind,
     Saved = papers$paper_id,
     Title = papers$title,
     Year = papers$year,

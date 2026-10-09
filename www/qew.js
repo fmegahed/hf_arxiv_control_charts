@@ -67,10 +67,16 @@ const QEW = (function() {
         '" aria-pressed="false" aria-label="Bookmark this paper" title="Bookmark this paper">' +
         '<span class="bookmark-glyph" aria-hidden="true">☆</span></button>';
     },
-    code: function(data, type) {
+    code: function(data, type, row, meta) {
       if (type !== 'display' || !data) return data;
       const cls = data === 'Public' ? 'code-public' : (data === 'Not public' ? 'code-none' : 'code-unknown');
-      return '<span class="code-badge ' + cls + '">' + data + '</span>';
+      const badge = '<span class="code-badge ' + cls + '">' + data + '</span>';
+      const href = row[column(meta, 'code_href')];
+      if (!href || !/^https?:\/\//.test(href)) return badge;
+      const inPaper = row[column(meta, 'code_kind')] === 'paper';
+      const title = inPaper ? 'The code is in the paper or its supplement. Open the paper on arXiv.' : 'Open the code: ' + href;
+      return '<a class="code-link" href="' + attr(href) + '" target="_blank" rel="noopener noreferrer" title="' +
+        attr(title) + '">' + badge + '<span class="code-link-mark" aria-hidden="true"> &#8599;</span></a>';
     },
     relevance: function(data, type) {
       if (type !== 'display') return data;

@@ -149,8 +149,10 @@ load_track_papers <- function(spec, track, data_dir = app_data_dir()) {
   papers$method <- primary_display(papers, spec_field(spec, track, info$core_filters$method))
   papers$link_abstract <- paste0("https://arxiv.org/abs/", papers$paper_id)
   papers$link_pdf <- paste0("https://arxiv.org/pdf/", papers$metadata_id)
-  papers$search_text <- tolower(paste(papers$title, papers$abstract,
-                                      ifelse(is.na(papers$summary), "", papers$summary)))
+  search_columns <- intersect(c("summary", "key_results", "limitations_stated"), names(papers))
+  search_text <- paste(papers$title, papers$abstract)
+  for (column in search_columns) search_text <- paste(search_text, ifelse(is.na(papers[[column]]), "", papers[[column]]))
+  papers$search_text <- tolower(search_text)
 
   list(papers = papers, problem = NULL,
        n_without_metadata = sum(!has_metadata),
@@ -194,6 +196,8 @@ load_app_data <- function(spec, data_dir = app_data_dir()) {
   }
   papers <- papers[order(papers$submitted_date, decreasing = TRUE, na.last = TRUE), , drop = FALSE]
   rownames(papers) <- NULL
+  # One name per person, for the author counts (R/authors.R).
+  papers$authors_merged <- merge_author_names(papers$authors)
   years <- papers$year[!is.na(papers$year)]
   list(
     papers = papers,

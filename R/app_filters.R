@@ -9,6 +9,12 @@
 #                              track the field belongs to
 #                       role   "any" (primary or additional label) or "primary"
 #   public_code, real_data, reviews_only, include_screened   logical switches
+#   authors           names; a paper must list every one of them as an author
+#   venue             text that the journal reference has to contain
+#   category          an arXiv category, such as stat.ME
+#   ids               arXiv ids; only these papers
+#   title             words that the title has to contain
+#   since             "YYYY-MM-DD"; submitted on or after this day
 #   residual          the part of a question no field covers (ranked, not filtered)
 #   keywords          terms of a keyword search (used when a question could
 #                     not be translated)
@@ -19,11 +25,15 @@
 # papers of other tracks untouched.
 
 SORT_CHOICES <- c("newest", "oldest", "relevance")
+AUTHOR_NAME_MAX_CHARS <- 80L
+ARXIV_CATEGORY_PATTERN <- "^[a-z-]+([.][A-Za-z-]+)?$"
+ARXIV_ID_PATTERN <- "^([0-9]{4}[.][0-9]{4,5}|[a-z-]+([.][A-Z]{2})?/[0-9]{7})$"
 CONDITION_ROLES <- c("any", "primary")
 
 new_filter_state <- function(track = NULL) {
   list(track = track, year_from = NULL, year_to = NULL, conditions = list(),
        public_code = FALSE, real_data = FALSE, reviews_only = FALSE, include_screened = FALSE,
+       authors = character(0), venue = "", category = "", ids = character(0), title = "", since = NULL,
        residual = "", keywords = character(0), sort = "newest")
 }
 
@@ -152,6 +162,24 @@ keyword_scores <- function(papers, terms) {
   rowMeans(hits)
 }
 
+# Words of a person's name, in lower case, without initials and punctuation.
+name_words <- function(name) {
+  words <- strsplit(tolower(gsub("[^[:alpha:]' -]", " ", name)), "[[:space:]]+")[[1]]
+  words[nchar(words) > 1L]
+}
+
+# Which papers list `name` as an author. Every word of the name has to occur
+# as a whole word in one author entry, so "Fadel Megahed" finds
+# "Fadel M. Megahed" and a family name alone finds everyone who has it.
+author_mask <- function(authors, name) {
+  wanted <- name_words(name)
+  if (length(wanted) == 0L) return(rep(TRUE, length(authors)))
+  vapply(authors, function(cell) {
+    entries <- split_values(cell)
+    any(vapply(entries, function(entry) all(wanted %in% name_words(entry)), logical(1)))
+  }, logical(1), USE.NAMES = FALSE)
+}
+
 # Logical vector: which rows of `papers` the state selects.
 filter_mask <- function(papers, state, spec, settings) {
   keep <- scope_mask(papers, state$include_screened) & track_mask(papers, state$track)
@@ -165,6 +193,18 @@ filter_mask <- function(papers, state, spec, settings) {
   if (isTRUE(state$reviews_only)) {
     keep <- keep & has_any_value(papers[[settings$paper_type_field]], settings$review_paper_types)
   }
+  for (name in state$authors) keep <- keep & author_mask(papers$authors, name)
+  if (nzchar(state$venue %||% "")) {
+    keep <- keep & !is.na(papers$journal_ref) & grepl(tolower(state$venue), tolower(papers$journal_ref), fixed = TRUE)
+  }
+  if (nzchar(state$category %||% "")) {
+    keep <- keep & (has_any_value(papers$categories, state$category) | papers$primary_category %in% state$category)
+  }
+  if (length(state$ids) > 0L) keep <- keep & papers$paper_id %in% state$ids
+  for (word in name_words(state$title %||% "")) {
+    keep <- keep & grepl(paste0("(^|[^[:alpha:]])", word, "([^[:alpha:]]|$)"), tolower(papers$title))
+  }
+  if (!is.null(state$since)) keep <- keep & !is.na(papers$submitted_date) & papers$submitted_date >= as.Date(state$since)
   if (length(state$keywords) > 0L) keep <- keep & keyword_scores(papers, state$keywords) > 0
   keep
 }
@@ -183,6 +223,10 @@ scope_counts <- function(papers, state, spec, settings) {
   reasons <- data.frame(category = names(tally), n = as.integer(tally), stringsAsFactors = FALSE)
   list(
     shown = sum(filter_mask(papers, state, spec, settings)),
+    # papers the same filters would add if screened-out papers were included
+    hidden_matches = if (isTRUE(state$include_screened)) 0L else
+      sum(filter_mask(papers, utils::modifyList(state, list(include_screened = TRUE)), spec, settings) &
+            papers$status %in% "out_of_scope"),
     in_scope = sum(in_track$status == "ok", na.rm = TRUE),
     screened_out = nrow(screened),
     failed = sum(in_track$status == "failed", na.rm = TRUE),
@@ -230,12 +274,19 @@ state_chips <- function(state, spec) {
     }
     add(paste0("cond:", i), text)
   }
+  for (i in seq_along(state$authors)) add(paste0("author:", i), paste0("Author: ", state$authors[i]))
+  if (nzchar(state$venue %||% "")) add("venue", paste0("Journal reference contains: ", state$venue))
+  if (nzchar(state$category %||% "")) add("category", paste0("arXiv category: ", state$category))
+  if (length(state$ids) > 0L) add("ids", paste0("arXiv id: ", paste(state$ids, collapse = ", ")))
+  if (nzchar(state$title %||% "")) add("title", paste0("Title contains: ", state$title))
+  if (!is.null(state$since)) add("since", paste0("Submitted since: ", state$since))
   if (isTRUE(state$public_code)) add("code", "Code: public")
   if (isTRUE(state$real_data)) add("real", "Data: uses real data")
   if (isTRUE(state$reviews_only)) add("reviews", "Reviews and tutorials only")
   if (isTRUE(state$include_screened)) add("screened", "Including screened-out papers")
   if (length(state$keywords) > 0L) add("keywords", paste0("Keywords: ", paste(state$keywords, collapse = ", ")))
-  if (nzchar(state$residual %||% "")) add("residual", paste0("Ranked by relevance to: ", state$residual))
+  criteria <- parse_criteria(state$residual)
+  for (i in seq_along(criteria)) add(paste0("crit:", i), criterion_label(criteria[[i]]))
   chips
 }
 
@@ -248,12 +299,26 @@ remove_chip <- function(state, id) {
       state$conditions <- state$conditions[-index]
     }
   }
+  else if (startsWith(id, "author:")) {
+    index <- suppressWarnings(as.integer(sub("author:", "", id, fixed = TRUE)))
+    if (!is.na(index) && index >= 1L && index <= length(state$authors)) state$authors <- state$authors[-index]
+  }
   else if (identical(id, "code")) state$public_code <- FALSE
   else if (identical(id, "real")) state$real_data <- FALSE
   else if (identical(id, "reviews")) state$reviews_only <- FALSE
   else if (identical(id, "screened")) state$include_screened <- FALSE
   else if (identical(id, "keywords")) state$keywords <- character(0)
   else if (identical(id, "residual")) state$residual <- ""
+  else if (startsWith(id, "crit:")) {
+    index <- suppressWarnings(as.integer(sub("crit:", "", id, fixed = TRUE)))
+    criteria <- parse_criteria(state$residual)
+    if (!is.na(index) && index >= 1L && index <= length(criteria)) state$residual <- format_criteria(criteria[-index])
+  }
+  else if (identical(id, "venue")) state$venue <- ""
+  else if (identical(id, "category")) state$category <- ""
+  else if (identical(id, "ids")) state$ids <- character(0)
+  else if (identical(id, "title")) state$title <- ""
+  else if (identical(id, "since")) state["since"] <- list(NULL)
   if (!nzchar(state$residual) && length(state$keywords) == 0L && identical(state$sort, "relevance")) {
     state$sort <- "newest"
   }
@@ -333,8 +398,23 @@ sanitize_state <- function(state, spec, year_range, context_track = NULL) {
   for (flag in c("public_code", "real_data", "reviews_only", "include_screened")) {
     clean[[flag]] <- isTRUE(as.logical(state[[flag]] %||% FALSE))
   }
-  residual <- state$residual %||% ""
-  clean$residual <- if (length(residual) == 1L && !is.na(residual)) trimws(residual) else ""
+  authors <- trimws(as.character(unlist(state$authors)))
+  authors <- authors[!is.na(authors) & vapply(authors, function(a) length(name_words(a)) > 0L, logical(1))]
+  clean$authors <- unique(substr(authors, 1L, AUTHOR_NAME_MAX_CHARS))
+  one_text <- function(value, max_chars = AUTHOR_NAME_MAX_CHARS) {
+    value <- as.character(unlist(value))
+    if (length(value) != 1L || is.na(value)) return("")
+    substr(trimws(gsub("[[:space:]]+", " ", value)), 1L, max_chars)
+  }
+  clean$venue <- one_text(state$venue)
+  category <- one_text(state$category)
+  clean$category <- if (grepl(ARXIV_CATEGORY_PATTERN, category)) category else ""
+  ids <- arxiv_base_id(trimws(as.character(unlist(state$ids))))
+  clean$ids <- unique(ids[!is.na(ids) & grepl(ARXIV_ID_PATTERN, ids)])
+  clean$title <- one_text(state$title)
+  since <- suppressWarnings(as.Date(one_text(state$since), format = "%Y-%m-%d"))
+  if (!is.na(since)) clean$since <- format(since, "%Y-%m-%d")
+  clean$residual <- format_criteria(parse_criteria(one_text(state$residual, 4L * CRITERION_MAX_CHARS)))
   keywords <- as.character(unlist(state$keywords))
   clean$keywords <- unique(keywords[!is.na(keywords) & nzchar(keywords)])
   can_rank <- nzchar(clean$residual) || length(clean$keywords) > 0L

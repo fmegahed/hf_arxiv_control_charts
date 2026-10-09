@@ -60,7 +60,7 @@ test_that("each factsheet of a two-track paper keeps its own relevance score", {
   expect_equal(score_for(papers, data.frame(paper_id = "2203.00009", score = 0.6)), c(0.6, 0.6))
   service <- function(bodies, api_key, url, ...) lapply(bodies, function(body) {
     keys <- names(body$questions)
-    answers <- lapply(keys, function(key) list(type = "noul", noul = if (grepl("experimental design", body$state$papers[[key]]$text)) 0.9 else 0.1))
+    answers <- lapply(keys, function(key) list(type = "noul", noul = if (grepl("experimental design", body$state$papers[[sub("_c[0-9]+$", "", key)]]$text)) 0.9 else 0.1))
     list(status = 200L, body = list(answers = stats::setNames(answers, keys), usage = list(input_tokens = 1, output_tokens = 1)))
   })
   ranking <- rank_papers(papers, "design", TEST_SETTINGS, api_key = "k", perform = service, sleep = function(s) NULL)

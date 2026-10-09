@@ -106,18 +106,18 @@ help_readers <- function(ctx, track = NULL) {
   spec <- ctx$spec
   code <- htmltools::tags$code
   steps <- list(htmltools::tags$li(
-    "A first reader (", code(spec$models$extraction), ") reads the PDF, chooses every label and writes the text."))
+    "A first model (", code(spec$models$extraction), ") reads the PDF, chooses every label and writes the text."))
   if (!is.null(spec$models$second_reader)) {
     steps <- c(steps, list(htmltools::tags$li(
-      "A second reader (", code(spec$models$second_reader), ") reads the paper's text and answers, on its own, ",
-      "the labels that have exactly one answer. It does not see the first reader's answers.")))
+      "A second model (", code(spec$models$second_reader), ") reads the paper's text and answers, on its own, ",
+      "the labels that have exactly one answer. It does not see the first model's answers.")))
     if (!is.null(spec$models$tie_break)) {
       main <- unique(unlist(lapply(help_tracks(ctx, track), function(id) {
         vapply(arbitrated_fields(spec, id), function(name) spec_field(spec, id, name)$label, character(1))
       })))
       steps <- c(steps, list(htmltools::tags$li(
-        "Where the two disagree on a main label (", paste(main, collapse = ", "), "), a third reader (",
-        code(spec$models$tie_break), ") reads the PDF and decides. Its evidence quote replaces the first reader's.")))
+        "Where the two disagree on a main label (", paste(main, collapse = ", "), "), a third model (",
+        code(spec$models$tie_break), ") reads the PDF and decides. Its evidence quote replaces the first model's.")))
     }
   }
   htmltools::tags$ol(steps)
@@ -165,18 +165,28 @@ help_content <- function(topic, ctx, track = NULL, fields = list()) {
       p("Inside a track the first chip is the track. Remove it to search all tracks. Across tracks, only the fields that every track has can filter all papers (year, ",
         paste(shared_filterable, collapse = ", "),
         "). A filter on a field that belongs to one track narrows that track's papers only, and its chip says so."),
-      p("Whatever part of the question no field covers becomes a phrase. A second model (", htmltools::tags$code(settings$jev$model),
-        ") then judges, for each paper that passed the filters, how likely it is to be about that phrase. See the help next to the relevance column."),
+      p("Authors, a journal, an arXiv category, an arXiv identifier, words of a title and a recent period (\"last month\") are matched directly against the arXiv record, without a model."),
+      p("A subject no field covers becomes a relevance criterion, and a question can have several (\"additive manufacturing\" and \"small budgets\"), including things the papers must not be about. A second model (", htmltools::tags$code(settings$jev$model),
+        ") then judges, for each paper that passed the filters, how likely it is to meet each criterion. See the help next to the relevance column."),
+      p("A filter the language model inferred but the question did not state is not applied. It is offered under the box, and one click adds it."),
+      p("A question about counts or trends opens the Landscape tab, and a question about who works on something opens the Authors tab, with the same filters. ",
+        "What the data cannot tell, such as citation counts, is reported as not answered."),
       p("If the language model cannot be reached, the app searches the words of the question in titles, abstracts and summaries, and says that it did."),
       p("Limits: ", QUESTION_MAX_CHARS, " characters per question, and ", QUESTION_RATE_LIMIT, " questions per ",
         QUESTION_RATE_WINDOW_SEC / 60, " minutes in one session."))),
 
     relevance = list(title = "Relevance ranking", body = htmltools::tagList(
-      p("The bar shows a probability between 0 and 1 that the paper is about the phrase left over from your question. It comes from a decision model (",
-        htmltools::tags$code(settings$jev$model), ") that reads the paper's title and factsheet summary (the abstract when there is no summary) and returns a number. It writes no text."),
+      p("The bar shows a probability between 0 and 1 that the paper meets the relevance criteria of your question. It comes from a decision model (",
+        htmltools::tags$code(settings$jev$model), ") that returns a number for each paper and each criterion. It writes no text. With several criteria the bar shows the weakest one, because a paper has to meet them all."),
+      p("First reading: the model sees the paper's title, authors and factsheet summary (the abstract when there is no summary). ",
+        "Second reading: papers it left between ", JEV_BORDERLINE[1], " and ", JEV_BORDERLINE[2], " (at most ", JEV_DETAIL_MAX_PAPERS,
+        ") are judged again on the fuller factsheet: ", paste(tolower(unname(JEV_DETAIL_SECTIONS)), collapse = ", "), "."),
+      p("The model never sees the full paper. A detail the factsheet leaves out cannot be found this way."),
       p("Papers at ", JEV_THRESHOLD, " or above are listed first. Papers below it are kept under \"Less likely matches\" and never removed."),
-      p("Only papers that passed the filters are scored, at most the ", JEV_MAX_PAPERS, " most recent, in batches of ", JEV_BATCH_SIZE,
-        ". When more papers pass the filters, the app says so and the rest are listed with the less likely matches."),
+      p("Only papers that passed the filters are scored, at most ", JEV_MAX_PAPERS, ", in batches of ", JEV_BATCH_SIZE,
+        ". When more pass, those whose text shares most words with the criteria are read first, then the most recent; the app says so and lists the rest with the less likely matches."),
+      p("When at least ", 100 * JEV_UNCERTAIN_SHARE, "% of the answers for a criterion fall between ", JEV_UNCERTAIN_BAND[1], " and ", JEV_UNCERTAIN_BAND[2],
+        ", the model is guessing: the factsheets do not hold what the criterion asks for. The papers are then not ranked by it, and the app says so."),
       p("If the service is unavailable, papers are ordered by the share of the phrase's words they contain, and the bar is labelled as a keyword match. The same threshold idea applies at ",
         KEYWORD_THRESHOLD, "."))),
 
@@ -227,11 +237,11 @@ help_content <- function(topic, ctx, track = NULL, fields = list()) {
     label_check = list(title = "How labels are checked", body = htmltools::tagList(
       help_readers(ctx, track),
       definition_list(unname(LABEL_CHECK_TEXT), c(
-        "Both readers chose this label independently.",
-        "The two readers chose different labels, and the third reader sided with the first.",
-        "The two readers chose different labels, and the third reader chose the one shown, which is not the first reader's.",
-        "The two readers chose different labels on a label that is not sent to the third reader. The first reader's label is shown.")),
-      p("Agreement between models is not proof. Two readers can make the same mistake, so check a label against the paper when it matters."))),
+        "Both models chose this label independently.",
+        "The two models chose different labels, and the third model sided with the first.",
+        "The two models chose different labels, and the third model chose the one shown, which is not the first model's.",
+        "The two models chose different labels on a label that is not sent to the third model. The first model's label is shown.")),
+      p("Agreement between models is not proof. Two models can make the same mistake, so check a label against the paper when it matters."))),
 
     chat = list(title = "Chat", body = htmltools::tagList(
       p("The chat sends your message and the paper's PDF (fetched from arXiv) to a language model (",
@@ -291,7 +301,8 @@ help_content <- function(topic, ctx, track = NULL, fields = list()) {
       field_blocks)),
 
     authors = list(title = "Authors", body = htmltools::tagList(
-      p("Counts use the current selection of papers. Author names are taken from arXiv as written, so one person who writes their name in two ways appears twice, and two people with the same name appear as one."))),
+      p("Counts use the current selection of papers. Author names come from arXiv as written. Two spellings are counted as one person when they share the full given name and the family name and their middle names do not contradict each other (\"Inez M. Zwetsloot\", \"Inez Maria Zwetsloot\" and \"Inez Zwetsloot\"); the spelling used on most papers is shown. ",
+        "A person whose given name appears only as an initial on some papers is still counted twice, and two people with the same name are counted as one."))),
 
     library = list(title = "Library", body = htmltools::tagList(
       p("Bookmarks are kept in this browser's local storage, not on a server. They are not affected by the question or the filters, and they cover all tracks."),

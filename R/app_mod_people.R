@@ -44,6 +44,13 @@ authors_ui <- function(id, deps) {
   )
 }
 
+# Choices of the author box: "Name (papers)" -> name. Empty when no paper is
+# selected, which a question can cause.
+author_choices <- function(table) {
+  if (nrow(table) == 0L) return(character(0))
+  stats::setNames(table$author, sprintf("%s (%d)", table$author, table$n))
+}
+
 authors_server <- function(id, app, deps) {
   shiny::moduleServer(id, function(input, output, session) {
     spec <- deps$spec
@@ -71,7 +78,7 @@ authors_server <- function(id, app, deps) {
 
     shiny::observe({
       table <- counts()
-      choices <- stats::setNames(table$author, paste0(table$author, " (", table$n, ")"))
+      choices <- author_choices(table)
       current <- shiny::isolate(input$author)
       shiny::updateSelectizeInput(session, "author", choices = c("Type a name" = "", choices),
                                   selected = if (isTRUE(current %in% table$author)) current else "", server = TRUE)
@@ -79,13 +86,13 @@ authors_server <- function(id, app, deps) {
     author_click <- shiny::reactive(plotly_click_value(session, ns("top_authors")))
     shiny::observeEvent(author_click(), {
       shiny::updateSelectizeInput(session, "author", selected = author_click(), server = TRUE,
-                                  choices = stats::setNames(counts()$author, paste0(counts()$author, " (", counts()$n, ")")))
+                                  choices = author_choices(counts()))
     })
 
     author_papers <- shiny::reactive({
       author <- input$author
       if (is.null(author) || !nzchar(author)) return(NULL)
-      papers()[has_any_value(papers()$authors, author), , drop = FALSE]
+      papers()[has_any_value(papers()$authors_merged %||% papers()$authors, author), , drop = FALSE]
     })
     output$author_info <- shiny::renderUI({
       found <- author_papers()

@@ -110,7 +110,7 @@ test_that("chips mirror the state and removing one changes only that part", {
   state <- set_condition(state, "chart_approach", "Nonparametric (distribution-free)", "spc")
   chips <- state_chips(state, TEST_SPEC)
   expect_equal(vapply(chips, function(chip) chip$id, character(1)),
-               c("track", "year", "cond:1", "code", "residual"))
+               c("track", "year", "cond:1", "code", "crit:1"))
   expect_equal(vapply(chips, function(chip) chip$label, character(1)),
                c("Track: SPM", "Year: 2025", "Approach: Nonparametric (distribution-free)", "Code: public",
                  "Ranked by relevance to: wind turbines"))
@@ -119,7 +119,7 @@ test_that("chips mirror the state and removing one changes only that part", {
   expect_null(remove_chip(state, "year")$year_from)
   expect_length(remove_chip(state, "cond:1")$conditions, 0L)
   expect_false(remove_chip(state, "code")$public_code)
-  no_residual <- remove_chip(state, "residual")
+  no_residual <- remove_chip(state, "crit:1")
   expect_equal(no_residual$residual, "")
   expect_equal(no_residual$sort, "newest")
   expect_equal(remove_chip(state, "cond:9"), state)

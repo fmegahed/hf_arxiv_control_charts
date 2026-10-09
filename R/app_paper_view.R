@@ -70,10 +70,10 @@ label_check_status <- function(paper, name) {
 }
 
 LABEL_CHECK_TEXT <- c(
-  confirmed = "Two readers agreed",
-  kept = "Readers disagreed; a third reader kept this label",
-  changed = "Readers disagreed; a third reader chose this label",
-  disputed = "Readers disagreed; not reviewed"
+  confirmed = "Two models agreed",
+  kept = "Models disagreed; a third model kept this label",
+  changed = "Models disagreed; a third model chose this label",
+  disputed = "Models disagreed; not reviewed"
 )
 
 label_check_note <- function(paper, name) {

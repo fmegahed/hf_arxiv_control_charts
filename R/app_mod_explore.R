@@ -61,7 +61,8 @@ results_widget <- function(table, page_length = RESULTS_PAGE_LENGTH) {
   names <- names(table)
   index <- function(name) match(name, names) - 1L
   defs <- list(
-    list(targets = c(index("paper_id"), index("row_track"), index("status"), index("href")), visible = FALSE, searchable = FALSE),
+    list(targets = c(index("paper_id"), index("row_track"), index("status"), index("href"), index("code_href"),
+                     index("code_kind")), visible = FALSE, searchable = FALSE),
     list(targets = index("Saved"), render = DT::JS("QEW.render.bookmark"), width = "34px", title = "",
          searchable = FALSE, className = "col-bookmark"),
     list(targets = index("Title"), render = DT::JS("QEW.render.title"), className = "col-title"),
@@ -186,8 +187,9 @@ explore_server <- function(id, app, deps) {
       papers <- app$papers()
       ranking <- app$ranking()
       state <- app$filters()
-      if (is.null(ranking)) {
-        return(list(likely = sort_papers(papers, state$sort), less_likely = NULL, scores = NULL))
+      if (is.null(ranking) || identical(ranking$source, "undecided")) {
+        return(list(likely = sort_papers(papers, if (identical(state$sort, "relevance")) "newest" else state$sort),
+                    less_likely = NULL, scores = NULL))
       }
       if (ranking$threshold <= 0) {
         # A keyword search: every listed paper matched, so there is one list.
@@ -211,14 +213,14 @@ explore_server <- function(id, app, deps) {
     output$ranking_note <- shiny::renderUI({
       ranking <- app$ranking()
       if (is.null(ranking)) return(NULL)
-      what <- if (identical(ranking$source, "jev")) "Relevance to: " else "Keyword match with: "
+      what <- switch(ranking$source, jev = "Relevance to: ", undecided = "Not ranked by: ", "Keyword match with: ")
       shiny::div(
         class = "ranking-note",
         shiny::tags$strong(what), ranking$label, help_button("relevance", "How relevance is computed"),
         if (isTRUE(ranking$capped)) shiny::tags$span(
           class = "ranking-cap",
-          paste0(" Only the ", ranking$considered, " most recent of ", ranking$total,
-                 " filtered papers were scored. Add filters to rank them all.")),
+          paste0(" Only ", ranking$considered, " of ", ranking$total,
+                 " filtered papers were scored: those sharing most words with the question, then the most recent. Add filters to rank them all.")),
         if (nzchar(ranking$message %||% "")) shiny::tags$div(class = "ranking-warning", ranking$message))
     })
 

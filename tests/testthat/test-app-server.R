@@ -15,6 +15,7 @@ test_deps <- function(question_fn = function(system_prompt, question) approach_f
                              total = nrow(papers), considered = nrow(papers), residual = residual)
                       }) {
   app_deps(TEST_SPEC, TEST_SETTINGS, fixture_data(), reliability = NULL, question_fn = question_fn,
+           check_fn = function(question, conditions) list(keep = conditions, demote = list(), checked = FALSE),
            rank_fn = rank_fn, chat_factory = function(system_prompt) stop("HTTP 429 quota exceeded"))
 }
 
@@ -330,4 +331,78 @@ test_that("the landing page explains the screen with the spec's examples and lin
   expect_match(html, "data-help=\"changes\"", fixed = TRUE)
   expect_match(html, "Include screened-out papers", fixed = TRUE)
   expect_match(as.character(landing_scope_note(TEST_SPEC, papers[0, ])), "0 of 0 papers", fixed = TRUE)
+})
+
+test_that("a question about counts opens Landscape, and the note reports suggestions and limits", {
+  form <- list(interpretation = "How many SPM papers use nonparametric charts.", intent = "count_or_trend",
+               track = "all", public_code = FALSE, real_data = FALSE, reviews_only = FALSE,
+               conditions = list(spc__chart_approach = list("Nonparametric (distribution-free)"),
+                                 application_domain = list("Healthcare and medical")),
+               guessed = list("application_domain"),
+               cannot_answer = "The data hold no citation counts.")
+  shiny::testServer(app_server(test_deps(question_fn = function(system_prompt, question) form)), {
+    session$setInputs(qew_select_track = "spc")
+    session$setInputs(question = "how many nonparametric charts, most cited first", ask_go = 1)
+    expect_equal(nav$tab, "landscape")
+    expect_length(filters()$conditions, 1L)
+    html <- output$note$html
+    expect_match(html, "Landscape tab is open", fixed = TRUE)
+    expect_match(html, "Not answered: ", fixed = TRUE)
+    expect_match(html, "no citation counts", fixed = TRUE)
+    expect_match(html, "data-field=\"application_domain\"", fixed = TRUE)
+    expect_match(html, "Application domain: Healthcare and medical", fixed = TRUE)
+    # clicking the suggestion adds it as a filter
+    session$setInputs(qew_tag_click = list(field = "application_domain", value = "Healthcare and medical",
+                                           track = "", role = "any"))
+    expect_length(filters()$conditions, 2L)
+  })
+})
+
+test_that("an author question filters by author, ranks nothing, and points to screened-out matches", {
+  papers <- fixture_papers()
+  hidden <- papers[papers$status == "out_of_scope" & papers$track == "spc", ][1, ]
+  name <- split_values(hidden$authors)[1]
+  ranked <- 0L
+  deps <- test_deps(
+    question_fn = function(system_prompt, question) {
+      list(interpretation = "Papers by one author.", intent = "find_papers", track = "all", public_code = FALSE,
+           real_data = FALSE, reviews_only = FALSE, conditions = list(), authors = list(name))
+    },
+    rank_fn = function(papers, residual, settings, ...) { ranked <<- ranked + 1L; stop("must not rank") })
+  shiny::testServer(app_server(deps), {
+    session$setInputs(qew_select_track = "spc")
+    session$setInputs(question = paste("papers by", name), ask_go = 1)
+    session$elapse(400)
+    expect_equal(filters()$authors, name)
+    expect_equal(ranked, 0L)
+    expect_match(output$chips$html, paste0("Author: ", name), fixed = TRUE)
+    in_scope <- sum(author_mask(papers$authors, name) & papers$status == "ok" & papers$track == "spc")
+    expect_equal(nrow(filtered()), in_scope)
+    expect_gte(counts()$hidden_matches, 1L)
+    expect_match(output$scope_line$html, "also match", fixed = TRUE)
+    session$setInputs(show_screened = 1)
+    expect_true(filters()$include_screened)
+    expect_equal(counts()$hidden_matches, 0L)
+    expect_true(hidden$paper_id %in% filtered()$paper_id)
+  })
+})
+
+test_that("a criterion the model cannot judge leaves the papers unranked and says why", {
+  deps <- test_deps(
+    question_fn = function(system_prompt, question) {
+      list(interpretation = "x", intent = "find_papers", track = "all", public_code = FALSE, real_data = FALSE,
+           reviews_only = FALSE, conditions = list(), criteria = list(list(text = "funded by industry", exclude = FALSE)))
+    },
+    rank_fn = function(papers, residual, settings, ...) {
+      list(scores = empty_scores(), source = "undecided", threshold = 0,
+           message = "The factsheets do not say enough to judge \"funded by industry\".", capped = FALSE,
+           total = nrow(papers), considered = nrow(papers), residual = residual)
+    })
+  shiny::testServer(app_server(deps), {
+    session$setInputs(qew_select_track = "spc")
+    session$setInputs(question = "funded by industry", ask_go = 1)
+    session$elapse(400)
+    expect_equal(current_ranking()$source, "undecided")
+    expect_equal(nrow(current_ranking()$scores), 0L)
+  })
 })
