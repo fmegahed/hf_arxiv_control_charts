@@ -221,3 +221,17 @@ test_that("the math guard gives the same result however the answer is cut into p
     expect_equal(streamed, whole, info = paste("piece size", size))
   }
 })
+
+test_that("a checked label says how the readers fared, and an unchecked one says nothing", {
+  paper <- paper_row("2501.00001")
+  expect_identical(label_check_status(paper, "chart_family"), "confirmed")
+  expect_identical(label_check_status(paper, "chart_statistic"), "kept")
+  expect_identical(label_check_status(paper, "phase"), "changed")
+  expect_identical(label_check_status(paper, "paper_type"), "disputed")
+  expect_true(is.na(label_check_status(paper, "chart_approach")))
+  html <- view_html("2501.00001")
+  for (text in LABEL_CHECK_TEXT) expect_match(html, htmltools::htmlEscape(text), fixed = TRUE)
+  expect_match(html, "data-help=\"label_check\"|label_check")
+  expect_null(label_check_note(paper_row("2401.00002"), "chart_family"))   # written before the check existed
+  expect_false(grepl("label-check", view_html("2401.00002"), fixed = TRUE))
+})

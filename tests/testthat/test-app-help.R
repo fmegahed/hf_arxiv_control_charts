@@ -103,3 +103,17 @@ test_that("the help control is a labelled button", {
   expect_match(html, "data-help=\"ask\"", fixed = TRUE)
   expect_match(html, "aria-label=\"How asking a question works\"", fixed = TRUE)
 })
+
+test_that("help lists the readers that are configured, and only those", {
+  ctx <- help_ctx()
+  for (topic in c("factsheet", "label_check")) {
+    text <- help_text(topic, ctx, track = "spc")
+    for (model in TEST_SPEC$models[c("extraction", "second_reader", "tie_break")]) expect_match(text, model, fixed = TRUE)
+    expect_match(text, spec_field(TEST_SPEC, "spc", "phase")$label, fixed = TRUE)
+  }
+  one_reader <- TEST_SPEC
+  one_reader$models$second_reader <- NULL
+  text <- help_text("label_check", help_ctx(spec = one_reader), track = "spc")
+  expect_false(grepl(TEST_SPEC$models$tie_break, text, fixed = TRUE))
+  expect_false(grepl("second reader", text, fixed = TRUE))
+})

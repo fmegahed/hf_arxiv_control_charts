@@ -36,7 +36,8 @@ fixture_data_dir <- function() {
   dir <- tempfile("qew_fixture_")
   dir.create(dir)
   spc <- rbind(
-    fixture_factsheet_row("spc", "2501.00001", paper_type = "New method",
+    fixture_factsheet_row("spc", "2501.00001", paper_type = "New method", labels_confirmed = "chart_family", labels_disputed = "paper_type",
+                          labels_resolved = "chart_statistic|phase", labels_changed = "phase",
                           chart_family = "Univariate",
                           chart_approach = "Nonparametric (distribution-free)|Bayesian",
                           chart_approach_evidence = "a distribution-free <b>EWMA</b> chart",

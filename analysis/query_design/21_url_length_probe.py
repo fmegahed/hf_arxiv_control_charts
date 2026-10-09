@@ -23,7 +23,17 @@ def url_for(endpoint, q):
     return endpoint + "?" + urllib.parse.urlencode({"search_query": q, "start": 0, "max_results": 1})
 
 
-def send(url):
+def send(url, tries=5):
+    # arXiv throttles in bursts: wait and try again on 429 or 503.
+    for attempt in range(tries):
+        status, total, final = send_once(url)
+        if status not in (429, 503):
+            break
+        time.sleep(60 * (attempt + 1))
+    return status, total, final
+
+
+def send_once(url):
     time.sleep(4)
     try:
         req = urllib.request.Request(url, headers={"User-Agent": "qe-arxiv-watch url length probe (mailto:fmegahed@miamioh.edu)"})

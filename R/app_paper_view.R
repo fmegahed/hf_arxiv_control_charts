@@ -58,6 +58,31 @@ evidence_block <- function(evidence) {
                           htmltools::tags$blockquote(class = "math-content", evidence))
 }
 
+# How a single-answer label fared when a second reader checked it. One of
+# "confirmed", "kept", "changed", "disputed", or NA when it was not checked.
+label_check_status <- function(paper, name) {
+  listed <- function(column) name %in% split_values(paper[[column]] %||% NA_character_)
+  if (listed("labels_changed")) "changed"
+  else if (listed("labels_resolved")) "kept"
+  else if (listed("labels_disputed")) "disputed"
+  else if (listed("labels_confirmed")) "confirmed"
+  else NA_character_
+}
+
+LABEL_CHECK_TEXT <- c(
+  confirmed = "Two readers agreed",
+  kept = "Readers disagreed; a third reader kept this label",
+  changed = "Readers disagreed; a third reader chose this label",
+  disputed = "Readers disagreed; not reviewed"
+)
+
+label_check_note <- function(paper, name) {
+  status <- label_check_status(paper, name)
+  if (is.na(status)) return(NULL)
+  htmltools::tags$span(class = paste("label-check", paste0("label-check-", status)),
+                       LABEL_CHECK_TEXT[[status]], help_button("label_check", "How labels are checked"))
+}
+
 # One field of the factsheet: label, values as chips or text, evidence.
 field_row <- function(paper, field, spec, shared) {
   name <- field$name
@@ -105,6 +130,7 @@ field_row <- function(paper, field, spec, shared) {
                                     paste0("Definition of ", field$label))),
     htmltools::tags$div(class = "fact-value",
                         if (is.null(value_part)) htmltools::tags$span(class = "not-recorded", "Not recorded") else value_part,
+                        if (!is.null(value_part)) label_check_note(paper, name),
                         evidence_block(paper[[paste0(name, "_evidence")]] %||% NA_character_)))
 }
 

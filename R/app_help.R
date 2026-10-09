@@ -100,6 +100,29 @@ help_reliability <- function(ctx, track = NULL) {
   )
 }
 
+# Who reads a paper, in order. Built from the models and fields named in the
+# spec, so it changes when they do.
+help_readers <- function(ctx, track = NULL) {
+  spec <- ctx$spec
+  code <- htmltools::tags$code
+  steps <- list(htmltools::tags$li(
+    "A first reader (", code(spec$models$extraction), ") reads the PDF, chooses every label and writes the text."))
+  if (!is.null(spec$models$second_reader)) {
+    steps <- c(steps, list(htmltools::tags$li(
+      "A second reader (", code(spec$models$second_reader), ") reads the paper's text and answers, on its own, ",
+      "the labels that have exactly one answer. It does not see the first reader's answers.")))
+    if (!is.null(spec$models$tie_break)) {
+      main <- unique(unlist(lapply(help_tracks(ctx, track), function(id) {
+        vapply(arbitrated_fields(spec, id), function(name) spec_field(spec, id, name)$label, character(1))
+      })))
+      steps <- c(steps, list(htmltools::tags$li(
+        "Where the two disagree on a main label (", paste(main, collapse = ", "), "), a third reader (",
+        code(spec$models$tie_break), ") reads the PDF and decides. Its evidence quote replaces the first reader's.")))
+    }
+  }
+  htmltools::tags$ol(steps)
+}
+
 help_scope_rules <- function(ctx, track) {
   info <- spec_track(ctx$spec, track)
   htmltools::tagList(
@@ -110,7 +133,7 @@ help_scope_rules <- function(ctx, track) {
     p("For example, kept: \"", info$scope$example_in, "\" Screened out: \"", info$scope$example_out, "\""))
 }
 
-HELP_TOPICS <- c("ask", "scope", "factsheet", "chat", "relevance", "explore", "per_year", "composition",
+HELP_TOPICS <- c("ask", "scope", "factsheet", "label_check", "chat", "relevance", "explore", "per_year", "composition",
                  "trends", "gap_map", "rising", "reuse", "tested", "authors", "library")
 
 # Content of one help topic: list(title, body). `fields` are field
@@ -172,6 +195,9 @@ help_content <- function(topic, ctx, track = NULL, fields = list()) {
     factsheet = list(title = "How the factsheets are made, and how good they are", body = htmltools::tagList(
       p("A factsheet is a structured reading of one paper's PDF by a language model. The model chooses labels from fixed lists, quotes the passage it relied on where the field asks for evidence, and writes the summary, results, equations, limitations and future work."),
       p("Parts marked \"model-identified\" (limitations and future work that the authors did not state) are the model's own suggestions. Evidence quotes are labelled \"model-cited\": they are what the model says the paper states, and should be checked against the PDF."),
+      htmltools::tags$h5("Who reads each new paper"),
+      help_readers(ctx, track),
+      p("Each label that was checked says how it fared. Factsheets written before this check was added show no such note."),
       htmltools::tags$h5("What produced the factsheets you are looking at"),
       help_provenance_table(ctx, track),
       p("New papers are extracted with ", htmltools::tags$code(spec$models$extraction), " under schema version ",
@@ -179,6 +205,15 @@ help_content <- function(topic, ctx, track = NULL, fields = list()) {
       htmltools::tags$h5("How good are these factsheets"),
       help_reliability(ctx, track),
       p("Each paper's own page shows the model, date and schema version of its factsheet, and has a link to report a problem."))),
+
+    label_check = list(title = "How labels are checked", body = htmltools::tagList(
+      help_readers(ctx, track),
+      definition_list(unname(LABEL_CHECK_TEXT), c(
+        "Both readers chose this label independently.",
+        "The two readers chose different labels, and the third reader sided with the first.",
+        "The two readers chose different labels, and the third reader chose the one shown, which is not the first reader's.",
+        "The two readers chose different labels on a label that is not sent to the third reader. The first reader's label is shown.")),
+      p("Agreement between models is not proof. Two readers can make the same mistake, so check a label against the paper when it matters."))),
 
     chat = list(title = "Chat", body = htmltools::tagList(
       p("The chat sends your message and the paper's PDF (fetched from arXiv) to a language model (",
