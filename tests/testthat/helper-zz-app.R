@@ -1,3 +1,6 @@
+# Fixture rows carry the current schema version so they read as up to date.
+FIXTURE_SCHEMA <- jsonlite::read_json(app_path("config", "factsheet_spec.json"))$schema_version
+
 # Fixtures for the app tests: a small dataset in the version 2 layout, written
 # to a temporary directory and read back with the app's own loader.
 
@@ -8,7 +11,7 @@ fixture_factsheet_row <- function(track, id, status = "ok", ...) {
   columns <- factsheet_columns(TEST_SPEC, track)
   row <- stats::setNames(as.list(rep(NA_character_, length(columns))), columns)
   base <- list(paper_id = id, arxiv_version = "2", id = paste0(id, "v2"), track = track, status = status,
-               schema_version = "2.0.0", llm_model = "test-extractor", extracted_at = "2026-03-01T10:00:00Z")
+               schema_version = FIXTURE_SCHEMA, llm_model = "test-extractor", extracted_at = "2026-03-01T10:00:00Z")
   if (status == "ok") {
     base <- c(base, list(scope_decision = "in_scope", scope_category = "in_scope",
                          summary = paste("Summary of paper", id), key_results = "Results.",

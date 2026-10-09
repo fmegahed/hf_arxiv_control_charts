@@ -66,7 +66,7 @@ test_that("provenance states model, date and schema, and flags an older schema",
   html <- view_html("2501.00001")
   expect_match(html, "test-extractor", fixed = TRUE)
   expect_match(html, "01 March 2026", fixed = TRUE)
-  expect_match(html, "<code>2.0.0</code>", fixed = TRUE)
+  expect_match(html, paste0("<code>", FIXTURE_SCHEMA, "</code>"), fixed = TRUE)
   expect_false(grepl("earlier definition of the fields", html, fixed = TRUE))
   old <- paper_row("2501.00001")
   old$schema_version <- "1.0.0-bridged"
@@ -96,7 +96,7 @@ test_that("the report link opens a prefilled issue in the right repository", {
   expect_match(decoded, "https://arxiv.org/abs/2501.00001", fixed = TRUE)
   expect_match(decoded, "- [ ] Charting statistic:", fixed = TRUE)
   expect_match(decoded, "- [ ] Summary:", fixed = TRUE)
-  expect_match(decoded, "model test-extractor, schema 2.0.0", fixed = TRUE)
+  expect_match(decoded, paste0("model test-extractor, schema ", FIXTURE_SCHEMA), fixed = TRUE)
   expect_match(view_html("2501.00001"), "Report a problem with this factsheet", fixed = TRUE)
 })
 

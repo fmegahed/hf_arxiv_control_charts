@@ -252,6 +252,40 @@ extract_paper <- function(paper, track, spec, llm, fetch_pdf, model, now = Sys.t
   raw$classify <- classify$data
   labels <- postprocess_classification(classify$data, spec, track)
 
+  # Second reader and tie-break on the single-answer labels. Both are optional
+  # and neither can fail the paper: on an error the first reader's labels stand
+  # and the record is flagged.
+  review <- list(confirmed = character(), disputed = character(), resolved = character(), changed = character())
+  if (!is.null(llm$second)) {
+    second <- llm$second(track, paper, pdf$path)
+    usage <- add_usage(usage, second$usage)
+    if (!second$ok) {
+      flags <- c(flags, "second_reader_failed")
+    } else {
+      raw$second <- second$data
+      if (isTRUE(second$data$text_cut)) flags <- c(flags, "second_reader_text_cut")
+      compared <- compare_readers(labels$columns, unlist(second$data$labels), spec, track)
+      review$confirmed <- compared$confirmed
+      review$disputed <- compared$disputed
+      if (length(compared$to_arbitrate) > 0L && !is.null(llm$tiebreak)) {
+        tiebreak <- llm$tiebreak(track, pdf$path, compared$to_arbitrate)
+        usage <- add_usage(usage, tiebreak$usage)
+        if (!tiebreak$ok) {
+          flags <- c(flags, "tie_break_failed")
+          review$disputed <- c(review$disputed, compared$to_arbitrate)
+        } else {
+          raw$tiebreak <- c(list(fields = as.list(compared$to_arbitrate)), tiebreak$data)
+          applied <- apply_tiebreak(labels$columns, tiebreak$data, compared$to_arbitrate, spec, track)
+          labels$columns <- applied$columns
+          review$resolved <- compared$to_arbitrate
+          review$changed <- applied$changed
+        }
+      } else {
+        review$disputed <- c(review$disputed, compared$to_arbitrate)
+      }
+    }
+  }
+
   narrate <- llm$narrate(track, pdf$path, labels_as_text(labels$columns, spec, track))
   usage <- add_usage(usage, narrate$usage)
   if (!narrate$ok) {
@@ -261,6 +295,10 @@ extract_paper <- function(paper, track, spec, llm, fetch_pdf, model, now = Sys.t
   narrative <- postprocess_narrative(narrate$data)
 
   complete <- c(record, labels$columns, narrative$columns)
+  complete$labels_confirmed <- collapse_values(review$confirmed)
+  complete$labels_disputed <- collapse_values(review$disputed)
+  complete$labels_resolved <- collapse_values(review$resolved)
+  complete$labels_changed <- collapse_values(review$changed)
   complete$status <- "ok"
   complete$qa_flags <- collapse_values(unique(c(flags, labels$flags, narrative$flags)))
 
@@ -282,6 +320,8 @@ record_from_raw <- function(entry, spec, track) {
     classify = function(track, pdf_path) if (is.null(entry$raw$classify)) missing_stage else replay(entry$raw$classify),
     narrate = function(track, pdf_path, labels_text) if (is.null(entry$raw$narrate)) missing_stage else replay(entry$raw$narrate)
   )
+  if (!is.null(entry$raw$second)) llm$second <- function(track, paper, pdf_path) replay(entry$raw$second)
+  if (!is.null(entry$raw$tiebreak)) llm$tiebreak <- function(track, pdf_path, fields) replay(entry$raw$tiebreak)
   fetch <- function(paper) list(ok = TRUE, path = NA_character_, truncated = isTRUE(entry$pdf_truncated))
   record <- extract_paper(list(id = entry$id), track, spec, llm, fetch, entry$model,
                           now = as.POSIXct(entry$at, format = "%Y-%m-%dT%H:%M:%SZ", tz = "UTC"))
@@ -293,7 +333,9 @@ record_from_raw <- function(entry, spec, track) {
 factsheet_columns <- function(spec, track) {
   c("paper_id", "arxiv_version", "id", "track", "status", "error_class", "error_message", "attempts",
     "scope_decision", "scope_category", "scope_reason",
-    spec_label_columns(spec, track), "code_public", spec_narrative_columns(spec),
+    spec_label_columns(spec, track), "code_public",
+    "labels_confirmed", "labels_disputed", "labels_resolved", "labels_changed",
+    spec_narrative_columns(spec),
     "schema_version", "prompt_version", "llm_model", "extracted_at", "qa_flags",
     "input_tokens", "cached_input_tokens", "output_tokens", "cost_usd", "n_calls")
 }

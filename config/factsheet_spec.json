@@ -1,14 +1,17 @@
 {
-  "schema_version": "2.0.0",
-  "prompt_version": "2.0.1",
+  "schema_version": "2.1.0",
+  "prompt_version": "2.1.0",
   "models": {
     "extraction": "gpt-6-luna",
+    "second_reader": "jev-latest",
+    "tie_break": "gpt-6.1-sol",
     "chat": "gpt-6-luna",
     "question": "gpt-6-luna"
   },
   "limits": {
     "max_additional_labels": 2,
     "max_pdf_pages": 80,
+    "second_reader_max_chars": 85000,
     "max_attempts": 5
   },
   "tracks": {
@@ -183,7 +186,7 @@
     ],
     "spc": [
       {
-        "name": "chart_family", "label": "Data structure", "kind": "single", "evidence": true, "other": true,
+        "name": "chart_family", "arbitrate": true, "label": "Data structure", "kind": "single", "evidence": true, "other": true,
         "group": "Method", "filter": "core",
         "question": "What kind of data does the proposed or evaluated chart monitor? Choose one.",
         "values": [
@@ -212,7 +215,7 @@
         ]
       },
       {
-        "name": "chart_statistic", "label": "Charting statistic", "kind": "primary_additional", "evidence": true, "other": true,
+        "name": "chart_statistic", "arbitrate": true, "label": "Charting statistic", "kind": "primary_additional", "evidence": true, "other": true,
         "group": "Method", "filter": "core",
         "question": "Which charting statistic does the paper propose or evaluate with its own results? The primary one is the statistic the paper is about. Competitors that appear only in a comparison table are not labels.",
         "values": [
@@ -229,7 +232,7 @@
         ]
       },
       {
-        "name": "phase", "label": "Phase", "kind": "single", "evidence": true,
+        "name": "phase", "arbitrate": true, "label": "Phase", "kind": "single", "evidence": true,
         "group": "Method", "filter": "more",
         "question": "Which phase does the paper's own contribution address? Many Phase II papers use the words 'Phase I' because they take an in-control reference sample to estimate parameters or to set control limits. That is NOT Phase I. Decide by what the proposed or studied method does, and apply these tests in order, stopping at the first that fits. (1) The method needs no separate reference sample and updates its estimates with each new observation: 'Self-starting'. (2) The method itself analyses a fixed historical dataset, to find outliers or changes in it or to establish that the process was in control, and the paper proposes no online monitoring method: 'Phase I'. (3) The paper proposes one method of each kind, a retrospective one and an online one: 'Phase I and Phase II'. (4) The method monitors new observations as they arrive: 'Phase II'. This includes papers that estimate parameters from Phase I data, papers that split an example dataset into a Phase I part and a Phase II part, and papers that study how estimation error affects a chart. (5) Otherwise: 'Not applicable'. Examples: 'the first 150 observations are used as Phase I data to estimate the parameters and the rest are monitored' is Phase II. 'A chart is proposed to detect outliers in the historical sample' is Phase I.",
         "values": [
@@ -304,7 +307,7 @@
     ],
     "exp_design": [
       {
-        "name": "design_type", "label": "Design type", "kind": "primary_additional", "evidence": true, "other": true,
+        "name": "design_type", "arbitrate": true, "label": "Design type", "kind": "primary_additional", "evidence": true, "other": true,
         "group": "Method", "filter": "core",
         "question": "Which type of experimental design does the paper propose, construct or evaluate with its own results? The primary one is the design the paper is about.",
         "values": [
@@ -329,7 +332,7 @@
         ]
       },
       {
-        "name": "design_objective", "label": "Design objective", "kind": "primary_additional", "other": true,
+        "name": "design_objective", "arbitrate": true, "label": "Design objective", "kind": "primary_additional", "other": true,
         "group": "Method", "filter": "core",
         "question": "What is the experiment designed to achieve? The primary one is the objective the paper states first or optimizes.",
         "values": [
@@ -383,7 +386,7 @@
     ],
     "reliability": [
       {
-        "name": "reliability_topic", "label": "Reliability topic", "kind": "primary_additional", "evidence": true, "other": true,
+        "name": "reliability_topic", "arbitrate": true, "label": "Reliability topic", "kind": "primary_additional", "evidence": true, "other": true,
         "group": "Method", "filter": "core",
         "question": "Which reliability topic does the paper address with its own results? The primary one is what the title and abstract are about.",
         "values": [
@@ -404,7 +407,7 @@
         ]
       },
       {
-        "name": "model_family", "label": "Model family", "kind": "primary_additional", "evidence": true, "other": true,
+        "name": "model_family", "arbitrate": true, "label": "Model family", "kind": "primary_additional", "evidence": true, "other": true,
         "group": "Method", "filter": "core",
         "question": "Which family of model does the paper propose or use for its main analysis?",
         "values": [

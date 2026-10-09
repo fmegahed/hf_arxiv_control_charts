@@ -11,7 +11,11 @@ PRICES <- list(
   "gpt-6-luna"  = list(input = 0.10, cached = 0.01, output = 0.50,
                        long_input = 0.20, long_cached = 0.02, long_output = 0.75),
   "gpt-6.1-sol" = list(input = 2.00, cached = 0.10, output = 10.00,
-                       long_input = 4.00, long_cached = 0.20, long_output = 15.00)
+                       long_input = 4.00, long_cached = 0.20, long_output = 15.00),
+  # TypeSafe decision model: input only, output free.
+  # Source: https://docs.typesafe.ai/models (checked 2026-10-08).
+  "jev-latest"  = list(input = 0.042, cached = 0.042, output = 0,
+                       long_input = 0.042, long_cached = 0.042, long_output = 0)
 )
 
 # input_tokens counts all input, of which cached_tokens were read from cache.
