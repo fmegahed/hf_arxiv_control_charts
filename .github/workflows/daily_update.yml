@@ -44,7 +44,8 @@ jobs:
             libcurl4-openssl-dev \
             libssl-dev \
             libxml2-dev \
-            libjpeg-dev
+            libjpeg-dev \
+            libpoppler-cpp-dev
 
       - name: Setup renv and restore packages
         uses: r-lib/actions/setup-renv@v2
@@ -52,6 +53,7 @@ jobs:
       - name: Run daily update
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          JEV_API_KEY: ${{ secrets.JEV_API_KEY }}
           EXTRACTION_ENABLED: ${{ inputs.extraction_enabled || vars.EXTRACTION_ENABLED || 'true' }}
         run: |
           Rscript 01_daily_update.r

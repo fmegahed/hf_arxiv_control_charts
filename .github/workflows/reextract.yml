@@ -60,7 +60,7 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libcurl4-openssl-dev libssl-dev libxml2-dev libjpeg-dev
+          sudo apt-get install -y libcurl4-openssl-dev libssl-dev libxml2-dev libjpeg-dev libpoppler-cpp-dev
 
       - name: Setup renv and restore packages
         uses: r-lib/actions/setup-renv@v2
@@ -68,6 +68,7 @@ jobs:
       - name: Run one chunk of the backfill
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          JEV_API_KEY: ${{ secrets.JEV_API_KEY }}
           IN_TRACK: ${{ inputs.track }}
           IN_MODEL: ${{ inputs.model }}
           IN_TIME: ${{ inputs.time_budget_min }}

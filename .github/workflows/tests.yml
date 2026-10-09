@@ -27,7 +27,9 @@ jobs:
           sudo apt-get install -y \
             libcurl4-openssl-dev \
             libssl-dev \
-            libxml2-dev
+            libxml2-dev \
+            libjpeg-dev \
+            libpoppler-cpp-dev
 
       - name: Setup renv and restore packages
         uses: r-lib/actions/setup-renv@v2
@@ -36,7 +38,7 @@ jobs:
       # does not list yet. Remove a name here once it is in the lockfile.
       - name: Install packages missing from the lockfile
         run: |
-          Rscript -e 'needed <- c("testthat", "qpdf"); missing <- needed[!vapply(needed, requireNamespace, logical(1), quietly = TRUE)]; if (length(missing)) install.packages(missing)'
+          Rscript -e 'needed <- c("testthat"); missing <- needed[!vapply(needed, requireNamespace, logical(1), quietly = TRUE)]; if (length(missing)) install.packages(missing)'
 
       # No model service is called: the tests use fakes, and the live
       # regression test only runs when it is asked for.
