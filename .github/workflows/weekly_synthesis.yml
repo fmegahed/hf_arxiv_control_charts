@@ -69,5 +69,4 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          git remote add space https://fmegahed:${HF_TOKEN}@huggingface.co/spaces/fmegahed/arxiv_control_charts || true
-          git push --force space HEAD:main
+          bash tools/deploy_space.sh "https://fmegahed:${HF_TOKEN}@huggingface.co/spaces/fmegahed/arxiv_control_charts"

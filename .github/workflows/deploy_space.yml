@@ -1,0 +1,31 @@
+name: Deploy to Hugging Face Space
+
+# A push to main by a person deploys the app. The daily and weekly jobs deploy
+# from their own last step, because a push made by a workflow does not start
+# another workflow.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: space-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Push to Hugging Face Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          bash tools/deploy_space.sh "https://fmegahed:${HF_TOKEN}@huggingface.co/spaces/fmegahed/arxiv_control_charts"
