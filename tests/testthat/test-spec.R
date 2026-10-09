@@ -182,3 +182,12 @@ test_that("tracks.json content is generated from the spec", {
 test_that("every model named in the spec has a price", {
   expect_true(all(unlist(spec$models) %in% names(PRICES)))
 })
+
+test_that("every arXiv query fits in one request line", {
+  # The arXiv server rejects a request line over 4,094 bytes. 250 bytes are
+  # left for the host path and the paging and sorting parameters.
+  for (track in TRACK_IDS) {
+    encoded <- utils::URLencode(spec$tracks[[track]]$query, reserved = TRUE)
+    expect_lt(nchar(encoded, type = "bytes") + 250L, 4094L, label = track)
+  }
+})
