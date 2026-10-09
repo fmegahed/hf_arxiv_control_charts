@@ -42,6 +42,7 @@ logo_row <- function(class) {
     class = class,
     shiny::tags$img(src = "miami-logo.png", alt = "Miami University"),
     shiny::tags$img(src = "university-of-dayton-vector-logo.png", alt = "University of Dayton"),
+    shiny::tags$img(src = "university-of-cambridge-logo.png", alt = "University of Cambridge", class = "logo-wide"),
     shiny::tags$img(src = "uva-compacte-logo.png", alt = "University of Amsterdam"))
 }
 

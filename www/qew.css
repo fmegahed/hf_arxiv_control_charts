@@ -21,7 +21,8 @@ body { max-width: 100%; overflow-x: clip; }
 .nav-tabs > li.active > a:focus { background-color: var(--track-color); }
 .nav-tabs > li > a:hover { color: var(--track-color); }
 .section-heading, .info-card h4 { color: var(--track-color); }
-.logo-container img { height: 50px; max-width: 28vw; object-fit: contain; }
+.logo-container img { height: 50px; max-width: 22vw; object-fit: contain; }
+.logo-container img.logo-wide { height: 38px; }
 
 /* ---- Help button ---- */
 .help-q {

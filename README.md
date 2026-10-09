@@ -107,6 +107,6 @@ No test calls a model service. A live regression test that encodes the author re
 
 ## Authors
 
-Fadel M. Megahed, Ying-Ju (Tessa) Chen, Allison Jones-Farmer, Ibrahim Yousif, and Inez M. Zwetsloot.
+Fadel M. Megahed, Ying-Ju Chen, Yamin Dahwich, Arthur Carvalho, L. Allison Jones-Farmer, Ibrahim Yousif, and Inez M. Zwetsloot.
 
-A collaboration between Miami University, the University of Dayton, and the University of Amsterdam.
+A collaboration between Miami University, the University of Dayton, the University of Cambridge, and the University of Amsterdam.
