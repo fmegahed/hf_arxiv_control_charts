@@ -1,0 +1,284 @@
+id,on_topic,title
+0906.3843,0,Threshold Verification Technique for Network Intrusion Detection System
+0907.3521,1,A Numerical Approach to Performance Analysis of Quickest Change-Point Detection Procedures
+0908.2954,1,Approximation of Average Run Length of Moving Sum Algorithms Using Multivariate Probabilities
+0911.5113,0,SuperAGILE data processing services
+1005.1129,1,Third-order Asymptotic Optimality of the Generalized Shiryaev-Roberts Changepoint Detection Procedures
+1105.1361,1,Data-Efficient Quickest Change Detection with On-Off Observation Control
+1202.0373,1,Partial Sliced Inverse Regression for Quality-Relevant Multivariate Statistical Process Monitoring
+1202.2849,1,Nearly Optimal Change-Point Detection with an Application to Cybersecurity
+1204.4333,1,Non-Restarting CUSUM charts and Control of the False Discovery Rate
+1302.4462,0,LEDDB: LOFAR Epoch of Reionization Diagnostic Database
+1303.4917,0,Power of Change-Point Tests for Long-Range Dependent Data
+1308.5738,1,Large-Scale Multi-Stream Quickest Change Detection via Shrinkage Post-Change Estimation
+1312.5002,1,Efficient Performance Evaluation of the Generalized Shiryaev--Roberts Detection Procedure in a Multi-Cyclic Setup
+1401.3790,0,Detection of Phase Shift Events
+1403.3931,1,Quickest detection in coupled systems
+1407.3491,0,Nonparametric confidence intervals for monotone functions
+1407.3625,0,A Darling-Erdős-type CUSUM-procedure for functional data II
+1407.5978,1,Sequential Changepoint Approach for Online Community Detection
+1408.6937,1,An Exact Formula for the Average Run Length to False Alarm of the Generalized Shiryaev-Roberts Procedure for Change-Point Detection under Exponential Observations
+1410.8765,1,Robustness of the ${N}$-CUSUM stopping rule in a Wiener disorder problem
+1502.04890,0,Algorithm for overlapping estimation of common change-sets in spatial data of fixed size
+1503.03932,1,Statistical quality control for volumetric modulated arc therapy (VMAT) delivery using machine log data
+1503.04161,0,Studentized U-quantile processes under dependence with applications to change-point analysis
+1505.06483,0,On Nonparametric Inference in the Regression Discontinuity Design
+1505.06770,1,Sketching for Sequential Change-Point Detection
+1506.01338,0,Optimal change point detection in Gaussian processes
+1506.06199,1,Non-parametric Quickest Change Detection for Large Scale Random Matrices
+1506.08504,1,Optimal sequential detection in multi-stream data
+1509.01570,1,Real-time financial surveillance via quickest change-point detection methods
+1509.08442,1,Adaptive sequential Monte Carlo for multiple changepoint analysis
+1512.03990,0,"Cloud-based Electronic Health Records for Real-time, Region-specific Influenza Surveillance"
+1601.06868,1,Quickest Change Detection with Mismatched Post-Change Models
+1602.05516,0,Overview of the software architecture and data flow for the J-PET tomography device
+1603.05265,1,Thresholded Multivariate Principal Component Analysis for Multi-channel Profile Monitoring
+1603.05544,0,Accelerating Deep Neural Network Training with Inconsistent Stochastic Gradient Descent
+1605.04049,1,Modeling and detecting change in temporal networks via a dynamic degree corrected stochastic block model
+1606.00586,0,Recurrence CFD - a novel approach to simulate multiphase flows with strongly separated time scales
+1606.05382,0,Sampling Method for Fast Training of Support Vector Data Description
+1611.03146,0,The Control of the False Discovery Rate in Fixed Sequence Multiple Testing
+1611.04158,0,Tests for scale changes based on pairwise differences
+1611.08639,0,Multiple-change-point detection for high dimensional time series via sparsified binary segmentation
+1612.02130,0,Predictive Business Process Monitoring with LSTM Neural Networks
+1701.03959,1,A test for monitoring under- and overtreatment in Dutch hospitals
+1702.02966,1,A monitoring and diagnostic approach for stochastic textured surfaces
+1702.05047,1,Data-driven online monitoring of wind turbines
+1705.04885,0,Awareness improves problem-solving performance
+1705.05137,0,Operational Semantics of Process Monitors
+1705.06995,1,Nearly second-order asymptotic optimality of sequential change-point detection with one-sample updates
+1705.08661,0,Robot Introspection with Bayesian Nonparametric Vector Autoregressive Hidden Markov Models
+1706.01679,0,On the Feasibility of Distinguishing Between Process Disturbances and Intrusions in Process Control Systems Using Multivariate Statistical Process Control
+1706.10071,0,Superpixel-based Semantic Segmentation Trained by Statistical Process Control
+1707.03821,1,Process Monitoring on Sequences of System Call Count Vectors
+1708.02635,0,Anomaly Detection in Multivariate Non-stationary Time Series for Automatic DBMS Diagnosis
+1709.00152,0,Using Deep Convolutional Neural Networks to Circumvent Morphological Feature Specification when Classifying Subvisible Protein Aggregates from Micro-Flow Images
+1712.05848,1,Efficient Global Monitoring Statistics for High-Dimensional Data
+1804.02422,0,Predictive Process Monitoring Methods: Which One Suits Me Best?
+1804.03967,0,Incremental Predictive Process Monitoring: How to Deal with the Variability of Real Environments
+1805.08061,1,NEWMA: a new method for scalable model-free online change-point detection
+1806.10585,0,Micromachined force scale for optical power measurement by radiation pressure sensing
+1806.10760,1,First-order optimal sequential subspace change-point detection
+1807.03387,0,Process Monitoring Using Maximum Sequence Divergence
+1808.02113,0,Paying Attention to Attention: Highlighting Influential Samples in Sequential Analysis
+1809.05250,1,Real-Time Nonparametric Anomaly Detection in High-Dimensional Settings
+1810.09447,0,A Method for Robust Online Classification using Dictionary Learning: Development and Assessment for Monitoring Manual Material Handling Activities Using Wearable Sensors
+1901.04443,1,"An Approach to Statistical Process Control that is New, Nonparametric, Simple, and Powerful"
+1901.08196,1,Asynchronous Multi-Sensor Change-Point Detection for Seismic Tremors
+1902.03293,0,Automatic dimensionality selection for principal component analysis models with the ignorance score
+1902.03460,1,Quickest Change Detection in the Presence of a Nuisance Change
+1904.00340,1,CUSUM ARL - Conditional or Unconditional?
+1904.02250,0,A new class of change point test statistics of Rényi type
+1904.04556,0,Cusum tests for changes in the Hurst exponent and volatility of fractional Brownian motion
+1904.09422,0,Specification-Driven Predictive Business Process Monitoring
+1904.09514,1,High Dimensional Process Monitoring Using Robust Sparse Probabilistic Principal Component Analysis
+1905.06318,1,Which principal components are most sensitive to distributional changes?
+1907.08237,1,A Systematic Approach to Detect Hierarchical Healthcare Cost Drivers and Interpretable Change Patterns
+1907.13421,1,Optimal Sequential Tests for Monitoring Changes in the Distribution of Finite Observation Sequences
+1909.10108,0,Improve Orthogonal GARCH with Hidden Markov Model
+1910.06497,1,The Value of Summary Statistics for Anomaly Detection in Temporally-Evolving Networks: A Performance Evaluation Study
+1910.09083,1,Spectral CUSUM for Online Network Structure Change Detection
+1910.09808,1,A Scalable Predictive Maintenance Model for Detecting Wind Turbine Component Failures Based on SCADA Data
+1911.03971,1,A new method for phase II monitoring of multivariate simple linear profiles
+1911.07762,1,Online Change-Point Detection in High-Dimensional Covariance Structure with Application to Dynamic Networks
+1912.11693,1,Asymptotically Optimal Sampling Policy for Quickest Change Detection with Observation-Switching Cost
+2001.02519,0,Temperature states in Powder Bed Fusion additive manufacturing are structurally controllable and observable
+2001.05204,0,Detecting Changes in the Second Moment Structure of High-Dimensional Sensor-Type Data in a $K$-Sample Setting
+2001.10494,0,Real-time Out-of-distribution Detection in Learning-Enabled Cyber-Physical Systems
+2002.05945,0,Online Process Monitoring Using Incremental State-Space Expansion: An Exact Algorithm
+2004.06574,0,Rank-based change-point analysis for long-range dependent time series
+2004.10977,1,Real-time Detection of Clustered Events in Video-imaging data with Applications to Additive Manufacturing
+2004.11710,1,Rapid Detection of Hot-spots via Tensor Decomposition with applications to Crime Rate Data
+2004.12322,1,Nonparametric sequential change-point detection for multivariate time series based on empirical distribution functions
+2004.13998,0,Adaptive tests for parameter changes in ergodic diffusion processes from discrete observations
+2005.13746,0,Tensor decomposition to Compress Convolutional Layers in Deep Learning
+2006.11351,0,Neural-network-assisted in situ processing monitoring by speckle pattern observation
+2007.08369,1,Open-end nonparametric sequential change-point detection based on the retrospective CUSUM statistic
+2007.15607,0,Simultaneous state and parameter estimation: the role of sensitivity analysis
+2008.07262,0,Temporal Conformance Checking at Runtime based on Time-infused Process Models
+2009.02098,0,Explainable Artificial Intelligence for Process Mining: A General Overview and Application of a Novel Local Explanation Approach for Predictive Process Monitoring
+2009.10513,0,Local Post-Hoc Explanations for Predictive Process Monitoring in Manufacturing
+2009.12165,0,Integration of Roadside Camera Images and Weather Data for Monitoring Winter Road Surface Conditions
+2009.13251,0,Deep Learning for Predictive Business Process Monitoring: Review and Benchmark
+2010.00889,0,Time Matters: Time-Aware LSTMs for Predictive Business Process Monitoring
+2010.11285,1,Sequential Change Detection by Optimal Weighted $\ell_2$ Divergence
+2010.11405,1,A Systematic Approach to Surveillance and Detection of Hierarchical Healthcare Cost Drivers and Utilization Offsets
+2011.05036,0,Testing and Dating Structural Changes in Copula-based Dependence Measures
+2012.06830,1,An improved mixture of probabilistic PCA for nonlinear data-driven process monitoring
+2101.02379,1,A Registration-free approach for Statistical Process Control of 3D scanned objects via FEM
+2101.04869,0,"Convolutional Neural Nets in Chemical Engineering: Foundations, Computations, and Applications"
+2101.08579,1,Monitoring nonstationary processes based on recursive cointegration analysis and elastic weight consolidation
+2102.01310,1,Optimal Sequential Detection of Signals with Unknown Appearance and Disappearance Points in Time
+2103.03144,0,The Euler Characteristic: A General Topological Descriptor for Complex Data
+2103.07303,1,Second-Order Component Analysis for Fault Detection
+2103.11588,0,Comprehensive process-molten pool relations modeling using CNN for wire-feed laser additive manufacturing
+2103.11740,0,Privacy-aware Process Performance Indicators: Framework and Release Mechanisms
+2103.12222,1,Explainability: Relevance based Dynamic Deep Learning Algorithm for Fault Detection and Diagnosis in Chemical Processes
+2104.13440,0,Changepoint detection in random coefficient autoregressive models
+2105.08186,0,Distribution-free changepoint detection tests based on the breaking of records
+2106.03829,0,First detection of threshold crossing events under intermittent sensing
+2107.11931,1,Max-Type and Sum-Type Procedures for Online Change-Point Detection in the Mean of High-Dimensional Data
+2108.11348,1,Non-Parametric Quickest Mean Change Detection
+2109.08384,0,Semantic Snapping for Guided Multi-View Visualization Design
+2109.14666,1,Dynamic probabilistic predictable feature analysis for multivariate temporal process monitoring
+2110.00198,1,A Review and Critique of Auxiliary Information-Based Process Monitoring Methods
+2110.01581,1,Quickest Change Detection with Non-Stationary Post-Change Observations
+2110.10867,1,Functional Boxplots for Outlier Detection in Additive Manufacturing
+2111.06390,0,Theoretical Foundations of δ-margin Majority Voting
+2112.01769,0,Prescriptive Process Monitoring: Quo Vadis?
+2112.14870,1,Registration-free localization of defects in 3-D parts from mesh metrology data using functional maps
+2201.02325,1,Bayesian Online Change Point Detection for Baseline Shifts
+2201.02742,0,Bayesian Changepoint Estimation for Spatially Indexed Functional Time Series
+2202.08265,0,XAI in the context of Predictive Process Monitoring: Too much to Reveal
+2203.03532,1,E-detectors: a nonparametric framework for sequential change detection
+2203.12471,0,Data Analysis using Riemannian Geometry and Applications to Chemical Engineering
+2204.06688,0,Time Series of Non-Additive Metrics: Identification and Interpretation of Contributing Factors of Variance by Linear Decomposition
+2204.13034,1,Minimax Robust Quickest Change Detection using Wasserstein Ambiguity Sets
+2205.04222,0,Alternative Data Augmentation for Industrial Monitoring using Adversarial Learning
+2206.08453,1,Online Score Statistics for Detecting Clustered Change in Network Point Processes
+2206.10143,1,Noise-contrastive Online Change Point Detection
+2206.11727,1,Sequential Detection of Common Change in High-dimensional Data Stream
+2206.11731,1,Sequential Detection of Transient Signals in High Dimensional Data Stream
+2206.13437,1,A Generalized Probabilistic Monitoring Model with Both Random and Sequential Data
+2209.12683,0,Evaluating Malware Forensics Tools
+2210.09688,0,Nirdizati: an Advanced Predictive Process Monitoring Toolkit
+2210.17312,1,Neural network-based CUSUM for online change-point detection
+2210.17353,1,Data-Adaptive Symmetric CUSUM for Sequential Change Detection
+2211.00223,1,Quickest Change Detection with Leave-one-out Density Estimation
+2211.01645,1,Towards federated multivariate statistical process control (FedMSPC)
+2211.04880,0,Outcome-Oriented Prescriptive Process Monitoring Based on Temporal Logic Patterns
+2212.06288,0,Agnostic Learning for Packing Machine Stoppage Prediction in Smart Factories
+2301.01038,0,Heterogeneous Domain Adaptation and Equipment Matching: DANN-based Alignment with Cyclic Supervision (DBACS)
+2301.02167,0,Trace Encoding in Process Mining: a survey and benchmarking
+2302.03957,0,A Perceptual Study of Sound Ecology in Peripheral Sonification
+2302.10426,1,An Accurate and Interpretable Framework for Trustworthy Process Monitoring
+2302.10916,1,"How Generative AI models such as ChatGPT can be (Mis)Used in SPC Practice, Education, and Research? An Exploratory Study"
+2302.12004,1,Knowledge Distillation-based Information Sharing for Online Process Monitoring in Decentralized Manufacturing System
+2303.00272,0,Influence of Spattering on In-process Layer Surface Roughness during Laser Powder Bed Fusion
+2303.03572,0,Learning When to Treat Business Processes: Prescriptive Process Monitoring with Causal Inference and Reinforcement Learning
+2303.18104,0,Status Updating under Partial Battery Knowledge in Energy Harvesting IoT Networks
+2304.00691,1,Lithium-ion Battery Online Knee Onset Detection by Matrix Profile
+2304.07003,0,Detection and Estimation of Structural Breaks in High-Dimensional Functional Time Series
+2305.19601,0,Monitoring the evolution of dimensional accuracy and product properties in property-controlled forming processes
+2307.06564,0,Prescriptive Process Monitoring Under Resource Constraints: A Reinforcement Learning Approach
+2307.14208,1,Online Modeling and Monitoring of Dependent Processes under Resource Constraints
+2308.05501,0,More Than Meets the Eye: Analyzing Anesthesiologists' Visual Attention in the Operating Room Using Deep Learning Models
+2308.15499,0,Classification robustness to common optical aberrations
+2309.08580,1,Automated Characterization and Monitoring of Material Shape using Riemannian Geometry
+2309.09878,0,Anomaly Detection in Spatio-Temporal Data: Theory and Application
+2310.02940,1,Bayes Watch: Bayesian Change-point Detection for Process Monitoring with Fault Detection
+2310.19787,0,$e^{\text{RPCA}}$: Robust Principal Component Analysis for Exponential Family Distributions
+2310.20434,0,Rapid cryogenic characterisation of 1024 integrated silicon quantum dots
+2311.11463,1,Designing monitoring strategies for deployed machine learning algorithms: navigating performativity through a causal lens
+2312.08847,0,Knowledge-Driven Modulation of Neural Networks with Attention Mechanism for Next Activity Prediction
+2401.17573,1,Tensor-based process control and monitoring for semiconductor manufacturing with unstable disturbances
+2402.03459,0,Hybrid Smoothing for Anomaly Detection in Time Series
+2402.08088,1,Out-of-Distribution Detection and Data Drift Monitoring using Statistical Process Control
+2402.10977,0,Generative AI and Process Systems Engineering: The Next Frontier
+2403.08836,0,Structural Positional Encoding for knowledge integration in transformer-based medical process monitoring
+2404.05486,1,Quickest Change Detection for Multiple Data Streams Using the James-Stein Estimator
+2404.08136,0,Exponentially Weighted Moving Models
+2404.13673,0,In-situ process monitoring and adaptive quality enhancement in laser additive manufacturing: a critical review
+2404.15609,1,Dynamic fault detection and diagnosis for alkaline water electrolyzer with variational Bayesian Sparse principal component analysis
+2404.17885,1,Sequential monitoring for explosive volatility regimes
+2405.15576,1,Online Changepoint Detection via Dynamic Mode Decomposition
+2405.16164,0,Acquiring Better Load Estimates by Combining Anomaly and Change Point Detection in Power Grid Time-series Measurements
+2406.01262,1,Structural Health Monitoring with Functional Data: Two Case Studies
+2406.16136,1,Distribution-Free Online Change Detection for Low-Rank Images
+2407.02275,0,Learning Paradigms and Modelling Methodologies for Digital Twins in Process Industry
+2408.05071,0,Functional Sieve Bootstrap for the Partial Sum Process with Application to Change-Point Detection
+2408.05817,1,High Probability Latency Sequential Change Detection over an Unknown Finite Horizon
+2410.06564,0,Green bubbles: a four-stage paradigm for detection and propagation
+2410.07508,1,MOLA: Enhancing Industrial Process Monitoring Using Multi-Block Orthogonal Long Short-Term Memory Autoencoder
+2410.09741,1,Real-time Fuel Leakage Detection via Online Change Point Detection
+2411.12563,1,Stream-Based Active Learning for Process Monitoring
+2411.13108,0,"Demonstrating the Suitability of Neuromorphic, Event-Based, Dynamic Vision Sensors for In Process Monitoring of Metallic Additive Manufacturing and Welding"
+2411.13703,0,High-Fidelity Optical Monitoring of Laser Powder Bed Fusion via Aperture Division Multiplexing
+2411.14635,0,Modelling Loss of Complexity in Intermittent Time Series and its Application
+2411.15915,0,Multi-Robot Scan-n-Print for Wire Arc Additive Manufacturing
+2501.04130,1,Multiple testing in multi-stream sequential change detection
+2501.12667,1,Sequential Change Point Detection via Denoising Score Matching
+2502.02594,0,Offshore Wind Turbine Tower Design and Optimization: A Review and AI-Driven Future Directions
+2503.01858,1,A Review of Artificial Intelligence Impacting Statistical Process Monitoring and Future Directions
+2503.02349,1,Nonparametric Sequential Change-point Detection on High Order Compositional Time Series Models with Exogenous Variables
+2503.03197,0,Directly Follows Graphs Go Predictive Process Monitoring With Graph Neural Networks
+2503.12456,1,Nonlinear Principal Component Analysis with Random Bernoulli Features for Process Monitoring
+2504.01276,1,Online Fault Detection and Classification of Chemical Process Systems Leveraging Statistical Process Control and Riemannian Geometric Analysis
+2504.06526,1,Sequential Change Point Detection with FDR Control in Reconfigurable Sensor Networks
+2504.08243,1,Practical Implementation of an End-to-End Methodology for SPC of 3-D Part Geometry: A Case Study
+2504.09783,1,BLAST: Bayesian online change-point detection with structured image data
+2505.01556,1,Optimising Kernel-based Multivariate Statistical Process Control
+2505.03517,0,Real-time small area estimation of food security in Zimbabwe: integrating mobile-phone and face-to-face surveys using joint multilevel regression and poststratification
+2505.04608,1,WATCH: Adaptive Monitoring for AI Deployments via Weighted-Conformal Martingales
+2505.08629,1,Chilean Avian flu and its marine impacts: an online Statistical Process Control task
+2505.11925,0,PyScrew: A Comprehensive Dataset Collection from Industrial Screw Driving Experiments
+2505.18682,1,Integrating Region-Specific SARS-CoV-2 Data for Statistical Wastewater Monitoring
+2506.03696,0,Comprehensive Attribute Encoding and Dynamic LSTM HyperModels for Outcome Oriented Predictive Business Process Monitoring
+2506.03898,0,Kernel conditional tests from learning-theoretic bounds
+2506.08462,0,"Hybrid Reasoning for Perception, Explanation, and Autonomous Action in Manufacturing"
+2506.08734,1,Flexible and Efficient Drift Detection without Labels
+2506.13909,0,Few-Shot Learning for Industrial Time Series: A Comparative Analysis Using the Example of Screw-Fastening Process Monitoring
+2506.20295,1,Multivariate Long-term Profile Monitoring with Application to the KW51 Railway Bridge
+2508.05915,0,Dual Signal Decomposition of Stochastic Time Series
+2508.06594,0,Stochastic Boundaries in Spatial General Equilibrium: A Diffusion-Based Approach to Causal Inference with Spillover Effects
+2508.06845,0,Hybrid Machine Learning Framework for Predicting Geometric Deviations from 3D Surface Metrology
+2508.09527,0,Time-Aware and Transition-Semantic Graph Neural Networks for Interpretable Predictive Business Process Monitoring
+2508.12077,0,Reconfigurable miniaturized computational spectrometer enabled by photoelastic effect
+2508.16553,0,TinyML Towards Industry 4.0: Resource-Efficient Process Monitoring of a Milling Machine
+2508.19016,0,Working My Way Back to You: Resource-Centric Next-Activity Prediction
+2508.20021,0,FairLoop: Software Support for Human-Centric Fairness in Predictive Business Process Monitoring
+2509.00514,1,Adaptive CUSUM Chart for Simultaneous Monitoring of Mean and Variance
+2509.00797,0,ProCause: Generating Counterfactual Outcomes to Evaluate Prescriptive Process Monitoring Methods
+2509.02606,0,Lessons Learned from Deploying Adaptive Machine Learning Agents with Limited Data for Real-time Cell Culture Process Monitoring
+2509.02768,1,Sequential Change Detection with Differential Privacy
+2509.07112,0,Self-Normalization for CUSUM-based Change Detection in Locally Stationary Time Series
+2509.16431,1,Proactive Statistical Process Control Using AI: A Time Series Forecasting Approach for Semiconductor Manufacturing
+2509.18986,0,Remaining Time Prediction in Outbound Warehouse Processes: A Case Study (Short Paper)
+2510.01560,0,AI Foundation Model for Time Series with Innovations Representation
+2510.17809,0,In-Process Monitoring of Gear Power Honing Using Vibration Signal Analysis and Machine Learning
+2510.25742,1,Statistical Process Monitoring based on Functional Data Analysis
+2511.02452,1,An Adaptive Sampling Framework for Detecting Localized Concept Drift under Label Scarcity
+2511.03953,1,Conditional Score Learning for Quickest Change Detection in Markov Transition Kernels
+2511.18830,0,Leveraging Duration Pseudo-Embeddings in Multilevel LSTM and GCN Hypermodels for Outcome-Oriented PPM
+2512.01562,0,TimePred: efficient and interpretable offline change point detection for high volume data -- with application to industrial process monitoring
+2512.02026,0,Towards Sustainable Precision: Machine Learning for Laser Micromachining Optimization
+2512.03109,0,E-valuator: Reliable Agent Verifiers with Sequential Hypothesis Testing
+2512.03460,0,Learning From Limited Data and Feedback for Cell Culture Process Monitoring: A Comparative Study
+2512.07624,0,Time Series Foundation Models for Process Model Forecasting
+2512.12004,0,EnviroLLM: Resource Tracking and Optimization for Local AI
+2601.07085,0,The AI Cognitive Trojan Horse: How Large Language Models May Bypass Human Epistemic Vigilance
+2601.13605,1,Outage Identification from Electricity Market Data: Quickest Change Detection Approach
+2601.14099,0,Causal feature selection framework for stable soft sensor modeling based on time-delayed cross mapping
+2601.17319,1,Statistical process control via $p$-values
+2601.19669,0,Microring Resonator Dispersion Metrology with Neural Networks
+2601.20830,1,VSCOUT: A Hybrid Variational Autoencoder Approach to Outlier Detection in High-Dimensional Retrospective Monitoring
+2602.03004,1,Graph Autoencoder for Process Monitoring
+2602.09039,0,Efficient Distance Pruning for Process Suffix Comparison in Prescriptive Process Monitoring
+2602.11897,0,Agentic AI for Cybersecurity: A Meta-Cognitive Architecture for Governable Autonomy
+2602.18184,0,"Kolmogorov-Type Maximal Inequalities for Independent and Dependent Negative Binomial Random Variables: Sharp Bounds, Sub-Exponential Refinements, and Applications to Overdispersed Count Data"
+2603.01702,0,Security Risks in Machining Process Monitoring: Sequence-to-Sequence Learning for Reconstruction of CNC Axis Positions
+2603.20349,0,Prediction intervals for overdispersed multinomial data with application to historical controls
+2604.02227,0,Sensitivity analysis for stopping criteria with application to organ transplantations
+2604.06840,0,MirageBackdoor: A Stealthy Attack that Induces Think-Well-Answer-Wrong Reasoning
+2604.09166,0,Automated Batch Distillation Process Simulation for a Large Hybrid Dataset for Deep Anomaly Detection
+2604.13274,1,Sequential Change Detection for Multiple Data Streams with Differential Privacy
+2604.16428,0,Non-Stationarity in the Embedding Space of Time Series Foundation Models
+2605.02592,0,"Foundation-Model-Based Agents in Industrial Automation: Purposes, Capabilities, and Open Challenges"
+2605.03326,1,Sequential Bayesian Monitoring for Recoverable and Drifting Processes
+2605.18188,1,UTOPYA: A Multimodal Deep Learning Framework for Physics-Informed Anomaly Detection and Time-Series Prediction
+2605.18798,1,Accurate Evaluation of Quickest Changepoint Detectors via Non-parametric Survival Analysis
+2606.00052,1,Product-Aware Deep Autoencoders for Robust Process Monitoring in Multi-Product Cyber-Physical Systems
+2606.01256,1,Distribution-free changepoint localization after sequential change detection
+2606.07416,0,Video-Based Prediction of In-Flight Particle Characteristics in Atmospheric Plasma Spraying
+2606.07624,1,"Sequential statistical inference for Large Language Models: Representation, validity, and monitoring"
+2606.22989,0,Powder Spreading and Layer Deposition in Metal Powder Bed Fusion
+2607.02510,0,Online Safety Monitoring for LLMs
+2607.27797,0,"Revisiting Predictive Process Monitoring in the Age of Foundation Models: A Comparative Study of Sequence, Tabular, and LLM Approaches"
+2607.28322,1,Non-partitioned e-detectors for nonparametric sequential change detection
+2608.10587,1,BREAD: Baseline-Referenced Explanations for Anomaly Diagnosis
+2608.29491,1,Pollak's Minimax Quickest Change Detection: Non-Asymptotic Optimality
+2608.31007,0,Augmenting Interviewer Judgments of Patient Experience with Automatic Language Analysis
+2609.14534,0,GNN4PPM: Multi-Target Predictive Process Monitoring with Relational Graph Convolutional Networks
+2609.27179,1,"Change detection with conformal martingales: new optimal constructions, and suboptimality of existing methods"
+math/0602325,0,High moment partial sum processes of residuals in GARCH models and their applications
+math/0605322,1,Sequential change-point detection when unknown parameters are present in the pre-change distribution

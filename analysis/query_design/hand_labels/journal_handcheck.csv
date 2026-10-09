@@ -1,0 +1,81 @@
+openalex_id,stratum,hand_reliability,hand_doe,hand_spm,note,title
+W3137603388,reliability,1,0,0,,Improved FMEA based on IVF and fuzzy VIKOR method: A case study of workpiece box system of CNC gear milling machine
+W583318817,reliability,1,0,0,,More Pitfalls of Accelerated Tests - Discussion 6
+W4383618797,reliability,1,0,0,,Joint optimization of condition‐based maintenance and condition‐based reallocation for a system with multiple degrading components
+W1501098522,reliability,1,0,1,borderline reliability (Weibull life data chart),Control Charts For Monitoring The Weibull Shape Parameter Based On Type‐II Censored Sample
+W2600191340,reliability,1,1,0,,Reliability improvement of diamond drill bits using design of experiments
+W4283074491,reliability,1,0,0,,Remaining useful life prediction using composite health index and hybrid LSTM‐SVR model
+W1813868876,reliability,1,0,0,,Optimum Specimen Sizes and Sample Allocation for Estimating Weibull Shape Parameters for Two Competing Failure Modes
+W2605557993,reliability,0,0,1,,Exponentially weighted moving average control charts based on the moving average statistic and lnS2 for monitoring a Weibull process with subgroups
+W2555382518,reliability,1,0,0,,System Reliability Optimization Using Gray Wolf Optimizer Algorithm
+W2170334507,reliability,1,0,1,borderline reliability,Monitoring the Weibull Shape Parameter with Type II Censored Data
+W7129232693,reliability,1,0,0,,Residual Lifetime Prediction for Heterogeneous Degradation Data by Bayesian Semi‐Parametric Method
+W4414931967,reliability,1,0,0,,Bayesian Network‐Based Reliability Analysis of Suction Anchor System
+W2048343067,reliability,1,0,0,,Variance‐corrected proportional hazard models for the analysis of multiple failures in personal computers
+W3047224978,reliability,1,0,0,,Reliability of safety‐critical systems: A state‐of‐the‐art review
+W3042688893,reliability,1,0,0,,Belief rule‐based dependence assessment method under interval uncertainty
+W2054964292,reliability,1,0,1,,B-Spline Approach for Failure Detection and Diagnosis on Railway Point Mechanisms Case Study
+W4298138698,reliability,1,0,0,,An aging‐intensity‐function‐based parameter estimation method on heavily censored data
+W2024437175,reliability,1,0,0,,How to handle reliability of (software) systems that fulfill critical roles in society?
+W4386091042,reliability,1,0,0,,Transmission reliability evaluation of the wireless mobile ad hoc network considering the routing protocol and randomness of channel capacity
+W4391157091,reliability,1,0,0,,Augmenting system tests with component tests for reliability assurance
+W2038336742,doe,0,1,0,,Illustrating the Use of Statistical Experimental Design and Analysis for Multiresponse Prediction and Optimization
+W2945408528,doe,0,0,0,borderline DOE,Improved learning from data competitions through strategic design of training and test data sets
+W2967390901,doe,0,1,0,,"Construction, Properties, and Analysis of Group-Orthogonal Supersaturated Designs"
+W2288404196,doe,0,1,0,,Monotonic Metamodels for Deterministic Computer Experiments
+W2593998029,doe,0,1,0,,Design and Analysis of Experiments on Nonconvex Regions
+W2178989955,doe,0,1,0,,Case Studies: Definitive Screening Applied to a Simulation Study of the F100-229 Engine Repair Network
+W2794398634,doe,0,1,0,,Response modelling approach to robust parameter design methodology using supersaturated designs
+W2961630988,doe,0,1,0,,Modification of the Maximin and ϕ p (Phi) Criteria to Achieve Statistically Uniform Distribution of Sampling Points
+W165651648,doe,0,1,0,,On Algorithms for Obtaining Orthogonal and Near-Orthogonal Arrays for Main-Effects Screening
+W2884811312,doe,0,1,0,,Response surface split‐plot designs: A literature review
+W4402746026,doe,0,1,0,,Robust Design for Order-of-Addition Experiments
+W2032158027,doe,0,1,0,,A comparison of designs for one‐step screening and response surface estimation
+W2594777131,doe,0,1,0,borderline DOE (combinatorial testing),Application of combinatorial tests in video game testing
+W3194812781,doe,0,1,0,,Considering the risk of ignoring active factors in industrial experiments
+W4400882082,doe,0,0,0,,"Automated, rapid, and convergent hyperparameter optimizer (ARCH) for neural network classifiers"
+W4392826620,doe,1,1,0,,On the application of compound optimal design strategy in progressively type-II censored life-testing experiments
+W2890178720,doe,0,1,0,borderline DOE (emulator),Uncertainty quantification of machining simulations using an in situ emulator
+W1483369148,doe,0,0,1,,Optimal Design of a CUSUM Chart for a Mean Shift of Unknown Size
+W1974904263,doe,0,1,0,,Guidelines for Planning and Evidence for Assessing a Well-Designed Experiment
+W2770607658,doe,0,1,0,,Analysis of Subjective Ordinal Responses in Mixture Experiments
+W2104309786,spm,0,0,1,,An AR‐Sieve Bootstrap Control Chart for Autocorrelated Process Data
+W1550790981,spm,0,0,1,,Alternative Hotelling's T2 Charts using Winsorized Modified One‐Step M‐estimator
+W3141670744,spm,0,0,1,,Change detection in parametric multivariate dynamic data streams using the ARMAX-GARCH model
+W2947584941,spm,0,0,1,,An overview of synthetic‐type control charts: Techniques and methodology
+W2105606403,spm,0,0,1,,Nonparametric Statistical Process Control Charts‐A Special Issue of QREI
+W3165067714,spm,0,0,1,,Bayesian EWMA control chart with measurement error under different loss functions
+W2783778328,spm,0,0,1,,Steady‐state ARL analysis of ARL‐unbiased EWMA‐RZ control chart monitoring the ratio of two normal variables
+W2890949557,spm,0,0,1,,EWMA chart with variable sample size and sampling interval for monitoring Pareto data with estimated parameters
+W4399369214,spm,0,0,1,,Group-wise monitoring of multivariate data with missing values
+W2027010405,spm,1,0,1,borderline reliability,Monitoring the Weibull shape parameter by control charts for the sample range
+W4319788741,spm,0,0,1,,Adaptive Sampling for Monitoring Multi-Profile Data with Within-and-between Profile Correlation
+W2898441437,spm,0,0,1,,The performance of the adaptive EWMA median chart in the presence of measurement error
+W7162786270,spm,0,0,1,,Support Vector Regression Assisted Truncated Adaptive EWMA Control Chart
+W2232918918,spm,0,0,1,,Nonlinear Profile Monitoring for Oven-Temperature Data
+W16733002,spm,0,0,1,,Monitoring Product Size and Edging from Bivariate Profile Data
+W1854460685,spm,0,0,1,,On the Modelling and Monitoring of General Inflated Poisson Processes
+W2914884633,spm,0,0,1,,A Diagnostic Procedure for High-Dimensional Data Streams via Missed Discovery Rate Control
+W2072799868,spm,0,0,1,,Fault detection for batch monitoring and discrete wavelet transforms
+W1922217842,spm,0,0,0,,The ENBIS‐13 Quality and Reliability Engineering International Special Issue
+W2962746665,spm,0,0,1,,Modeling and detecting change in temporal networks via the degree corrected stochastic block model
+W4405461882,other,0,0,0,,Detecting Influential Observations in Single-Index Fréchet Regression
+W2074320244,other,0,0,0,,Regularized Semiparametric Estimation for Ordinary Differential Equations
+W7160430025,other,0,0,0,borderline SPM,One‐Class Classification Using Deep Least Squares One‐Class Support Vector Machine
+W2850076669,other,0,0,0,,Exact two‐sided statistical tolerance limits for sample variances
+W3174108767,other,0,0,0,,PICAR: An Efficient Extendable Approach for Fitting Hierarchical Spatial Models
+W2030947209,other,0,0,0,,Nearly-Isotonic Regression
+W3004323899,other,0,0,0,,Parametric and Nonparametric Statistics for Sample Surveys and Customer Satisfaction Data
+W2768975535,other,0,0,0,,Data Analysis and Graphics Using R: An Example-Based Approach
+W4288044954,other,0,0,0,,Statistical Universals of Language: Mathematical Chance vs. Human Choice
+W4367178163,other,0,0,0,,Efficient global optimization with co‐evolutionary strategy for asymmetric minimax problem in robust design
+W277861086,other,0,0,0,,On Nonparametric Image Registration
+W303538025,other,0,1,0,,The Case Against Normal Plots of Effects
+W2277886123,other,0,0,0,,Multivariate effects size estimation: Confidence interval construction via latent variable modeling
+W2088357415,other,0,0,0,,Statistics to Facilitate Innovation*: A Panel Discussion
+W7196938512,other,0,0,1,,"On Capability Indices, Measurement Error, and Guardbanding"
+W3027275150,other,0,0,0,,Mathematical Statistics
+W3190758383,other,0,0,0,,Statistical Rethinking: A Bayesian Course with Examples in R and Stan
+W2235867845,other,0,0,0,borderline DOE (clinical trial randomization),Two-stage adaptive randomization for delayed response in clinical trials
+W2054668375,other,0,0,0,,Tooling adjustment strategy for acceptable product quality in assembly processes
+W2025780542,other,0,1,0,,Problem‐based learning approach to application of statistical experimentation

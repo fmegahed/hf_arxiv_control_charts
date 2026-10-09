@@ -19,7 +19,7 @@
       "label": "Statistical Process Monitoring (SPM)",
       "short_label": "SPM",
       "topic_name": "statistical process monitoring",
-      "query": "(ti:\"control chart\" OR abs:\"control chart\")",
+      "query": "(((ti:\"control chart\" OR abs:\"control chart\") OR (ti:\"statistical process monitoring\" OR abs:\"statistical process monitoring\" OR ti:\"statistical process control\" OR abs:\"statistical process control\") OR ((ti:\"process monitoring\" OR abs:\"process monitoring\") AND (cat:stat.ME OR cat:stat.AP))) OR (ti:\"time between events\") OR ((abs:\"out-of-control\" OR abs:\"control limits\" OR abs:\"profile monitoring\" OR ti:\"profile monitoring\" OR ti:\"monitoring method\" OR abs:Shewhart OR abs:EWMA) AND (cat:stat.ME OR cat:stat.AP OR cat:stat.CO OR cat:stat.OT OR cat:stat.ML OR cat:math.ST)))",
       "icon": "chart-line",
       "color": "#1b9e77",
       "description": "Control charts and statistical process monitoring methods.",
@@ -27,10 +27,10 @@
       "factsheet_csv": "spc_factsheet.csv",
       "core_filters": {"topic": "chart_family", "method": "chart_statistic"},
       "scope": {
-        "include": "The paper proposes, extends, compares or applies a control chart or another procedure that monitors a process over time and signals when it changes.",
-        "exclude": "Control charts are only mentioned as background or used once as a minor tool; or 'control chart' means a flow diagram; or the paper is general time-series forecasting, anomaly detection or change-point analysis with no process-monitoring procedure.",
+        "include": "The paper proposes, extends, compares or applies a control chart or another procedure that monitors a process, product, system or data stream over time and signals when it changes, and it is presented in process-monitoring terms: a chart or monitoring statistic, control limits, in-control and out-of-control states, Phase I or Phase II, profile monitoring, or run-length performance of a chart. A change-detection method counts when it is presented this way.",
+        "exclude": "Control charts are only mentioned as background or used once as a minor tool; or 'control chart' means a flow diagram; or the paper is general time-series forecasting, anomaly detection or change-point analysis with no process-monitoring procedure; or the paper is sequential or quickest change detection theory, meaning its contribution is an optimality or asymptotic result, a detection-delay bound, or a detection rule for sensor networks, communication limits or adversaries, and it has no control chart and no process-monitoring application.",
         "example_in": "A nonparametric EWMA control chart for monitoring process location.",
-        "example_out": "A deep-learning forecasting model that cites control charts in its introduction."
+        "example_out": "A deep-learning forecasting model that cites control charts in its introduction. Also: a proof that a quickest change detection rule is asymptotically optimal in a distributed sensor network."
       },
       "narrative": {
         "summary": "Say what is monitored, what kind of change the method detects, how the chart signals, and the main finding.",
@@ -96,6 +96,7 @@
     ["different_meaning_of_keyword", "The search keyword is used in another sense."],
     ["keyword_in_passing", "The topic is mentioned only as background."],
     ["method_used_as_minor_tool", "A standard method from the topic is applied once; it is not what the paper is about."],
+    ["neighbouring_topic_excluded", "The paper is on a neighbouring topic that the exclusion rule names."],
     ["other_field_entirely", "The paper is about another field."],
     ["not_a_research_paper", "Erratum, comment, book review, or similar."]
   ],

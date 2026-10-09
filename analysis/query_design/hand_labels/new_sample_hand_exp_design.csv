@@ -1,0 +1,146 @@
+id,on_topic,hand_sample_of,title
+0708.1901,1,D2_add_stat_title_vocab,On the number of support points of maximin and Bayesian optimal designs
+0806.2901,1,D3_D2_minus_noisy_cats,Optimal designs for mixed models in experiments based on ordered units
+0812.3000,1,D1_add_title_vocab|D4_add_stat_abstracts,Recent Developments in Nonregular Fractional Factorial Designs
+0902.3723,0,D1_add_title_vocab|D3_D2_minus_noisy_cats,A non-homogeneous method of third order for additive stiff systems of ordinary differential equations
+1001.1817,1,D2_add_stat_title_vocab,Asymptotic optimal designs under long-range dependence error structure
+1009.5177,1,D2_add_stat_title_vocab,Sequential design of computer experiments for the estimation of a probability of failure
+1106.5313,0,D1_add_title_vocab|D2_add_stat_title_vocab,Analysis of Hepatitis C Viral Dynamics Using Latin Hypercube Sampling
+1109.5320,1,D2_add_stat_title_vocab|D3_D2_minus_noisy_cats,Optimal Designs for 2^k Factorial Experiments with Binary Response
+1110.2167,0,D1_add_title_vocab,Status of the Super-B factory Design
+1203.2433,1,D4_add_stat_abstracts,Accurate emulators for large-scale computer experiments
+1206.0897,1,D1_add_title_vocab,Uniform fractional factorial designs
+1208.2113,0,D4_add_stat_abstracts,Stochastic linear programming with a distortion risk constraint
+1209.6176,0,D2_add_stat_title_vocab,Unique Truncated Cluster Expansions for Materials Design via Subspace Projection and Fractional Factorial Design
+1212.3151,1,D2_add_stat_title_vocab,Optimal design of dilution experiments under volume constraints
+1302.2882,1,D2_add_stat_title_vocab,Markov chain Monte Carlo methods for the regular two-level fractional factorial designs and cut ideals
+1307.1954,0,D4_add_stat_abstracts,B-tests: Low Variance Kernel Two-Sample Tests
+1309.3520,1,D3_D2_minus_noisy_cats,Efficient uniform designs for multi-wave computer experiments
+1310.3574,1,D1_add_title_vocab|D3_D2_minus_noisy_cats,Isomorphism Check for $2^n$ Factorial Designs with Randomization Restrictions
+1312.4472,1,D2_add_stat_title_vocab,Optimal designs for multi-response generalized linear models with applications in thermal spraying
+1405.6257,1,D3_D2_minus_noisy_cats,Universally optimal designs for two interference models
+1405.7145,1,D3_D2_minus_noisy_cats,Generalized resolution for orthogonal arrays
+1406.0920,1,D2_add_stat_title_vocab,On the construction of nested space-filling designs
+1406.4549,0,D2_add_stat_title_vocab,Extensible grids: uniform sampling on a space-filling curve
+1406.4676,1,D4_add_stat_abstracts,Active Learning Via Sequential Design and Uncertainty Sampling
+1408.0534,1,D4_add_stat_abstracts,Accounting for parameter uncertainty in two-stage designs for Phase II dose-response studies
+1410.3293,1,D3_D2_minus_noisy_cats,Calibrating a large computer experiment simulating radiative shock hydrodynamics
+1411.7049,1,D3_D2_minus_noisy_cats,A Framework for Controlling Sources of Inaccuracy in Gaussian Process Emulation of Deterministic Computer Experiments
+1506.02916,1,D4_add_stat_abstracts,Singular prior distributions and ill-conditioning in Bayesian D-optimal design for several nonlinear models
+1507.06716,1,D1_add_title_vocab,The generalization of Latin hypercube sampling
+1508.04837,1,D1_add_title_vocab|D2_add_stat_title_vocab,Box-Hunter resolution in nonregular fractional factorial designs
+1509.03410,1,D3_D2_minus_noisy_cats,Optimal Design in Geostatistics under Preferential Sampling
+1510.01685,1,D4_add_stat_abstracts,"Four-Point, 2D, Free-Ranging, IMSPE-Optimal, Twin-Point Designs"
+1510.06212,0,D1_add_title_vocab,"On the number of SQSs, latin hypercubes and MDS codes"
+1511.01973,1,D1_add_title_vocab,Improving Covariate Balance in 2^K Factorial Designs via Rerandomization
+1512.07328,1,D4_add_stat_abstracts,Monte Carlo based Designs for Constrained Domains
+1604.03802,1,D4_add_stat_abstracts,Robust designs to model uncertainty with high estimation and prediction efficiency
+1604.05489,1,D4_add_stat_abstracts,K-optimal designs for parameters of shifted Ornstein-Uhlenbeck processes and sheets
+1605.07811,0,D4_add_stat_abstracts,Probabilistic Numerical Methods for Partial Differential Equations and Bayesian Inverse Problems
+1606.03973,1,D1_add_title_vocab,Rank-Based Procedures in Factorial Designs: Hypotheses about Nonparametric Treatment Effects
+1606.05418,1,D1_add_title_vocab,Covariate adjustment in randomization-based causal inference for 2K factorial designs
+1607.00959,0,D3_D2_minus_noisy_cats,Optimal Design of the Shiryaev-Roberts Chart: Give Your Shiryaev-Roberts a Headstart
+1608.00481,1,D1_add_title_vocab,Robust split-plot designs for model misspecification
+1610.00024,1,D1_add_title_vocab,A Study of Revenue Cost Dynamics in Large Data Centers: A Factorial Design Approach
+1702.00888,1,D2_add_stat_title_vocab|D3_D2_minus_noisy_cats,On randomization-based causal inference for matched-pair factorial designs
+1704.07090,1,D2_add_stat_title_vocab,An efficient methodology for the analysis and modeling of computer experiments with large number of inputs
+1705.08074,1,D2_add_stat_title_vocab,Universally Optimal Designs for the Two-dimensional Interference Model
+1706.04059,1,D2_add_stat_title_vocab,Approximate Optimal Designs for Multivariate Polynomial Regression
+1707.08407,0,D4_add_stat_abstracts,A Note on Implementing a Special Case of the LEAR Covariance Model in Standard Software
+1710.04532,1,D4_add_stat_abstracts,Wild Bootstrapping Rank-Based Procedures: Multiple Testing in Nonparametric Split-Plot Designs
+1710.06959,0,D4_add_stat_abstracts,On Prediction Properties of Kriging: Uniform Error Bounds and Robustness
+1711.05704,1,D3_D2_minus_noisy_cats,Bayesian optimal designs for dose-response curves with common parameters
+1712.03198,0,D4_add_stat_abstracts,Using simulation studies to evaluate statistical methods
+1712.09074,1,D1_add_title_vocab|D2_add_stat_title_vocab,Space-Filling Designs for Robustness Experiments
+1802.02901,0,D1_add_title_vocab,Pair correlation of sequences $(\lbrace a_n α\rbrace)_{n \in \mathbb{N}}$ with maximal order of additive energy
+1802.10024,1,D4_add_stat_abstracts,On optimal designs for non-regular models
+1803.04499,1,D1_add_title_vocab|D3_D2_minus_noisy_cats,On finite-population Bayesian inferences for $2^K$ factorial designs with binary outcomes
+1803.06517,1,D3_D2_minus_noisy_cats,Optimal Designs for the Generalized Partial Credit Model
+1807.05944,1,D1_add_title_vocab|D3_D2_minus_noisy_cats,Use Factorial Design To Improve Experimental Reproducibility
+1807.10042,1,D2_add_stat_title_vocab,Optimal Designs in Multiple Group Random Coefficient Regression Models
+1808.03201,1,D3_D2_minus_noisy_cats,An optimal design for hierarchical generalized group testing
+1808.06901,1,D2_add_stat_title_vocab,Optimal designs for two-level main effects models on a restricted design region
+1810.04088,1,D3_D2_minus_noisy_cats,"Bridging the gap between regret minimization and best arm identification, with application to A/B tests"
+1810.11185,1,D3_D2_minus_noisy_cats,Beyond A/B Testing: Sequential Randomization for Developing Interventions in Scaled Digital Learning Environments
+1811.02414,1,D4_add_stat_abstracts,Copula-based robust optimal block designs
+1902.00482,1,D2_add_stat_title_vocab,D-optimal Design for Network A/B Testing
+1904.11087,1,D1_add_title_vocab,A Comparison of Methods for Identifying Location Effects in Unreplicated Fractional Factorials in the Presence of Dispersion Effects
+1906.09712,0,D2_add_stat_title_vocab,Sequential estimation of quantiles with applications to A/B-testing and best-arm identification
+1906.10125,1,D4_add_stat_abstracts,A note on locally optimal designs for generalized linear models with restricted support
+1907.02373,1,D1_add_title_vocab,Construction of Blocked Factorial Designs to Estimate Main Effects and Selected Two-Factor Interactions
+1907.02708,1,D4_add_stat_abstracts,The adaptive Wynn-algorithm in generalized linear models with univariate response
+1907.10684,1,D3_D2_minus_noisy_cats,Teaching Split Plot Experiments With a Boomerang Tin
+1910.02539,1,D3_D2_minus_noisy_cats,R-optimal designs for multi-response regression models with multi-factors
+1912.07366,1,D2_add_stat_title_vocab,Learning Arbitrary Quantities of Interest from Expensive Black-Box Functions through Bayesian Sequential Optimal Design
+1912.09146,1,D1_add_title_vocab,QANOVA: Quantile-based Permutation Methods For General Factorial Designs
+2001.05602,1,D4_add_stat_abstracts,Sequential Selection for Accelerated Life Testing via Approximate Bayesian Inference
+2003.09507,1,D1_add_title_vocab,Space Filling Split Plot Design using Fast Flexible Filling
+2003.10609,0,D2_add_stat_title_vocab,More efficient approximation of smoothing splines via space-filling basis selection
+2004.03854,1,D1_add_title_vocab,Sequential Design of Mixture Experiments with an Empirically Determined Input Domain and an Application to Burn-up Credit Penalization of Nuclear Fuel Rods
+2005.10494,1,D2_add_stat_title_vocab,"The Optimal Design of Clinical Trials with Potential Biomarker Effects, A Novel Computational Approach"
+2008.08648,1,D3_D2_minus_noisy_cats,Cluster-Adaptive Network A/B Testing: From Randomization to Estimation
+2011.09545,1,D4_add_stat_abstracts,MOFA: Modular Factorial Design for Hyperparameter Optimization
+2012.12135,0,D2_add_stat_title_vocab,COVID-19: Optimal Design of Serosurveys for Disease Burden Estimation
+2104.01573,1,D3_D2_minus_noisy_cats|D4_add_stat_abstracts,D-optimal designs for the Mitscherlich non-linear regression function
+2104.09615,0,D2_add_stat_title_vocab,Robust parameter design for Wiener-based binaural noise reduction methods in hearing aids
+2105.13420,1,D2_add_stat_title_vocab,Model Selection for Production System via Automated Online Experiments
+2106.04453,1,D4_add_stat_abstracts,Sequential active learning of low-dimensional model representations for reliability analysis
+2106.05833,1,D2_add_stat_title_vocab,Incremental space-filling design based on coverings and spacings: improving upon low discrepancy sequences
+2106.13540,1,D4_add_stat_abstracts,Optimal Accelerated Degradation Testing Based on Bivariate Gamma Process with Dependent Components
+2108.08890,1,D1_add_title_vocab,Local Latin Hypercube Refinement for Multi-objective Design Uncertainty Optimization
+2109.13595,0,D4_add_stat_abstracts,The Fragility of Optimized Bandit Algorithms
+2112.09797,1,D2_add_stat_title_vocab,Nested Bayesian Optimization for Computer Experiments
+2206.01806,1,D1_add_title_vocab,Estimation and variable selection in joint mean and dispersion models applied to mixture experiments
+2206.04157,1,D1_add_title_vocab,Inference for Matched Tuples and Fully Blocked Factorial Designs
+2207.02391,0,D1_add_title_vocab,Query-Efficient Adversarial Attack Based on Latin Hypercube Sampling
+2207.09382,1,D1_add_title_vocab,Inference for high-dimensional split-plot designs with different dimensions between groups
+2209.12385,1,D1_add_title_vocab,Rerandomization and covariate adjustment in split-plot designs
+2209.12403,0,D4_add_stat_abstracts,Sampling Constrained Continuous Probability Distributions: A Review
+2210.13943,1,D1_add_title_vocab,D- and A-optimal Screening Designs
+2211.12556,1,D3_D2_minus_noisy_cats,Optimal design of the Wilcoxon-Mann-Whitney-test
+2302.10108,1,D2_add_stat_title_vocab,Anytime-Valid Confidence Sequences in an Enterprise A/B Testing Platform
+2306.12394,1,D1_add_title_vocab|D3_D2_minus_noisy_cats,Optimal allocation of sample size for randomization-based inference from $2^K$ factorial designs
+2307.02604,1,D2_add_stat_title_vocab,Bayesian D- and I-optimal designs for choice experiments involving mixtures and process variables
+2309.09367,1,D2_add_stat_title_vocab,ForLion: A New Algorithm for D-optimal Designs under General Parametric Statistical Models with Mixed Factors
+2311.14997,0,D1_add_title_vocab,Every latin hypercube of order 5 has transversals
+2312.06883,1,D4_add_stat_abstracts,Adaptive Experiments Toward Learning Treatment Effect Heterogeneity
+2312.10814,1,D2_add_stat_title_vocab,Design of Bayesian A/B Tests Controlling False Discovery Rates and Power
+2312.15341,0,D4_add_stat_abstracts,Statistical inverse learning problems with random observations
+2402.03915,1,D2_add_stat_title_vocab|D3_D2_minus_noisy_cats,Learning Metrics that Maximise Power for Accelerated A/B-Tests
+2405.14440,1,D4_add_stat_abstracts,Bayesian Adaptive Calibration and Optimal Design
+2406.11306,1,D3_D2_minus_noisy_cats,Bayesian Variable Selection via Hierarchical Gaussian Process Model in Computer Experiments
+2406.12237,1,D1_add_title_vocab,Lasso regularization for mixture experiments with noise variables
+2408.05297,1,D3_D2_minus_noisy_cats,"Bootstrap Matching: a robust and efficient correction for non-random A/B test, and its applications"
+2409.13300,0,D4_add_stat_abstracts,A Two-stage Inference Procedure for Sample Local Average Treatment Effects in Randomized Experiments
+2409.15663,1,D4_add_stat_abstracts,BARD: A seamless two-stage dose optimization design integrating backfill and adaptive randomization
+2410.05633,0,D1_add_title_vocab,Outbursts Upon Cooling of Low-Temperature Binary Mixtures: Experiments and Their Planetary Implications
+2410.22501,1,D3_D2_minus_noisy_cats,Order of Addition in Orthogonally Blocked Mixture and Component-Amount Designs
+2411.14690,1,D2_add_stat_title_vocab|D3_D2_minus_noisy_cats,Deep Gaussian Process Emulation and Uncertainty Quantification for Large Computer Experiments
+2412.10213,1,D3_D2_minus_noisy_cats,Collaborative Design of Controlled Experiments in the Presence of Subject Covariates
+2501.13841,1,D4_add_stat_abstracts,Efficient Active Learning Strategies for Computer Experiments
+2501.14329,1,D2_add_stat_title_vocab,K-Anonymous A/B Testing
+2502.13711,0,D1_add_title_vocab,On noncentral Wishart mixtures of noncentral Wisharts and their use for testing random effects in factorial design models
+2506.04582,1,D3_D2_minus_noisy_cats,Optimized and regularly repeated lattice-based Latin hypercube designs for large-scale computer experiments
+2506.10677,1,D3_D2_minus_noisy_cats,Exploiting Similarities in A/B Testing with Off-Policy Estimation
+2506.15292,1,D1_add_title_vocab,Multivariate and Multiple Contrast Testing in General Covariate-adjusted Factorial Designs
+2508.09569,1,D3_D2_minus_noisy_cats,Optimal Designs for Gamma Degradation Tests
+2509.13970,1,D1_add_title_vocab,Optimal Transport Based Testing in Factorial Designs
+2509.15576,1,D3_D2_minus_noisy_cats,Subset Selection for Stratified Sampling in Online Controlled Experiments
+2510.11609,1,D2_add_stat_title_vocab,The Generalized Word Count in Two-Level Fractional Factorial Designs
+2510.16293,0,D4_add_stat_abstracts,Synergizing chemical and AI communities for advancing laboratories of the future
+2510.23199,0,D2_add_stat_title_vocab,Rate-optimal Design for Anytime Best Arm Identification
+2512.08828,0,D4_add_stat_abstracts,Prediction Intervals for Individual Treatment Effects in a Multiple Decision Point Framework using Conformal Inference
+2601.16318,1,D3_D2_minus_noisy_cats,Orthogonal factorial designs for trials of therapist-delivered interventions: Randomising intervention-therapist combinations to patients
+2601.16749,1,D3_D2_minus_noisy_cats,Finite Population Inference for Factorial Designs and Panel Experiments with Imperfect Compliance
+2602.13852,1,D2_add_stat_title_vocab,Experimentation Accelerator: Interpretable Insights and Creative Recommendations for A/B Testing with Content-Aware ranking
+2603.01715,0,D4_add_stat_abstracts,Power and Sample Size Calculations for Bayes Factors in two-arm clinical Phase II Trials with binary Endpoints
+2606.04637,1,D4_add_stat_abstracts,Optimal designs for incomplete stepped wedge trials
+2607.06981,0,D3_D2_minus_noisy_cats,Multi-Trigger Crypto CAT Bonds with On-Chain Settlement: Valuation and Optimal Design
+2607.21044,0,D4_add_stat_abstracts,"Trust by Context, Not by Design? A Quantitative Study of Data Donation Willingness for Open-Source Civic AI in Switzerland"
+2608.19815,0,D4_add_stat_abstracts,Trustworthy Decisions in Reliability Set Estimation under Insufficient Model Information
+2609.01954,1,D2_add_stat_title_vocab|D3_D2_minus_noisy_cats,A staggered seamless dose-optimization design for co-developing monotherapy and combination therapy
+2609.02756,0,D4_add_stat_abstracts,Off-policy causal estimation in networks
+2609.09695,0,D1_add_title_vocab,Quantum Latin Hypercubes with Maximal Cardinality
+hep-ex/0207036,0,D1_add_title_vocab,Neutrino Factory Designs and R&D
+math/0503677,1,D3_D2_minus_noisy_cats,Optimal designs for a class of nonlinear regression models
+math/0703365,1,D1_add_title_vocab,Indicator function and complex coding for mixed fractional factorial designs

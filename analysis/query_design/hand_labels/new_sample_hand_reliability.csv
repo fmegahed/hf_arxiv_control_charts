@@ -1,0 +1,185 @@
+id,on_topic,title
+1006.3718,1,G1-Renewal Process as Repairable System Model
+1008.1032,1,Modeling total expenditure on warranty claims
+1102.0299,1,Fisher information matrix for three-parameter exponentiated-Weibull distribution under type II censoring
+1102.3780,0,A Conversation with Myles Hollander
+1103.6204,0,Bias-reduced extreme quantiles estimators of Weibull-tail distributions
+1108.0822,0,The effect of winning an Oscar Award on survival: Correcting for healthy performer survivor bias with a rank preserving structural accelerated failure time model
+1109.1402,0,Reverse engineering gene regulatory networks using approximate Bayesian computation
+1110.5509,1,Goodness-of-fit tests for weibull populations on the basis of records
+1204.4248,1,A new two parameter lifetime distribution: model and properties
+1204.6286,1,Skewed Multivariate Birnbaum-Saunders Distributions
+1212.3214,0,Integrating Prior Knowledge Into Prognostic Biomarker Discovery based on Network Structure
+1308.0174,1,MATCASC: A tool to analyse cascading line outages in power grids
+1402.0432,0,SurvRegCensCov: Weibull Regression for a Right-Censored Endpoint with a Censored Covariate
+1403.5841,0,Measuring the lack of monotonicity in functions
+1412.1331,1,On analysis of incomplete field failure data
+1508.05137,0,A Heteroscedastic Accelerated Failure Time Model for Survival Analysis
+1511.07696,1,Acceptance sampling plans for inverse Weibull distribution based on truncated life test
+1607.02957,0,A low-rank based estimation-testing procedure for matrix-covariate regression
+1608.05565,0,Uncertainty propagation of p-boxes using sparse polynomial chaos expansions
+1609.08997,1,The Marshall-Olkin Flexible Weibull Extension Distribution
+1702.07125,0,Automatic Representation for Lifetime Value Recommender Systems
+1702.07847,0,Automated Verification and Synthesis of Embedded Systems using Machine Learning
+1703.01051,1,Interval Estimation of the Unknown Exponential Parameter Based on Time Truncated Data
+1706.06611,0,Individualized Treatment Effects with Censored Data via Fully Nonparametric Bayesian Accelerated Failure Time Models
+1706.07682,1,Point and Interval Estimation of Weibull Parameters Based on Joint Progressively Censored Data
+1706.08209,1,A sequential surrogate method for reliability analysis based on radial basis function
+1709.08626,0,A general framework for data-driven uncertainty quantification under complex input dependencies using vine copulas
+1711.01674,0,A robust RUV-testing procedure via gamma-divergence
+1804.02998,0,Anomaly Detection for Industrial Big Data
+1804.06466,1,Objective Bayesian Inference for Repairable System Subject to Competing Risks
+1805.03892,1,A Generalized Xgamma Generator Family of Distributions
+1806.10111,0,Modelling Joint Lifetimes of Couples by Using Bivariate Phase-type Distributions
+1807.01137,1,Simple Step-Stress Models with a Cure Fraction
+1807.01200,0,"Power Maxwell distribution: Statistical Properties, Estimation and Application"
+1807.06093,1,Prognostics Estimations with Dynamic States
+1812.00246,0,A PMU-based Multivariate Model for Classifying Power System Events
+1812.04448,0,seq2graph: Discovering Dynamic Dependencies from Multivariate Time Series with Multi-level Attention
+1904.13207,0,Methods of Estimation for the Three-Parameter Reflected Weibull Distribution
+1904.13365,1,Fault Diagnosis using Clustering. What Statistical Test to use for Hypothesis Testing?
+1905.05145,1,Modeling failures times with dependent renewal type models via exchangeability
+1905.11586,1,Rare Failure Prediction via Event Matching for Aerospace Applications
+1906.03866,0,A kernel- and optimal transport- based test of independence between covariates and right-censored lifetimes
+1907.07480,1,Remaining Useful Lifetime Prediction via Deep Domain Adaptation
+1908.00307,1,Optimum Testing Time of Software using Size-Biased Concepts
+1908.11334,0,Bayesian Stacked Parametric Survival with Frailty Components and Interval Censored Failure Times
+1909.02303,1,Further study on inferential aspects of log-Lindley distribution with an application of stress-strength reliability in insurance
+1909.07680,1,Multilevel Sequential Importance Sampling for Rare Event Estimation
+1911.00511,0,Analysis of Genomic and Transcriptomic Variations as Prognostic Signature for Lung Adenocarcinoma
+1911.11691,0,Emergent Structures and Lifetime Structure Evolution in Artificial Neural Networks
+1912.01853,0,ADEPOS: A Novel Approximate Computing Framework for Anomaly Detection Systems and its Implementation in 65nm CMOS
+1912.07753,0,A Deep Probabilistic Model for Customer Lifetime Value Prediction
+2001.05602,1,Sequential Selection for Accelerated Life Testing via Approximate Bayesian Inference
+2001.08681,1,Bayesian estimates of transmission line outage rates that consider line dependencies
+2001.10489,1,An efficient surrogate-aided importance sampling framework for reliability analysis
+2002.03537,1,Calibrating wood products for load duration and rate: A statistical look at three damage models
+2003.05994,1,Estimation of Failure Probabilities via Local Subset Approximations
+2004.13382,1,Divergence-based robust inference under proportional hazards model for one-shot device life-test
+2004.13556,1,Neural Network and Particle Filtering: A Hybrid Framework for Crack Propagation Prediction
+2004.14384,1,A Formally Verified HOL4 Algebra for Event Trees
+2005.06860,1,Inference for a Step-Stress Model With Type-II and Progressive Type-II Censoring and Lognormally Distributed Lifetimes
+2005.10614,0,Transfer learning based multi-fidelity physics informed deep neural network
+2007.00180,1,Hamiltonian MCMC methods for estimating rare events probabilities in high-dimensional problems
+2007.03744,1,Predictive Analytics for Water Asset Management: Machine Learning and Survival Analysis
+2007.13492,1,Self-Supervised Encoder for Fault Prediction in Electrochemical Cells
+2008.06388,0,Common pitfalls and recommendations for using machine learning to detect and prognosticate for COVID-19 using chest radiographs and CT scans
+2009.10149,1,Crafting Adversarial Examples for Deep Learning Based Prognostics (Extended Version)
+2101.01885,1,Statistical learning for accurate and interpretable battery lifetime prediction
+2101.02354,0,Kullback-Leibler-Based Discrete Failure Time Models for Integration of Published Prediction Models with New Time-To-Event Dataset
+2103.01648,0,Solving Inverse Problems by Joint Posterior Maximization with Autoencoding Prior
+2103.09305,0,Optimal stratification of survival data via Bayesian nonparametric mixtures
+2104.01707,0,Scalable algorithms for semiparametric accelerated failure time models in high dimensions
+2105.09019,1,New classes of tests for the Weibull distribution using Stein's method in the presence of random right censoring
+2106.04453,1,Sequential active learning of low-dimensional model representations for reliability analysis
+2106.07221,0,Certification of embedded systems based on Machine Learning: A survey
+2106.13576,0,Robust Real-Time Delay Predictions in a Network of High-Frequency Urban Buses
+2107.06178,0,An Ecological Robustness-Oriented Approach for Power System Network Expansion
+2109.03008,0,Semiparametric Bayesian Networks
+2109.08661,0,Destructive cure models with proportional hazards lifetimes and associated likelihood inference
+2204.11560,1,Robust inference for non-destructive one-shot device testing under step-stress model with exponential lifetimes
+2206.08463,0,Estimating the lifetime risk of a false positive screening test result
+2210.14537,0,Accelerated Weight Histogram Method for Rare Event Simulations
+2211.00315,1,One-Shot Device Testing Data Analysis under Logistic-Exponential Lifetimes with an Application to SEER Gallbladder Cancer Data
+2211.08403,0,REPAIR: REnormalizing Permuted Activations for Interpolation Repair
+2301.01885,0,Enhancement attacks in biomedical machine learning
+2302.10771,1,Data-driven prognostics based on time-frequency analysis and symbolic recurrent neural network for fuel cells under dynamic load
+2303.16369,1,A Spatially Correlated Competing Risks Time-to-Event Model for Supercomputer GPU Failure Data
+2304.00691,1,Lithium-ion Battery Online Knee Onset Detection by Matrix Profile
+2304.02239,0,Optimal Energy Storage Scheduling for Wind Curtailment Reduction and Energy Arbitrage: A Deep Reinforcement Learning Approach
+2304.11671,1,Battery Capacity Knee-Onset Identification and Early Prediction Using Degradation Curvature
+2306.02709,1,Comparative Study on Semi-supervised Learning Applied for Anomaly Detection in Hydraulic Condition Monitoring System
+2307.07191,0,Bridging AI and Energy Forecasting: An Autonomous Workflow with Customized Toolkit
+2308.14770,1,Power Generalized KM-Transformation for Non-Monotone Failure Rate Distribution
+2309.03165,0,A semiparametric generalized exponential regression model with a principled distance-based prior
+2310.14893,0,Data Drift Monitoring for Log Anomaly Detection Pipelines
+2310.18027,0,Bayesian Prognostic Covariate Adjustment With Additive Mixture Priors
+2311.03628,0,Reinforcement Twinning: from digital twins to model-based reinforcement learning
+2311.06993,1,State-of-the-art review and synthesis: A requirement-based roadmap for standardized predictive maintenance automation using digital twin technologies
+2312.02662,0,Robust parameter estimation of the log-logistic distribution based on density power divergence estimators
+2312.02867,1,Semi-Supervised Health Index Monitoring with Feature Generation and Fusion
+2401.04832,0,Group lasso priors for Bayesian accelerated failure time models with left-truncated and interval-censored data
+2401.11538,1,Maintenance cost assessment for heterogeneous multi-component systems incorporating perfect inspections and waiting time to maintenance
+2401.11860,1,A Review of Physics-Informed Machine Learning Methods with Applications to Condition Monitoring and Anomaly Detection
+2401.12621,0,Classification non supervis{é}e des processus d'{é}v{é}nements r{é}currents
+2401.15806,0,Continuous-time structural failure time model for intermittent treatment
+2402.06382,1,Robust Rao-type tests for step-stress accelerated life-tests under interval-monitoring and Weibull lifetime distributions
+2402.18242,0,A network-constrain Weibull AFT model for biomarkers discovery
+2403.05251,1,Errors due to departure from independence in multivariate Weibull distributions
+2403.08618,0,SAP: Corrective Machine Unlearning with Scaled Activation Projection for Label Noise Robustness
+2405.11624,1,On Generalized Transmuted Lifetime Distribution
+2405.17575,1,Interpretable Prognostics with Concept Bottleneck Models
+2406.00578,0,ContextFlow++: Generalist-Specialist Flow-based Generative Models with Mixed-Variable Context Encoding
+2406.01259,1,Aging modeling and lifetime prediction of a proton exchange membrane fuel cell using an extended Kalman filter
+2406.07903,0,GAPses: Versatile smart glasses for comfortable and fully-dry acquisition and parallel ultra-low-power processing of EEG and EOG
+2407.17658,0,Semiparametric Piecewise Accelerated Failure Time Model for the Analysis of Immune-Oncology Clinical Trials
+2408.14379,0,Synergistic and Efficient Edge-Host Communication for Energy Harvesting Wireless Sensor Networks
+2409.18625,1,Predicting failure times of coherent systems
+2410.03811,0,Enhanced Digital Twin for Human-Centric and Integrated Lighting Asset Management in Public Libraries: From Corrective to Predictive Maintenance
+2410.09402,0,Minimax rates of convergence for nonparametric regression under adversarial attacks
+2411.12159,1,Prognostics for Autonomous Deep-Space Habitat Health Management under Multiple Unknown Failure Modes
+2412.07404,0,Median Based Unit Weibull Distribution (MBUW): Do the Higher Order Probability Weighted Moments (PWM) Add More Information over the Lower Order PWM in Parameter Estimation
+2412.09129,1,Comparisons of coherent systems under the time-transformed exponential model
+2501.00970,0,A novel unit-asymmetric distribution based on correlated Fréchet random variables
+2501.05863,1,An approach to non-homogenous phase-type distributions through multiple cut-points
+2501.07191,1,Pre-Trained Large Language Model Based Remaining Useful Life Transfer Prediction of Bearing
+2501.10492,1,ACCEPT: Diagnostic Forecasting of Battery Degradation Through Contrastive Learning
+2501.11809,0,Dynamic Risk-Adjusted Monitoring of Time Between Events: Applications of NHPP in Pipeline Accident Surveillance
+2501.14289,0,Higher-Order Meta Distribution Reliability Analysis of Wireless Networks
+2502.02071,1,Sequential Multi-objective Multi-agent Reinforcement Learning Approach for Predictive Maintenance
+2502.05950,0,Survival Concept-Based Learning Models
+2502.11507,1,A Bi-failure Mode Model for Competing Risk Modeling with HMC-Driven Bayesian Framework
+2502.19793,1,Modeling Extreme Events in the Presence of Inlier: A Mixture Approach
+2503.13660,0,INPROVF: Leveraging Large Language Models to Repair High-level Robot Controllers from Assumption Violations
+2503.13751,0,Optimizing ML Training with Metagradient Descent
+2503.19524,0,Use of Lambert W function in the simulation of Weibull and non-Weibull distributions
+2504.13956,1,Prognosis Of Lithium-Ion Battery Health with Hybrid EKF-CNN+LSTM Model Using Differential Capacity
+2504.14179,0,"A New Generalized Fisk distribution: Its Properties, Characterizations and Applications"
+2504.18835,1,Machine learning accelerates fuel cell life testing
+2504.19821,0,SILENT: A New Lens on Statistics in Software Timing Side Channels
+2506.15152,1,Determination of Optimum Warranty Region for Two Dimensional Dependent Data
+2506.23201,0,External Data-Enhanced Meta-Representation for Adaptive Probabilistic Load Forecasting
+2507.05114,0,Sequential multiple importance sampling for high-dimensional Bayesian inference
+2507.09559,1,The Use of Variational Inference for Lifetime Data with Spatial Correlations
+2507.17214,0,Our Cars Can Talk: How IoT Brings AI to Vehicles
+2507.20001,1,Computation of Optimal Type-II Progressing Censoring Scheme Using Genetic Algorithm Approach
+2508.06985,0,Discovery Learning accelerates battery design evaluation
+2508.13696,0,Extropy-Based Generalized Divergence and Similarity Ratios: Theory and Applications
+2508.17359,0,Unit-Modified Weibull Distribution and Quantile Regression Model
+2509.01778,0,Grid Transmission Evaluation for Solar Deployment and Data Center Growth
+2509.05444,1,Modeling Spatially Correlated Failure-time Data Under Two Distance Functions with an Application to Titan GPU Data
+2510.09420,1,Critical States Identiffcation in Power System via Lattice Partition and Its Application in Reliability Assessment
+2510.15075,1,Physics-informed data-driven machine health monitoring for two-photon lithography
+2510.19131,0,Training-Free Spectral Fingerprints of Voice Processing in Transformers
+2510.22224,0,Taming Silent Failures: A Framework for Verifiable AI Reliability
+2511.03216,0,RKUM: An R Package for Robust Kernel Unsupervised Methods
+2511.11310,0,Simulating an Autonomous System in CARLA using ROS 2
+2511.16102,1,Estimation of the Coefficient of Variation of Weibull Distribution under Type-I Progressively Interval Censoring: A Simulation-based Approach
+2512.04439,0,Quantum-Accelerated Deep Reinforcement Learning for Frequency Regulation Enhancement
+2512.08592,0,The SMART+ Framework for AI Systems
+2512.09163,1,WTNN: Weibull-Tailored Neural Networks for survival analysis
+2512.17632,0,Fast and Robust: Computationally Efficient Covariance Estimation for Sub-Weibull Vectors
+2601.06890,1,Likelihood-Based Regression for Weibull Accelerated Life Testing Model Under Censored Data
+2602.05351,1,A Flexible Modeling of Extremes in the Presence of Inliers
+2602.14303,0,A Novel Three-Parameter Extended Weibull Distribution for Health Data Modelling
+2602.19263,1,Prognostics of Multisensor Systems with Unknown and Unlabeled Failure Modes via Bayesian Nonparametric Process Mixtures
+2603.03289,1,A New System Function for Maximum Processable Flow in Process Plants and Application to Reliability Assessment
+2603.08130,1,Explainable Condition Monitoring via Probabilistic Anomaly Detection Applied to Helicopter Transmissions
+2603.17243,1,"Transmuted logistic-exponential distribution - some new properties, estimation methods and application with infectious disease mortality data"
+2603.27265,1,Robust Estimation in Step-Stress Experiments under Weibull Lifetime Distributions
+2604.00173,0,Advanced Capacity Accreditation of Future Energy System Resources with Deep Uncertainties
+2604.06681,0,Model-Agnostic Energy Throughput Control for Range and Lifetime Extension of Electric Vehicles via Cell-Level Inverters
+2604.09259,1,Exact Bayesian Planning for Simple Step-Stress Accelerated Life Testing with Competing Risks
+2604.12324,0,HICM: An approach towards Harmonizing Indian Census Migration data and its applications
+2604.13459,1,Asymmetric-Loss-Guided Hybrid CNN-BiLSTM-Attention Model for Industrial RUL Prediction with Interpretable Failure Heatmaps
+2605.15823,1,Active Redundancy Allocation Strategy at Component and System Level
+2605.23082,0,KAPLAN: Kolmogorov-Arnold Prognostic Learnable Activation Networks for Survival Analysis
+2605.23631,1,Directional subset simulation method for reliability analysis
+2605.29196,1,Coating Breakdown Prediction for Ships and Inspection Planning
+2606.06699,1,Robust inference for cyclic-stress accelerated life tests under interval monitoring with lognormal lifetimes
+2606.20191,1,AK-MCS-C2 : Active Kriging Monte Carlo Simulation method with conformal certification for failure probability estimation
+2608.01123,0,Statistical inference of a competing risks model based on improved adaptive type-II progressive censored data under Gompertz lifetime distribution
+2608.13971,1,Interval Estimation of the Common Shape Parameter and Coefficient of Variation of Several Weibull Populations under Progressive Censoring
+2608.14606,0,Plausible but Not Valid: A Psychometric Audit of LLMs as Synthetic Survey Respondents
+2608.22205,0,Voxel-wise Bayesian Estimation for Multi-Population Positronium Lifetime Imaging
+2609.21434,1,Robust tests for log-normal lifetimes under cyclic-stress accelerated tests and interval monitoring

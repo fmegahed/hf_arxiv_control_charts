@@ -1,0 +1,81 @@
+openalex_id,journal,luna_stratum,hand_reliability,hand_doe,hand_spm,title
+W4296605717,Computational Statistics & Data Analysis,none,0,0,0,Applications on linear spectral statistics of high-dimensional sample covariance matrix with divergent spectrum
+W2743356099,Quality and Reliability Engineering International,doe,0,1,0,Uncertainty analysis of trade‐offs between multiple responses using hypervolume
+W2751460058,Applied Stochastic Models in Business and Industry,spm,0,0,1,An evaluation of the multivariate dispersion charts with estimated parameters under non‐normality
+W2614677376,Applied Stochastic Models in Business and Industry,reliability,1,1,0,Augmented probability simulation for accelerated life test design
+W4413129616,Technometrics,doe,0,1,0,Efficient Active Learning Strategies for Computer Experiments
+W2004932968,Quality and Reliability Engineering International,none,0,0,0,Optimal scaling for risk assessment: merging of operational and financial data
+W3046197750,Applied Stochastic Models in Business and Industry,spm,0,0,1,Comparison of control charts for Poisson count data in health‐care monitoring
+W2026087586,IIE Transactions,reliability,1,0,0,Multistate degradation and supervised estimation methods for a condition-monitored device
+W3088781633,IISE Transactions,spm,0,0,1,Optimal sampling plan for an unreliable multistage production system subject to competing and propagating random shifts
+W2260204678,Quality Engineering,doe,1,0,0,Estimating confidence interval of software reliability with adaptive testing strategy
+W2960600145,Journal of Quality Technology,spm,0,0,1,A review of some sampling and aggregation strategies for basic statistical process monitoring: Discussion by Ross Sparks
+W2070776376,IIE Transactions,none,0,0,0,Robust scheduling on a single machine using time buffers
+W2002226780,Quality Engineering,none,0,0,0,Statistical Thinking and Methods in Quality Improvement: A Look to the Future
+W2962655934,IEEE Transactions on Reliability,reliability,1,0,0,A New Study on Reliability Importance Analysis of Phased Mission Systems
+W4385453030,IEEE Transactions on Reliability,reliability,1,0,0,Experiment-Based Reliability Analysis of Girth Welds on Different Grade Steel Pipelines
+W7164339976,Quality and Reliability Engineering International,spm,0,0,1,Supplier Evaluation Using Multivariate Process Capability with Preserved Batch Heterogeneity
+W4386714722,Quality and Reliability Engineering International,doe,1,0,0,A Dendrite Net based decoupled framework for the reliability‐based control co‐design problem
+W3087254871,Quality and Reliability Engineering International,doe,0,1,0,Use of optimal mixture‐process designs and response‐surface models to study properties of calcium silicate units
+W4382516909,Technometrics,doe,0,1,0,Sequential Designs for Filling Output Spaces
+W4414059419,Quality and Reliability Engineering International,doe,1,1,0,On Constrained Multicriteria‐Based Planning for a Two‐Parameter Exponential Distribution
+W2166392222,IEEE Transactions on Reliability,reliability,1,0,0,Fuzzy C-Means Clustering of Signal Functional Principal Components for Post-Processing Dynamic Scenarios of a Nuclear Power Plant Digital Instrumentation and Control System
+W2606311698,Quality and Reliability Engineering International,doe,0,1,0,Examining robustness of model selection with half‐normal and LASSO plots for unreplicated factorial designs
+W3016255426,IISE Transactions,none,0,0,0,Multiple obnoxious facilities location: A cooperative model
+W1935657208,Quality and Reliability Engineering International,doe,0,1,0,A Response Surface Methodology for Modeling Time Series Response Data
+W4205234940,Quality and Reliability Engineering International,spm,0,0,1,A new EWMA median chart with measurement errors in short production runs–An application in yogurt cup filling process
+W1936325951,Quality and Reliability Engineering International,spm,0,0,1,A Review and perspective on surveillance of Bernoulli processes
+W4232620942,IEEE Transactions on Reliability,none,0,0,0,IEEE Transactions on Reliability institutional listings
+W3120524730,IISE Transactions,reliability,1,0,0,Performance-oriented risk evaluation and maintenance for multi-asset systems: A Bayesian perspective
+W3037332399,Quality and Reliability Engineering International,spm,0,0,1,On mixed memory control charts based on auxiliary information for efficient process monitoring
+W4408973462,Applied Stochastic Models in Business and Industry,reliability,1,0,0,Hazard Rate Order Between Parallel Systems With Multiple Types of Scaled Components
+W2968456436,Quality and Reliability Engineering International,spm,0,0,1,Variable sampling interval exponentially weighted moving average median chart with estimated process parameters
+W3128702248,IISE Transactions,spm,0,0,1,Real-time detection of clustered events in video-imaging data with applications to additive manufacturing
+W4381616356,Journal of Quality Technology,spm,0,0,1,Directional fault classification for correlated High-Dimensional data streams using hidden Markov models
+W3154823449,Quality and Reliability Engineering International,doe,0,1,0,Practical choices for space‐filling designs
+W2897027603,IISE Transactions,spm,0,0,1,Monitoring the data quality of data streams using a two-step control scheme
+W2174867930,Quality and Reliability Engineering International,doe,0,1,0,The Impacts of Errors in Factor Levels on Robust Parameter Design Optimization
+W4281633116,Quality Engineering,doe,0,1,0,A class of response surface split-plot designs
+W2097817381,Quality and Reliability Engineering International,spm,0,0,1,Monitoring General Linear Profiles When Random Errors Have Contaminated Normal Distributions
+W2604295592,Quality Engineering,doe,0,1,0,Nonconvex optimization of desirability functions
+W4412999849,Computational Statistics & Data Analysis,none,0,0,0,Variable selection in AUC-optimizing classification
+W4412393735,IISE Transactions,none,0,0,0,Mitigating modality bias in multi-label emotion recognition
+W2772617387,IISE Transactions,none,0,0,0,Process flexibility in homogeneous production–inventory systems with a single-period demand
+W7151311761,Quality and Reliability Engineering International,reliability,1,0,0,Prediction of Remaining Service Life for Rolling Bearings Using a CapsTCN‐Transformer Hybrid Model
+W7170418480,Quality and Reliability Engineering International,none,0,0,0,"SAFE Artificial Intelligence to Improve Environmental, Social, and Governance Sustainability"
+W4387687585,Quality Engineering,reliability,1,0,0,Remaining useful life prediction using the similarity-based integrations of multi-sensors data
+W4415348241,Applied Stochastic Models in Business and Industry,doe,0,1,0,Optimal Exact Designs of Multiresponse Experiments Under Linear and Sparsity Constraints
+W2962797037,Quality and Reliability Engineering International,reliability,1,0,0,Weibull analysis for normal/accelerated and fatigue random vibration test
+W7139114881,Quality Engineering,none,0,0,0,A conversation with Ronald J.M.M. Does
+W2804773815,Technometrics,doe,0,1,0,Constructing Two-Level Designs by Concatenation of Strength-3 Orthogonal Arrays
+W4410581572,Quality and Reliability Engineering International,reliability,1,0,0,Multidimensional Feature Mining and Selection for Health Indicator Construction and Remaining Useful Life Prediction
+W4406049107,Quality Engineering,none,0,0,0,Semi-supervised learning for predictive modeling in industrial applications
+W3006681552,Quality Engineering,none,0,0,0,Quality 4.0—the challenging future of quality engineering
+W2131066846,Quality and Reliability Engineering International,spm,0,0,1,An np‐control chart for inspection errors and repeated classifications
+W2126691367,IEEE Transactions on Reliability,reliability,1,0,0,An Integrated Model for Production and Preventive Maintenance Planning in Multi-State Systems
+W1608615004,IEEE Transactions on Reliability,none,0,0,0,Enhancing Conformance Testing Using Symbolic Execution for Network Protocols
+W2017604842,IIE Transactions,reliability,1,0,0,Component and system burn-in for repairable systems
+W2068829531,IIE Transactions,reliability,1,1,0,Equivalent step-stress accelerated life tests with log-location-scale lifetime distributions under Type-I censoring
+W4313143066,IEEE Transactions on Reliability,doe,1,1,0,Sequential Bayesian Planning for Accelerated Degradation Tests Considering Sensor Degradation
+W2947691432,Quality and Reliability Engineering International,doe,0,1,0,Sequential latin hypercube design with both space‐filling and projective properties
+W2022475375,Computational Statistics & Data Analysis,none,0,0,0,Global hypothesis test to simultaneously compare the predictive values of two binary diagnostic tests
+W2770644776,Journal of Quality Technology,none,0,0,0,John A. Cornell (1941–2016)
+W2962942599,Quality and Reliability Engineering International,reliability,1,0,0,Reliability and economic analysis and improvement of complex mechanical products based on DEA: An empirical case study of hydraulic products
+W2738267700,Technometrics,spm,0,0,1,Difference Detection Between Two Images for Image Monitoring
+W3046569217,Journal of Quality Technology,doe,0,1,0,Robust experimental designs for model calibration
+W4415821411,IEEE Transactions on Reliability,reliability,1,0,0,Terminating the Reliability Growth Test Under Small Sample Failure Dataset
+W2937700141,Technometrics,spm,0,0,1,Process Monitoring ROC Curve for Evaluating Dynamic Screening Methods
+W4408581708,Quality and Reliability Engineering International,spm,0,0,1,The Misguided Adaptive EWMA Chart
+W4385666414,Quality Engineering,reliability,1,0,0,"Redefining software reliability modeling: embracing fault-dependency, imperfect removal, and maximum fault considerations"
+W2133338005,Quality and Reliability Engineering International,reliability,1,0,1,EWMA Control Chart for Poisson–Exponential Lifetime Distribution Under Type I Censoring
+W4214814595,IEEE Transactions on Reliability,none,0,0,0,IEEE Reliability Society
+W4415185446,Quality and Reliability Engineering International,spm,0,0,1,Bootstrap Confidence Intervals of Process Capability Indices S pmk and C py Using Different Methods of Estimation for Marshall‐Olkin Inverse Log‐Logistic Distribution
+W2951900631,IEEE Transactions on Reliability,doe,1,0,0,Optimal Computing Budget Allocation for Stochastic N–$k$ Problem in the Power Grid System
+W7202167920,IEEE Transactions on Reliability,doe,1,1,0,Adaptive Sequential Test Planning for Multimechanism Reliability Qualification via Bayesian Monte Carlo Tree Search
+W4366680605,Quality Engineering,reliability,1,0,0,Step-stress tests for interval-censored data under gamma lifetime distribution
+W2810671702,Applied Stochastic Models in Business and Industry,spm,0,0,1,Control charts with random interarrival times between successive samplings
+W2890432973,Applied Stochastic Models in Business and Industry,none,0,0,0,"Redistricting without gerrymandering, utilizing the convexity ratio, and other applications to business and industry"
+W2803244328,Computational Statistics & Data Analysis,none,0,0,0,Time-varying quantile single-index model for multivariate responses
+W2613528835,Quality Engineering,spm,0,0,1,Shewhart dispersion charts made easy for mild to moderately autocorrelated normally distributed data
+W2810027158,IISE Transactions,none,0,0,0,Generation of patterned indentations for additive manufacturing technologies
+W7117416340,Quality and Reliability Engineering International,reliability,1,0,0,Reliability Assessment and Maintenance Policy of Polygonal k ‐Out‐of‐ n Systems Under Mixed Shock Sources

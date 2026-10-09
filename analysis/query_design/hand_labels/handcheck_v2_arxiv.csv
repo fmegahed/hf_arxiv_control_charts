@@ -1,0 +1,121 @@
+key,track,hand,title
+spc:2102.08827,spc,0,A Knowledge-based Approach for the Automatic Construction of Skill Graphs for Online Monitoring
+exp_design:2011.14307,exp_design,1,Active Output Selection Strategies for Multiple Learning Regression Models
+exp_design:1103.1046,exp_design,0,Bayesian design of synthetic biological systems
+spc:2505.07755,spc,0,Benchmarking of CPU-intensive Stream Data Processing in The Edge Computing Systems
+exp_design:2103.13202,exp_design,1,Anova of Balanced Variance Component Models
+exp_design:1410.3517,exp_design,0,Convex Modeling of Interactions with Strong Heredity
+reliability:1709.03555,reliability,0,A general class of quasi-independence tests for left-truncated right-censored data
+spc:2301.10942,spc,0,Divide and Conquer Dynamic Programming: An Almost Linear Time Change Point Detection Methodology in High Dimensions
+reliability:1907.11884,reliability,0,A Particle Filter for Stochastic Advection by Lie Transport (SALT): A case study for the damped and forced incompressible 2D Euler equation
+spc:2609.12904,spc,0,MIMO and Multi-Group Comparison Problem in Process Control: A Multivariate Statistical Framework for Systems Represented with Frequency Response Functions
+spc:1110.3091,spc,0,What's unusual in online disease outbreak news?
+exp_design:2110.15124,exp_design,0,Living on the Edge: An Unified Approach to Antithetic Sampling
+reliability:2603.03289,reliability,1,A New System Function for Maximum Processable Flow in Process Plants and Application to Reliability Assessment
+exp_design:2509.18319,exp_design,1,Sequential Design for the Efficient Estimation of Offshore Structure Failure Probability
+reliability:2602.05377,reliability,1,Optimal Accelerated Life Testing Sampling Plan Design with Piecewise Linear Function based Modeling of Lifetime Characteristics
+reliability:2110.00133,reliability,1,A Novel Simplified Swarm Optimization for Generalized Reliability Redundancy Allocation Problem
+spc:2503.16539,spc,0,A Digital Twin Simulator of a Pastillation Process with Applications to Automatic Control based on Computer Vision
+reliability:1801.02935,reliability,0,Modeling the number of hidden events subject to observation delay
+exp_design:2605.08666,exp_design,0,The Cancellation Hypothesis in Critic-Free RL: From Outcome Rewards to Token Credits
+exp_design:2602.23815,exp_design,0,Efficient Tests for Testing in Two-way ANOVA under Heteroscedasticity
+reliability:2205.07250,reliability,0,A cGAN Ensemble-based Uncertainty-aware Surrogate Model for Offline Model-based Optimization in Industrial Control Problems
+spc:2103.08201,spc,0,Geometric Change Detection in Digital Twins using 3D Machine Learning
+exp_design:2405.13931,exp_design,1,A Methodology to Identify Physical or Computational Experiment Conditions for Uncertainty Mitigation
+exp_design:2305.13185,exp_design,0,Regularization and Variance-Weighted Regression Achieves Minimax Optimality in Linear MDPs: Theory and Practice
+reliability:2008.02871,reliability,0,Fatigue Assessment using ECG and Actigraphy Sensors
+spc:2101.00470,spc,0,An Improved Approximation for Packing Big Two-Bar Charts
+spc:2202.02697,spc,0,Bandwidth-Constrained Distributed Quickest Change Detection in Heterogeneous Sensor Networks: Anonymous vs Non-Anonymous Settings
+exp_design:2606.02533,exp_design,1,Space-Filling One-Factor-At-A-Time Designs
+exp_design:2303.06114,exp_design,1,Optimal Design of Validation Experiments for the Prediction of Quantities of Interest
+exp_design:quant-ph/0309005,exp_design,0,The Quantum Self-eraser
+exp_design:2106.13540,exp_design,1,Optimal Accelerated Degradation Testing Based on Bivariate Gamma Process with Dependent Components
+reliability:2604.23377,reliability,0,Constraint-Based Analysis of Reasoning Shortcuts in Neurosymbolic Learning
+spc:1911.00482,spc,1,Toward a Better Monitoring Statistic for Profile Monitoring via Variational Autoencoders
+reliability:2603.06758,reliability,0,Enhancing SHAP Explainability for Diagnostic and Prognostic ML Models in Alzheimer Disease
+reliability:1906.08488,reliability,1,On Relative Ageing of Coherent Systems with Dependent Identically Distributed Components
+exp_design:1506.00053,exp_design,1,Efficient Bayesian experimentation using an expected information gain lower bound
+reliability:2306.06642,reliability,1,Well-Calibrated Probabilistic Predictive Maintenance using Venn-Abers
+exp_design:2410.15151,exp_design,0,A Comparative Analysis of Nigeria's Power Sector with and without Grid-Scale Storage: Future Implications for Emission and Renewable Energy Integration
+reliability:2108.02394,reliability,0,Efficient approximation of SDEs driven by countably dimensional Wiener process and Poisson random measure
+reliability:1709.08770,reliability,0,On the Model Shrinkage Effect of Gamma Process Edge Partition Models
+exp_design:2605.06608,exp_design,0,DARTS: Targeting Prognostic Covariates in Budget-Constrained Sequential Experiments
+spc:2202.13023,spc,0,Quickest Change Detection in Anonymous Heterogeneous Sensor Networks
+spc:1902.05326,spc,0,Sinkhorn Divergence of Topological Signature Estimates for Time Series Classification
+exp_design:2502.05715,exp_design,0,Active multiple testing with proxy p-values and e-values
+reliability:2404.04049,reliability,1,Cycle Life Prediction for Lithium-ion Batteries: Machine Learning and More
+exp_design:2602.16328,exp_design,0,A general framework for modeling Gaussian process with qualitative and quantitative factors
+exp_design:1711.00562,exp_design,1,Percent Change Estimation in Large Scale Online Experiments
+spc:1505.06770,spc,0,Sketching for Sequential Change-Point Detection
+spc:1909.02686,spc,0,Asymptotic Optimality in Byzantine Distributed Quickest Change Detection
+reliability:cond-mat/0311493,reliability,0,"Andrade, Omori and Time-to-failure Laws from Thermal Noise in Material Rupture"
+reliability:2501.11924,reliability,1,Make Full Use of Testing Information: An Integrated Accelerated Testing and Evaluation Method for Autonomous Driving Systems
+spc:1802.00167,spc,0,Consensus-based Distributed Quickest Detection of Attacks with Unknown Parameters
+spc:2509.00535,spc,1,Adaptive CUSUM Chart for Real-Time Monitoring of Bivariate Event Data
+reliability:2011.04097,reliability,0,Lipkin model on a quantum computer
+spc:2003.11062,spc,0,Bayesian Methods for Multiple Change-Point Detection with Reduced Communication
+reliability:2602.07846,reliability,0,System-Level Error Propagation and Tail-Risk Amplification in Reference-Based Robotic Navigation
+exp_design:2205.01027,exp_design,0,"The impact of COVID-19, climate change and working from home on travel choices"
+reliability:2205.03550,reliability,1,Order Restricted Inference for Adaptive Progressively Censored Competing Risks Data
+spc:0909.5524,spc,0,Distributed detection/localization of change-points in high-dimensional network traffic data
+exp_design:1403.6573,exp_design,0,Exact Inference for Gaussian Process Regression in case of Big Data with the Cartesian Product Structure
+reliability:2605.12103,reliability,0,Informative Simultaneous Confidence Intervals for Graphical Group Sequential Test Procedures
+reliability:2202.13720,reliability,0,A Market Mechanism for Trading Flexibility Between Interconnected Electricity Markets
+reliability:2305.02449,reliability,1,Bayesian Safety Validation for Failure Probability Estimation of Black-Box Systems
+reliability:2008.07966,reliability,1,Analysis of Left Truncated and Right Censored Competing Risks Data
+exp_design:1805.02407,exp_design,0,Soft Maximin Estimation for Heterogeneous Data
+reliability:2204.12420,reliability,1,Interpretable Battery Cycle Life Range Prediction Using Early Degradation Data at Cell Level
+spc:2605.29290,spc,0,SWORD: Spectral Wasserstein Online Regime Detection in Dynamic Networks
+spc:2205.06256,spc,1,Real-time Monitoring of Functional Data
+reliability:2501.07995,reliability,1,MMAPs to model complex multi-state systems with vacation policies in the repair facility
+reliability:1702.05047,reliability,1,Data-driven online monitoring of wind turbines
+exp_design:2410.02050,exp_design,0,"A fast, flexible simulation framework for Bayesian adaptive designs -- the R package BATSS"
+spc:2307.02375,spc,0,Online Learning of Order Flow and Market Impact with Bayesian Change-Point Detection Methods
+spc:2608.27050,spc,0,Self-starting Dynamics in All-fibre All-Normal-Dispersion Thulium Mamyshev oscillator
+exp_design:1405.4358,exp_design,1,Efficient Designs in Small Blocks for Comparing Consecutive Pairs of Treatments
+spc:2501.15969,spc,0,An Explainable Disease Surveillance System for Early Prediction of Multiple Chronic Diseases
+exp_design:2301.02859,exp_design,1,$D$-Optimal and Nearly $D$-Optimal Exact Designs for Binary Response on the Ball
+reliability:2402.06382,reliability,1,Robust Rao-type tests for step-stress accelerated life-tests under interval-monitoring and Weibull lifetime distributions
+spc:2011.10925,spc,0,Locally Linear Embedding and its Variants: Tutorial and Survey
+spc:2007.10660,spc,0,Flow Sampling: Network Monitoring in Large-Scale Software-Defined IoT Networks
+spc:2309.09111,spc,0,Reducing sequential change detection to sequential estimation
+exp_design:2005.05067,exp_design,0,Upper Trust Bound Feasibility Criterion for Mixed Constrained Bayesian Optimization with Application to Aircraft Design
+exp_design:0908.3459,exp_design,0,"An Algorithmic Perspective on Some Network Design, Construction and Analysis Problems"
+reliability:2509.22751,reliability,0,Variance-Bounded Evaluation of Entity-Centric AI Systems Without Ground Truth: Theory and Measurement
+reliability:1304.6656,reliability,1,A new modeling approach to the safety evaluation of N-modular redundant computer systems in presence of imperfect maintenance
+reliability:2210.13390,reliability,0,On the failure of variational score matching for VAE models
+reliability:2501.14819,reliability,0,A Comprehensive Mathematical and System-Level Analysis of Autonomous Vehicle Timelines
+exp_design:2007.11344,exp_design,0,DEAL: Deep Evidential Active Learning for Image Classification
+spc:2301.04578,spc,0,Precision Dose-finding Cancer Clinical Trials in the Setting of Broadened Eligibility
+reliability:2012.01703,reliability,1,From Femtoseconds to Gigaseconds: The SolDeg Platform for the Performance Degradation Analysis of Silicon Heterojunction Solar Cells
+reliability:2603.24081,reliability,0,Primary creep encodes time to failure across laboratory and natural systems
+exp_design:2407.08972,exp_design,0,Revealing the Dark Secrets of Extremely Large Kernel ConvNets on Robustness
+reliability:2312.08531,reliability,0,Revisiting the Last-Iterate Convergence of Stochastic Gradient Methods
+exp_design:1901.05954,exp_design,0,Diverse mini-batch Active Learning
+spc:1509.00114,spc,1,Multi-Sensor Slope Change Detection
+exp_design:2408.16708,exp_design,0,Effect Aliasing in Observational Studies
+reliability:2402.12990,reliability,0,Data Unfolding with Mean Integrated Square Error Optimization
+spc:1408.7000,spc,1,A Changepoint Detection Method for Profile Variance
+spc:2410.14615,spc,0,Asymptotically Optimal Change Detection for Unnormalized Pre- and Post-Change Distributions
+exp_design:2104.04966,exp_design,0,Nonparametric Method for Clustered Data in Pre-Post Factorial Design
+exp_design:2608.10328,exp_design,0,Statistical analysis of block structured latent variable models
+spc:2506.14790,spc,0,Continuous Evolution Pool: Taming Recurring Concept Drift in Online Time Series Forecasting
+spc:1612.08543,spc,0,Distributed Real-Time Sentiment Analysis for Big Data Social Streams
+spc:1904.00787,spc,0,CUSUM Filter for Brain Segmentation on DSC Perfusion MR Head Scans with Abnormal Brain Anatomy
+exp_design:2204.02904,exp_design,0,Vecchia-approximated Deep Gaussian Processes for Computer Experiments
+spc:2510.07329,spc,1,A Digital Pheromone-Based Approach for In-Control/Out-of-Control Classification
+reliability:2503.21286,reliability,1,Use of copula functions in error assessment due to deviation from dependence assumption
+reliability:1707.05769,reliability,1,Estimation of Inverse Weibull Distribution Under Type-I Hybrid Censoring
+spc:2407.10721,spc,1,Nonparametric Multivariate Profile Monitoring Via Tree Ensembles
+exp_design:2607.24804,exp_design,0,Bumblebee: Interleaved Mixed-Layer Building Blocks for Large-Scale Recommendation Systems
+spc:2601.00554,spc,0,Entropy Production in Machine Learning Under Fokker-Planck Probability Flow
+exp_design:1312.5085,exp_design,1,A complementary set theory for quaternary code designs
+spc:1812.02736,spc,0,A Technical Survey on Statistical Modelling and Design Methods for Crowdsourcing Quality Control
+spc:2406.13368,spc,0,Lewis Acidity and Basicity Diagnostics of Molten Salt for its Properties and Structure Online Monitoring
+spc:1403.7853,spc,0,A Latent Gaussian Process Model with Application to Monitoring Clinical Trials
+reliability:2110.14534,reliability,0,Differential Deep Detection in Massive MIMO With One-Bit ADC
+exp_design:2209.05265,exp_design,0,Emulation and History Matching using the hmer Package
+exp_design:2508.08420,exp_design,0,Regret minimization in Linear Bandits with offline data via extended D-optimal exploration
+exp_design:2310.02507,exp_design,0,Inference of Sample Complier Average Causal Effects under Experiments with Completely Randomized Design and Computer Assisted Balance-Improving Designs
+spc:1907.02097,spc,0,Estimation of common change point and isolation of changed panels after sequential detection
+reliability:2008.13453,reliability,0,CoShare: An Efficient Approach for Redundancy Allocation in NFV

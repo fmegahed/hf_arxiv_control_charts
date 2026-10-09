@@ -1,0 +1,43 @@
+class,journal,year,doi,title
+theory,Computational Statistics & Data Analysis,2024,10.1016/j.csda.2024.108089,Optimal sequential detection by sparsity likelihood
+theory,Applied Stochastic Models in Business and Industry,2014,10.1002/asmb.2026,Efficient performance evaluation of the generalized Shiryaev–Roberts detection procedure in a multi‐cyclic setup
+theory,Applied Stochastic Models in Business and Industry,2018,10.1002/asmb.2372,Comparative performance analysis of the Cumulative Sum chart and the Shiryaev‐Roberts procedure for detecting changes in autocorrelated data
+theory,Applied Stochastic Models in Business and Industry,2016,10.1002/asmb.2181,A note on efficient performance evaluation of the Cumulative Sum chart and the Sequential Probability Ratio Test
+theory,Applied Stochastic Models in Business and Industry,2018,10.1002/asmb.2317,Unspecified distributions in single disorder problem
+theory,Quality and Reliability Engineering International,2012,10.1002/qre.1436,On Assessing the Performance of Sequential Procedures for Detecting a Change
+theory,Quality and Reliability Engineering International,2020,10.1002/qre.2723,Performance study of change‐point detection thresholds for cumulative sum statistic in a sequential context
+theory,Quality and Reliability Engineering International,2026,10.1002/qre.70372,On the Relationship Between Two CUSUM Charts
+monitoring-framed sequential change detection method,Technometrics,2022,10.1080/00401706.2022.2054861,Bandit Change-Point Detection for Real-Time Monitoring High-Dimensional Data Under Sampling Control
+monitoring-framed sequential change detection method,Technometrics,2022,10.1080/00401706.2022.2054862,Sequential Change-Point Detection for Mutually Exciting Point Processes
+monitoring-framed sequential change detection method,Technometrics,2022,10.1080/00401706.2022.2124307,Adaptive Partially Observed Sequential Change Detection and Isolation
+monitoring-framed sequential change detection method,Technometrics,2022,10.1080/00401706.2022.2127914,A Bayesian Partially Observable Online Change Detection Approach with Thompson Sampling
+monitoring-framed sequential change detection method,Technometrics,2022,10.1080/00401706.2022.2124312,PERCEPT: A New Online Change-Point Detection Method using Topological Data Analysis
+monitoring-framed sequential change detection method,Technometrics,2022,10.1080/00401706.2022.2046171,Online Structural Change-Point Detection of High-dimensional Streaming Data via Dynamic Sparse Subspace Learning
+monitoring-framed sequential change detection method,Computational Statistics & Data Analysis,2022,10.1016/j.csda.2022.107551,Online non-parametric changepoint detection with application to monitoring operational performance of network devices
+monitoring-framed sequential change detection method,Computational Statistics & Data Analysis,2015,10.1016/j.csda.2015.11.010,An exact approach to Bayesian sequential change point detection
+monitoring-framed sequential change detection method,IISE Transactions,2023,10.1080/24725854.2023.2281580,An adaptive approach for online monitoring of large-scale data streams
+monitoring-framed sequential change detection method,IISE Transactions,2023,10.1080/24725854.2023.2207252,Online directed-structural change-point detection: A segment-wise time-varying dynamic Bayesian network approach
+monitoring-framed sequential change detection method,IISE Transactions,2019,10.1080/24725854.2019.1676937,Count-based change point detection via multi-output log-Gaussian Cox processes
+monitoring-framed sequential change detection method,Applied Stochastic Models in Business and Industry,2024,10.1002/asmb.2865,Sequential monitoring for conditional quantiles of general conditional heteroscedastic time series models
+monitoring-framed sequential change detection method,Applied Stochastic Models in Business and Industry,2020,10.1002/asmb.2578,Sequential detection of parameter changes in dynamic conditional correlation models
+monitoring-framed sequential change detection method,Quality and Reliability Engineering International,2025,10.1002/qre.3787,Condition Accelerator: A New Framework for Online Change‐Point Detection With Error Rate Control
+monitoring-framed sequential change detection method,Journal of Quality Technology,2023,10.1080/00224065.2022.2161434,Predictive ratio CUSUM (PRC): A Bayesian approach in online change point detection of short runs
+monitoring-framed sequential change detection method,Quality and Reliability Engineering International,2021,10.1002/qre.2945,The Shiryaev–Roberts control chart for Markovian count time series
+monitoring-framed sequential change detection method,Quality and Reliability Engineering International,2021,10.1002/qre.2952,Signed sequential rank Shiryaev–Roberts schemes
+monitoring-framed sequential change detection method,Quality and Reliability Engineering International,2022,10.1002/qre.3125,Performance of the Shiryaev‐Roberts‐type scheme in comparison to the CUSUM and EWMA schemes in monitoring weibull scale parameter based on Type I censored data
+monitoring-framed sequential change detection method,Quality and Reliability Engineering International,2024,10.1002/qre.3699,Performance of the Shiryaev–Roberts‐Type Scheme in Monitoring Weibull Shape Parameter Based on Type II Censored Data
+monitoring-framed sequential change detection method,Technometrics,2014,10.1080/00401706.2014.940089,An Efficient Online Monitoring Method for High-Dimensional Data Streams
+sequential test for acceptance or reliability demonstration (not change detection),IEEE Transactions on Reliability,2010,10.1109/tr.2010.2088730,A General Model for Start-Up Demonstration Tests
+sequential test for acceptance or reliability demonstration (not change detection),IEEE Transactions on Reliability,2010,10.1109/tr.2010.2041975,A New Start-Up Demonstration Test
+sequential test for acceptance or reliability demonstration (not change detection),IEEE Transactions on Reliability,2012,10.1109/tr.2011.2182219,Start-Up Demonstration Test Based on Total Successes and Total Failures With Dependent Start-Ups
+sequential test for acceptance or reliability demonstration (not change detection),IEEE Transactions on Reliability,2012,10.1109/tr.2012.2220911,Sequential Test for Reliability Under Allowance for Target Uncertainty
+sequential test for acceptance or reliability demonstration (not change detection),IEEE Transactions on Reliability,2018,10.1109/tr.2018.2869597,Fast Semiconductor Reliability Assessments Using SPRT
+sequential test for acceptance or reliability demonstration (not change detection),Quality and Reliability Engineering International,2012,10.1002/qre.1387,Planning of Truncated Sequential Binomial Test via Relative Efficiency
+sequential test for acceptance or reliability demonstration (not change detection),Quality and Reliability Engineering International,2017,10.1002/qre.2244,Planning of sequential binomial tests for various risk ratios
+sequential test for acceptance or reliability demonstration (not change detection),Quality and Reliability Engineering International,2023,10.1002/qre.3395,Comparing the sequential and the repetitive Cpk sampling plans
+sequential test for acceptance or reliability demonstration (not change detection),Quality Engineering,2012,10.1080/08982112.2012.680225,Finding Test Statistic Thresholds Using Simulation and Model Fitting with an Application to Radiation Detection
+sequential test for acceptance or reliability demonstration (not change detection),Quality Engineering,2022,10.1080/08982112.2022.2146510,Case study on applying sequential analyses in operational testing
+sequential test for acceptance or reliability demonstration (not change detection),Quality Engineering,2023,10.1080/08982112.2023.2244588,Sequential Bayesian assurance tests for degradation data
+sequential test for acceptance or reliability demonstration (not change detection),Applied Stochastic Models in Business and Industry,2015,10.1002/asmb.2122,Different weights of tests within a start‐up demonstration procedure
+sequential test for acceptance or reliability demonstration (not change detection),Computational Statistics & Data Analysis,2014,10.1016/j.csda.2014.02.007,Exact sequential test of equivalence hypothesis based on bivariate non-central t -statistics
+sequential test for acceptance or reliability demonstration (not change detection),Computational Statistics & Data Analysis,2011,10.1016/j.csda.2011.02.019,Sequential methods for pharmacogenetic studies
