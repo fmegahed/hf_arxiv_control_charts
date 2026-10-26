@@ -1,59 +1,75 @@
 {
   "metadata": {
-    "generated_at": "2026-10-12T20:40:50Z",
-    "week_start": "2026-10-05",
-    "week_end": "2026-10-12",
+    "generated_at": "2026-10-26T13:32:09Z",
+    "week_start": "2026-10-19",
+    "week_end": "2026-10-26",
     "version": "3.1.0"
   },
   "summary": {
-    "total_papers": 5,
+    "total_papers": 7,
     "papers_by_track": {
       "spc": 0,
-      "exp_design": 5,
-      "reliability": 0
+      "exp_design": 6,
+      "reliability": 1
     }
   },
-  "synthesis": "# QE ArXiv Watch Weekly  \n**Week ending October 12, 2026**\n\nWhat if your experiment could stop early, keep its error guarantees while you peek at the results, and still estimate effects precisely? One paper this week gets close—and it points to a broader theme across the batch: good design can do more than improve precision. It can make inference faster, more reliable, and easier to operationalize.\n\nYu et al. build a method for multifactor online experiments that combines treatment allocation, continuous monitoring, and estimation. Their block-orthogonal designs separate treatment information from nuisance block effects, while an anytime-valid e-value lets teams monitor evidence without invalidating their test by checking repeatedly. In simulations, the procedure stopped after an average of 1.4 batches, versus 7.7 for a safe-testing competitor, and had lower treatment-effect estimation error. In a 128-response prompt experiment, it stopped at batch four while the alternatives ran to the end. The practical draw is especially clear when experiments are expensive: orthogonal arrays can also cut a seven-factor design from 128 runs to 16 while preserving the design’s key properties. The reported type-I error was 5.8%, so—as always with a new procedure—teams should check how its guarantees and operating characteristics fit their own setting.\n\nFor causal experiments with complicated assignment schemes, Klosin et al. offer a refreshingly practical variance estimator. Their connected-components approach uses the pattern of which potential outcomes can’t be observed together to build an unbiased estimate of an upper bound on design-based variance. It reduces to familiar estimators under complete and cluster randomization, but can be much sharper in more tangled designs. In a school-network application, it gave the shortest standard error in seven of eight specifications; some competing calculations took hours, while theirs took under a second. If your treatment assignments are dependent—because of networks, geography, or other design constraints—this looks worth a closer read.\n\nTwo cautions from Zaidi et al. are useful for anyone running online tests on skewed outcomes. Blocking on a pre-experiment scale measure reduced variance in their simulations, with finer blocks producing larger gains. But handling the tails matters: within-block winsorization improved precision while maintaining coverage in a tail-effect scenario, whereas global winsorization and inverse-variance weighting produced badly calibrated results. The latter is a good reminder that a tiny standard error is no comfort if the analysis has quietly changed the estimand.\n\nThe remaining papers extend the design conversation in different directions. Yin et al. ask how far mobile sensors must move when the signal model changes. Their certification method can bound movement when the model perturbation is small and the placement objective has enough separation; the key message is that perturbation size alone won’t guarantee stability. Liu et al. show, theoretically, that LinUCB’s adaptive sampling can approach D-optimal designs in a small-gap regime—suggesting an algorithm built for regret reduction can also be information-efficient.\n\nAcross this week’s work, design is increasingly treated as part of inference, not just a setup step. The question for practitioners: where could a better allocation—or a better account of dependence—save more than just sample size?",
+  "synthesis": "# QE ArXiv Watch Weekly  \n**Week ending October 26, 2026**\n\nThis week’s useful reminder: getting to an answer sooner is only a win if we know what risk we’re taking to get there. Two papers tackle that trade-off in online experiments from different angles—and a reliability study shows why a “best” maintenance age can be much less certain than its cost estimate suggests.\n\n**Faster A/B tests, with the guardrails made explicit.** Perini et al. build group sequential designs that can stop an experiment early while retaining the platform’s fixed-horizon terminal decision rule. Their predictive-probability stopping policy cut expected duration by 41.7% in simulation; online experiments showed a 43.1% runtime reduction and an estimated 76% increase in testing capacity. The practical appeal is clear: less waiting without quietly loosening error-rate or power targets. But the policy’s boundaries and horizon are chosen by simulation, so teams should validate them against their own traffic patterns and outcome correlations.\n\nLu et al. address a different trap: repeatedly checking a clustered experiment’s **quantile** results. Their CAQ method provides sequential confidence sequences for quantile effects when users contribute multiple correlated events. In simulations, cumulative miscoverage stayed around 3%, while “peek at a fixed-horizon test” and “ignore clustering” baselines failed badly. CAQ’s validity is asymptotic, not an exact finite-sample guarantee; still, it’s a promising option when tail behavior matters and experiments are monitored continuously.\n\n**Maintenance decisions need risk ranges, not just a point estimate.** Wu et al. model changing inter-failure times with a geometric process and quantify uncertainty in both reliability and replacement age. In an aircraft example with just 27 intervals, two strategies at cycle 9 had cost rates of 12.705 and 13.767—but reliabilities of 0.912 and 0.670. That’s a striking reminder that modest expected-cost differences can conceal substantial risk differences. Their generalized confidence intervals had better coverage than bootstrap and Bayesian intervals in several small-sample simulations. For practitioners, the message is to show decision-makers the reliability consequences of a replacement policy, not only its average cost.\n\nA useful counterpoint to this week’s enthusiasm for adaptive methods comes from Nyaupane et al., who audit learned experimental-design controllers. In one simulated voltage-clamp task, policies presented as learned feedback controllers always chose the same protocol; masking the observed current changed nothing. In a task where the best next pulse truly depended on the first observation, they did adapt—and matched a Bayesian reference. Clever algorithms can use feedback, but we should test whether the feedback actually changes decisions and improves outcomes.\n\nThe remaining papers focus on getting the design right for messy experiments. Zhang et al. show how rerandomization and Lasso adjustment can sharpen network-effect estimates, while accounting for auxiliary variables that themselves depend on assignment. Singh et al. tackle therapist capacity, availability, and turnover: flexible allocation can substantially reduce the number of batches needed, though no strategy dominates across settings. And Kaji et al. offer a two-stage design for multi-arm trials with noncompliance, identifying a targeted local effect under specific assumptions about treatment choice and receipt.\n\nAcross the week, the common thread is operational realism: clustering, interference, scarce staff, noncompliance, changing failure rates. The question for us is not simply whether a method is adaptive or efficient. It’s whether its assumptions match the system we’re trying to improve.",
   "papers": [
     {
-      "id": "2610.12674v1",
-      "title": "Simple Standard Errors for Complicated (Quasi-)Experimental Designs",
-      "authors": "Sylvia Klosin|Jonathan Roth",
-      "submitted": "2026-10-08",
-      "track": "exp_design",
-      "link": "https://arxiv.org/pdf/2610.12674v1"
+      "id": "2610.32108v1",
+      "title": "Finite-horizon maintenance under geometric-process models: Quantifying model and decision uncertainty",
+      "authors": "Wenhui Wu|Bingxing Wang|Wei Wang|Piao Chen",
+      "submitted": "2026-10-23",
+      "track": "reliability",
+      "link": "https://arxiv.org/pdf/2610.32108v1"
     },
     {
-      "id": "2610.10435v1",
-      "title": "On the Benefit of Blocking for Online Experiments with Skewed Data",
-      "authors": "Abbas Zaidi|Matthew Reimherr|Rina Friedberg|Fabian Martinez|Richard Mudd",
-      "submitted": "2026-10-07",
+      "id": "2610.30019v1",
+      "title": "CAQ: Clustered Asymptotically Anytime-Valid Quantile Treatment Effects for Online Experiments",
+      "authors": "Diane Lu|Eric J. Oh",
+      "submitted": "2026-10-21",
       "track": "exp_design",
-      "link": "https://arxiv.org/pdf/2610.10435v1"
+      "link": "https://arxiv.org/pdf/2610.30019v1"
     },
     {
-      "id": "2610.08152v1",
-      "title": "Movement Stability of D-Optimal Sensor Placement Under Projector Perturbations",
-      "authors": "Isabella Yin|Laura P. Schaposnik",
-      "submitted": "2026-10-06",
+      "id": "2610.27899v1",
+      "title": "Let Them Peek: Group Sequential Designs for A/B Testing",
+      "authors": "Lorenzo Perini|Mia Garrard|Rina Friedberg|Rohit Kumar|Houssam Nassif|Abbas Zaidi|Pablo Alcain",
+      "submitted": "2026-10-20",
       "track": "exp_design",
-      "link": "https://arxiv.org/pdf/2610.08152v1"
+      "link": "https://arxiv.org/pdf/2610.27899v1"
     },
     {
-      "id": "2610.07831v1",
-      "title": "Design-Driven Inference for Online Experiments: Jointly Optimal Evidence Collection, Testing, and Estimation",
-      "authors": "Jun Yu| Wenbiao| Zhao| Lixing| Zhu",
-      "submitted": "2026-10-06",
+      "id": "2610.27741v1",
+      "title": "Rerandomization and high-dimensional adjustment with assignment-dependent auxiliary variables under network interference",
+      "authors": "Honghao Zhang|Yanghao Wei|Hanzhong Liu",
+      "submitted": "2026-10-20",
       "track": "exp_design",
-      "link": "https://arxiv.org/pdf/2610.07831v1"
+      "link": "https://arxiv.org/pdf/2610.27741v1"
     },
     {
-      "id": "2610.06213v1",
-      "title": "Sampling Allocation of LinUCB: Optimal Design Limits in the Small-Gap Regime",
-      "authors": "Yujie Liu|Vincent Y. F. Tan|Yunbei Xu",
-      "submitted": "2026-10-05",
+      "id": "2610.27632v1",
+      "title": "When Does Feedback Help? Auditing Learned Voltage-Clamp Experimental Design",
+      "authors": "Rayan Nyaupane|Abhiram Bhupatiraju",
+      "submitted": "2026-10-20",
       "track": "exp_design",
-      "link": "https://arxiv.org/pdf/2610.06213v1"
+      "link": "https://arxiv.org/pdf/2610.27632v1"
+    },
+    {
+      "id": "2610.26321v1",
+      "title": "Incorporating therapist capacity, availability and turnover in trials of therapist-delivered interventions: Non-orthogonal factorial designs",
+      "authors": "Arpan Singh|Steven G Gilmour|Rebecca EA Walwyn",
+      "submitted": "2026-10-19",
+      "track": "exp_design",
+      "link": "https://arxiv.org/pdf/2610.26321v1"
+    },
+    {
+      "id": "2610.25667v2",
+      "title": "A LATE-Targeting Experimental Design for Multi-Arm RCTs",
+      "authors": "Tetsuya Kaji",
+      "submitted": "2026-10-19",
+      "track": "exp_design",
+      "link": "https://arxiv.org/pdf/2610.25667v2"
     }
   ]
 }
