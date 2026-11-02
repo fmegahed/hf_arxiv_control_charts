@@ -1,75 +1,51 @@
 {
   "metadata": {
-    "generated_at": "2026-10-26T13:32:09Z",
-    "week_start": "2026-10-19",
-    "week_end": "2026-10-26",
+    "generated_at": "2026-11-02T12:07:01Z",
+    "week_start": "2026-10-26",
+    "week_end": "2026-11-02",
     "version": "3.1.0"
   },
   "summary": {
-    "total_papers": 7,
+    "total_papers": 4,
     "papers_by_track": {
       "spc": 0,
-      "exp_design": 6,
-      "reliability": 1
+      "exp_design": 4,
+      "reliability": 0
     }
   },
-  "synthesis": "# QE ArXiv Watch Weekly  \n**Week ending October 26, 2026**\n\nThis week’s useful reminder: getting to an answer sooner is only a win if we know what risk we’re taking to get there. Two papers tackle that trade-off in online experiments from different angles—and a reliability study shows why a “best” maintenance age can be much less certain than its cost estimate suggests.\n\n**Faster A/B tests, with the guardrails made explicit.** Perini et al. build group sequential designs that can stop an experiment early while retaining the platform’s fixed-horizon terminal decision rule. Their predictive-probability stopping policy cut expected duration by 41.7% in simulation; online experiments showed a 43.1% runtime reduction and an estimated 76% increase in testing capacity. The practical appeal is clear: less waiting without quietly loosening error-rate or power targets. But the policy’s boundaries and horizon are chosen by simulation, so teams should validate them against their own traffic patterns and outcome correlations.\n\nLu et al. address a different trap: repeatedly checking a clustered experiment’s **quantile** results. Their CAQ method provides sequential confidence sequences for quantile effects when users contribute multiple correlated events. In simulations, cumulative miscoverage stayed around 3%, while “peek at a fixed-horizon test” and “ignore clustering” baselines failed badly. CAQ’s validity is asymptotic, not an exact finite-sample guarantee; still, it’s a promising option when tail behavior matters and experiments are monitored continuously.\n\n**Maintenance decisions need risk ranges, not just a point estimate.** Wu et al. model changing inter-failure times with a geometric process and quantify uncertainty in both reliability and replacement age. In an aircraft example with just 27 intervals, two strategies at cycle 9 had cost rates of 12.705 and 13.767—but reliabilities of 0.912 and 0.670. That’s a striking reminder that modest expected-cost differences can conceal substantial risk differences. Their generalized confidence intervals had better coverage than bootstrap and Bayesian intervals in several small-sample simulations. For practitioners, the message is to show decision-makers the reliability consequences of a replacement policy, not only its average cost.\n\nA useful counterpoint to this week’s enthusiasm for adaptive methods comes from Nyaupane et al., who audit learned experimental-design controllers. In one simulated voltage-clamp task, policies presented as learned feedback controllers always chose the same protocol; masking the observed current changed nothing. In a task where the best next pulse truly depended on the first observation, they did adapt—and matched a Bayesian reference. Clever algorithms can use feedback, but we should test whether the feedback actually changes decisions and improves outcomes.\n\nThe remaining papers focus on getting the design right for messy experiments. Zhang et al. show how rerandomization and Lasso adjustment can sharpen network-effect estimates, while accounting for auxiliary variables that themselves depend on assignment. Singh et al. tackle therapist capacity, availability, and turnover: flexible allocation can substantially reduce the number of batches needed, though no strategy dominates across settings. And Kaji et al. offer a two-stage design for multi-arm trials with noncompliance, identifying a targeted local effect under specific assumptions about treatment choice and receipt.\n\nAcross the week, the common thread is operational realism: clustering, interference, scarce staff, noncompliance, changing failure rates. The question for us is not simply whether a method is adaptive or efficient. It’s whether its assumptions match the system we’re trying to improve.",
+  "synthesis": "# QE ArXiv Watch Weekly  \n**Week ending November 02, 2026**\n\nThe best design isn’t always the one that covers the space most evenly. This week’s papers keep asking a more practical question: *what uncertainty are we trying to reduce, and what assumptions are we willing to trust?* That’s a useful shift for anyone designing experiments where runs are costly, measurements are clustered, or the system keeps changing under our feet.\n\nThe most immediately portable idea comes from Karl et al.’s **sphericity filter** for nondeterministic experiments. It starts with a familiar goal—choose a space-filling design—but also protects precision for effects we think may matter. Across their examples, that small change often bought better prediction precision at modest geometric cost. In a constrained lipid-nanoparticle study, efficiency improved 27.5% over a geometry-focused comparator, with a 2.3% increase in median geometric cost. The catch is important: the filter needs a working model to say which effects to protect. In the same study, a raw coefficient-based filter actually reduced efficiency. So this is a promising way to refine a candidate design, not a license to treat the model as unquestionable.\n\nCao et al. offer a quieter but equally practical reminder from oat trials: plants from the same plot are not independent experimental units. Their Bayesian ordinal model accounts for ordered growth stages and plot-level clustering, then compares models by holding out whole plots. Leaving out the plot effect substantially hurt prediction and made some contrast intervals look narrower than they should. By contrast, adding a spatial field provided little detectable benefit on these layouts. For quality engineers, the lesson travels well: model the randomization and sampling structure first; add spatial complexity when the data can support it.\n\nZanotta et al.’s **FIDE** takes design selection into less familiar territory: measurements of evolving population laws, where aggregate observations can’t identify the full state. FIDE first enforces a scientific-risk allowance, then prefers designs that require a smaller correction to a frozen reference dynamics. That preference improved held-out action measures in several simulations, including a 32-dimensional example. But it is explicitly reference-dependent: when the baseline was misspecified, its downstream advantage could reverse. Think of it as a way to choose among designs *given a trusted reference*, not as protection against a bad one.\n\nAnd then there’s Moradi et al., who put experimental design on one athlete’s training schedule. EPICOACH proposes feasible workouts that balance learning about the rider with improving performance, while recording predictions before the rides—an appealing discipline for any adaptive system. The results are a good reality check: heart-rate forecasts improved over several baselines, but segment-time forecasts did not, and early climb forecasts missed the athlete’s improvement. Safety checks also vetoed the top-ranked overload plan in both live cycles. That’s not a failure of the idea; it’s a reminder that a clever experiment planner still needs a model that can keep up with a changing process.\n\nAcross the week, the common thread is **design for the decision you actually care about—and make your assumptions visible**. Which assumption in your own experiment would you most want to stress-test before trusting the design?",
   "papers": [
     {
-      "id": "2610.32108v1",
-      "title": "Finite-horizon maintenance under geometric-process models: Quantifying model and decision uncertainty",
-      "authors": "Wenhui Wu|Bingxing Wang|Wei Wang|Piao Chen",
-      "submitted": "2026-10-23",
-      "track": "reliability",
-      "link": "https://arxiv.org/pdf/2610.32108v1"
+      "id": "2610.40370v1",
+      "title": "The Athlete as a Scientist of One: Agentic Bayesian Experimental Design for Individualized Physiology from Consumer Wearables",
+      "authors": "Behnam Moradi",
+      "submitted": "2026-10-29",
+      "track": "exp_design",
+      "link": "https://arxiv.org/pdf/2610.40370v1"
     },
     {
-      "id": "2610.30019v1",
-      "title": "CAQ: Clustered Asymptotically Anytime-Valid Quantile Treatment Effects for Online Experiments",
-      "authors": "Diane Lu|Eric J. Oh",
-      "submitted": "2026-10-21",
+      "id": "2610.40009v1",
+      "title": "FIDE: Fiber-Informed Differentiable Experimental Design for Reference-Relative Law Dynamics",
+      "authors": "Pietro Zanotta|Ján Drgoňa",
+      "submitted": "2026-10-29",
       "track": "exp_design",
-      "link": "https://arxiv.org/pdf/2610.30019v1"
+      "link": "https://arxiv.org/pdf/2610.40009v1"
     },
     {
-      "id": "2610.27899v1",
-      "title": "Let Them Peek: Group Sequential Designs for A/B Testing",
-      "authors": "Lorenzo Perini|Mia Garrard|Rina Friedberg|Rohit Kumar|Houssam Nassif|Abbas Zaidi|Pablo Alcain",
-      "submitted": "2026-10-20",
+      "id": "2610.37384v1",
+      "title": "Bayesian Ordinal Analysis of Cereal Growth Stage Data from Oat Trials in Western Australia",
+      "authors": "Zhanglong Cao|Rose Megirian|Matthew Nguyen|Adam H. Sparks",
+      "submitted": "2026-10-27",
       "track": "exp_design",
-      "link": "https://arxiv.org/pdf/2610.27899v1"
+      "link": "https://arxiv.org/pdf/2610.37384v1"
     },
     {
-      "id": "2610.27741v1",
-      "title": "Rerandomization and high-dimensional adjustment with assignment-dependent auxiliary variables under network interference",
-      "authors": "Honghao Zhang|Yanghao Wei|Hanzhong Liu",
-      "submitted": "2026-10-20",
+      "id": "2610.36012v1",
+      "title": "A Sphericity Filter for Space-Filling Designs in Nondeterministic Experiments",
+      "authors": "Andrew T. Karl",
+      "submitted": "2026-10-26",
       "track": "exp_design",
-      "link": "https://arxiv.org/pdf/2610.27741v1"
-    },
-    {
-      "id": "2610.27632v1",
-      "title": "When Does Feedback Help? Auditing Learned Voltage-Clamp Experimental Design",
-      "authors": "Rayan Nyaupane|Abhiram Bhupatiraju",
-      "submitted": "2026-10-20",
-      "track": "exp_design",
-      "link": "https://arxiv.org/pdf/2610.27632v1"
-    },
-    {
-      "id": "2610.26321v1",
-      "title": "Incorporating therapist capacity, availability and turnover in trials of therapist-delivered interventions: Non-orthogonal factorial designs",
-      "authors": "Arpan Singh|Steven G Gilmour|Rebecca EA Walwyn",
-      "submitted": "2026-10-19",
-      "track": "exp_design",
-      "link": "https://arxiv.org/pdf/2610.26321v1"
-    },
-    {
-      "id": "2610.25667v2",
-      "title": "A LATE-Targeting Experimental Design for Multi-Arm RCTs",
-      "authors": "Tetsuya Kaji",
-      "submitted": "2026-10-19",
-      "track": "exp_design",
-      "link": "https://arxiv.org/pdf/2610.25667v2"
+      "link": "https://arxiv.org/pdf/2610.36012v1"
     }
   ]
 }
