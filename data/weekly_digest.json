@@ -1,51 +1,75 @@
 {
   "metadata": {
-    "generated_at": "2026-11-02T12:07:01Z",
-    "week_start": "2026-10-26",
-    "week_end": "2026-11-02",
+    "generated_at": "2026-11-09T21:48:38Z",
+    "week_start": "2026-11-02",
+    "week_end": "2026-11-09",
     "version": "3.1.0"
   },
   "summary": {
-    "total_papers": 4,
+    "total_papers": 7,
     "papers_by_track": {
       "spc": 0,
       "exp_design": 4,
-      "reliability": 0
+      "reliability": 3
     }
   },
-  "synthesis": "# QE ArXiv Watch Weekly  \n**Week ending November 02, 2026**\n\nThe best design isn’t always the one that covers the space most evenly. This week’s papers keep asking a more practical question: *what uncertainty are we trying to reduce, and what assumptions are we willing to trust?* That’s a useful shift for anyone designing experiments where runs are costly, measurements are clustered, or the system keeps changing under our feet.\n\nThe most immediately portable idea comes from Karl et al.’s **sphericity filter** for nondeterministic experiments. It starts with a familiar goal—choose a space-filling design—but also protects precision for effects we think may matter. Across their examples, that small change often bought better prediction precision at modest geometric cost. In a constrained lipid-nanoparticle study, efficiency improved 27.5% over a geometry-focused comparator, with a 2.3% increase in median geometric cost. The catch is important: the filter needs a working model to say which effects to protect. In the same study, a raw coefficient-based filter actually reduced efficiency. So this is a promising way to refine a candidate design, not a license to treat the model as unquestionable.\n\nCao et al. offer a quieter but equally practical reminder from oat trials: plants from the same plot are not independent experimental units. Their Bayesian ordinal model accounts for ordered growth stages and plot-level clustering, then compares models by holding out whole plots. Leaving out the plot effect substantially hurt prediction and made some contrast intervals look narrower than they should. By contrast, adding a spatial field provided little detectable benefit on these layouts. For quality engineers, the lesson travels well: model the randomization and sampling structure first; add spatial complexity when the data can support it.\n\nZanotta et al.’s **FIDE** takes design selection into less familiar territory: measurements of evolving population laws, where aggregate observations can’t identify the full state. FIDE first enforces a scientific-risk allowance, then prefers designs that require a smaller correction to a frozen reference dynamics. That preference improved held-out action measures in several simulations, including a 32-dimensional example. But it is explicitly reference-dependent: when the baseline was misspecified, its downstream advantage could reverse. Think of it as a way to choose among designs *given a trusted reference*, not as protection against a bad one.\n\nAnd then there’s Moradi et al., who put experimental design on one athlete’s training schedule. EPICOACH proposes feasible workouts that balance learning about the rider with improving performance, while recording predictions before the rides—an appealing discipline for any adaptive system. The results are a good reality check: heart-rate forecasts improved over several baselines, but segment-time forecasts did not, and early climb forecasts missed the athlete’s improvement. Safety checks also vetoed the top-ranked overload plan in both live cycles. That’s not a failure of the idea; it’s a reminder that a clever experiment planner still needs a model that can keep up with a changing process.\n\nAcross the week, the common thread is **design for the decision you actually care about—and make your assumptions visible**. Which assumption in your own experiment would you most want to stress-test before trusting the design?",
+  "synthesis": "# QE ArXiv Watch Weekly\n**Week ending November 09, 2026**\n\nThe most striking result this week is a reminder that nuisance parameters can change more than the fine print: they can change how much data you need. In software reliability, allowing an unknown trend in detection effort shifts the failure count needed to detect population depletion from roughly \\(N^{2/3}\\) to \\(N^{4/5}\\). If your test plan assumes the trend away, you may think you have evidence of finite-population effects long before you really do.\n\n## Designs you can build—and designs you can adapt\n\nFor order-of-addition experiments, Georgiou et al. give a satisfying exact result: start with an orthogonal array, add one order, and the enlarged design is determinant-optimal among designs of that run size. For foldover designs, the corresponding optimal augmentation is a reversal pair. This is stronger than a good heuristic: the comparison allows replication and replacing original runs. It gives practitioners a principled way to add a small number of runs when a study grows, rather than rebuilding from scratch. One useful caveat: deleting a reversal pair need not produce a determinant-optimal smaller design, even when it meets a discrepancy bound.\n\nKerrigan et al.’s open-source **TESTBED** tackles a different design challenge: comparing Bayesian experimental-design strategies across problems. Its modular setup lets you mix models, objectives, and optimization methods, including sequential designs. The benchmark’s practical lesson is that no strategy wins everywhere—and implementation details matter. On one location-finding task, giving an adaptive policy explicit time information made a large difference. That’s a good nudge to scrutinize what information your policy receives, not just which algorithm you choose.\n\nTwo papers help connect these applied methods to broader ideas. Tarek et al. show how familiar criteria—D-, T-, A-, C-, and E-optimality—can be read through divergences and distances between prior and posterior beliefs. It’s a theoretical bridge, not a new performance benchmark, but it clarifies what different criteria are “trying” to optimize. Obando et al. put expected information gain to work in single-pixel imaging: an RL policy learns adaptive illumination patterns, recovering the optimal bisection strategy in a small, noiseless one-active-pixel setting. Promising as a proof of concept; not yet evidence for general images or hardware.\n\n## Reliability: use what you have, but model what you don’t\n\nChaudhuri et al. review multifidelity tools for rare-event and tail-risk estimation. The idea is familiar from production modeling: use cheaper, imperfect simulations to guide or correct expensive ones. Control variates, importance sampling, and active learning each exploit that relationship differently. The review reports no new benchmark, so treat “orders of magnitude” cost reductions as motivation, not a guarantee for your system. The payoff depends on whether low-fidelity models are informative about the risk quantity you care about.\n\nFor reliability data scattered across sources, Ortiz et al. combine failure-rate distributions under a constant-rate assumption. Their simulations suggest moment matching works well when sources are homogeneous; minimizing KL divergence is a better choice when heterogeneity is present or uncertain. That’s a practical distinction when aggregating sparse equipment records—but the real-data application doesn’t establish predictive accuracy.\n\nTogether, this week’s papers keep returning to a useful question: before we optimize a design or pool more data, what assumptions—and nuisance structure—are quietly setting the limits of what we can learn?",
   "papers": [
     {
-      "id": "2610.40370v1",
-      "title": "The Athlete as a Scientist of One: Agentic Bayesian Experimental Design for Individualized Physiology from Consumer Wearables",
-      "authors": "Behnam Moradi",
-      "submitted": "2026-10-29",
+      "id": "2611.08793v1",
+      "title": "Exact optimality of augmented order-of-addition designs",
+      "authors": "Stelios D. Georgiou|Haralambos Evangelaras|Stella Stylianou",
+      "submitted": "2026-11-05",
       "track": "exp_design",
-      "link": "https://arxiv.org/pdf/2610.40370v1"
+      "link": "https://arxiv.org/pdf/2611.08793v1"
     },
     {
-      "id": "2610.40009v1",
-      "title": "FIDE: Fiber-Informed Differentiable Experimental Design for Reference-Relative Law Dynamics",
-      "authors": "Pietro Zanotta|Ján Drgoňa",
-      "submitted": "2026-10-29",
+      "id": "2611.06633v1",
+      "title": "TestBED: An Open-Source Toolkit for Bayesian Experimental Design",
+      "authors": "Gavin Kerrigan|Marcel Hedman|Sahel Iqbal|Tom Rainforth",
+      "submitted": "2026-11-04",
       "track": "exp_design",
-      "link": "https://arxiv.org/pdf/2610.40009v1"
+      "link": "https://arxiv.org/pdf/2611.06633v1"
     },
     {
-      "id": "2610.37384v1",
-      "title": "Bayesian Ordinal Analysis of Cereal Growth Stage Data from Oat Trials in Western Australia",
-      "authors": "Zhanglong Cao|Rose Megirian|Matthew Nguyen|Adam H. Sparks",
-      "submitted": "2026-10-27",
+      "id": "2611.04450v1",
+      "title": "A Bayesian-Geometric Reading of Classical Model-Based Optimal Design",
+      "authors": "Mohamed Tarek",
+      "submitted": "2026-11-03",
       "track": "exp_design",
-      "link": "https://arxiv.org/pdf/2610.37384v1"
+      "link": "https://arxiv.org/pdf/2611.04450v1"
     },
     {
-      "id": "2610.36012v1",
-      "title": "A Sphericity Filter for Space-Filling Designs in Nondeterministic Experiments",
-      "authors": "Andrew T. Karl",
-      "submitted": "2026-10-26",
+      "id": "2611.05087v1",
+      "title": "Enabling risk and reliability analysis in next-generation computational tools via multifidelity methods",
+      "authors": "Anirban Chaudhuri|Karen Willcox",
+      "submitted": "2026-11-03",
+      "track": "reliability",
+      "link": "https://arxiv.org/pdf/2611.05087v1"
+    },
+    {
+      "id": "2611.04585v1",
+      "title": "A reliability data aggregation method for fusion-oriented research facilities",
+      "authors": "Helena Ortiz|Juan Eloy Ruiz-Castro|Christian Acal|Karol Kowal|Juan Chiachío|Ana María Aguilera",
+      "submitted": "2026-11-03",
+      "track": "reliability",
+      "link": "https://arxiv.org/pdf/2611.04585v1"
+    },
+    {
+      "id": "2611.04453v1",
+      "title": "Nuisance structure and the detection boundary for population size: how profiling can change a rate, not only a constant",
+      "authors": "Yakir Berchenko",
+      "submitted": "2026-11-03",
+      "track": "reliability",
+      "link": "https://arxiv.org/pdf/2611.04453v1"
+    },
+    {
+      "id": "2611.03042v1",
+      "title": "Bayesian Sequential Optimal Experimental Design for Single-Pixel Imaging using Reinforcement Learning",
+      "authors": "Marcos Antonio Obando|Tianyuan Wang|Tanja Tarvainen|Tristan van Leeuwen|Felix Lucka",
+      "submitted": "2026-11-02",
       "track": "exp_design",
-      "link": "https://arxiv.org/pdf/2610.36012v1"
+      "link": "https://arxiv.org/pdf/2611.03042v1"
     }
   ]
 }
