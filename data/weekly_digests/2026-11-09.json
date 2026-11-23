@@ -1,0 +1,76 @@
+{
+  "metadata": {
+    "generated_at": "2026-11-09T21:48:38Z",
+    "week_start": "2026-11-02",
+    "week_end": "2026-11-09",
+    "version": "3.1.0"
+  },
+  "summary": {
+    "total_papers": 7,
+    "papers_by_track": {
+      "spc": 0,
+      "exp_design": 4,
+      "reliability": 3
+    }
+  },
+  "synthesis": "# QE ArXiv Watch Weekly\n**Week ending November 09, 2026**\n\nThe most striking result this week is a reminder that nuisance parameters can change more than the fine print: they can change how much data you need. In software reliability, allowing an unknown trend in detection effort shifts the failure count needed to detect population depletion from roughly \\(N^{2/3}\\) to \\(N^{4/5}\\). If your test plan assumes the trend away, you may think you have evidence of finite-population effects long before you really do.\n\n## Designs you can build—and designs you can adapt\n\nFor order-of-addition experiments, Georgiou et al. give a satisfying exact result: start with an orthogonal array, add one order, and the enlarged design is determinant-optimal among designs of that run size. For foldover designs, the corresponding optimal augmentation is a reversal pair. This is stronger than a good heuristic: the comparison allows replication and replacing original runs. It gives practitioners a principled way to add a small number of runs when a study grows, rather than rebuilding from scratch. One useful caveat: deleting a reversal pair need not produce a determinant-optimal smaller design, even when it meets a discrepancy bound.\n\nKerrigan et al.’s open-source **TESTBED** tackles a different design challenge: comparing Bayesian experimental-design strategies across problems. Its modular setup lets you mix models, objectives, and optimization methods, including sequential designs. The benchmark’s practical lesson is that no strategy wins everywhere—and implementation details matter. On one location-finding task, giving an adaptive policy explicit time information made a large difference. That’s a good nudge to scrutinize what information your policy receives, not just which algorithm you choose.\n\nTwo papers help connect these applied methods to broader ideas. Tarek et al. show how familiar criteria—D-, T-, A-, C-, and E-optimality—can be read through divergences and distances between prior and posterior beliefs. It’s a theoretical bridge, not a new performance benchmark, but it clarifies what different criteria are “trying” to optimize. Obando et al. put expected information gain to work in single-pixel imaging: an RL policy learns adaptive illumination patterns, recovering the optimal bisection strategy in a small, noiseless one-active-pixel setting. Promising as a proof of concept; not yet evidence for general images or hardware.\n\n## Reliability: use what you have, but model what you don’t\n\nChaudhuri et al. review multifidelity tools for rare-event and tail-risk estimation. The idea is familiar from production modeling: use cheaper, imperfect simulations to guide or correct expensive ones. Control variates, importance sampling, and active learning each exploit that relationship differently. The review reports no new benchmark, so treat “orders of magnitude” cost reductions as motivation, not a guarantee for your system. The payoff depends on whether low-fidelity models are informative about the risk quantity you care about.\n\nFor reliability data scattered across sources, Ortiz et al. combine failure-rate distributions under a constant-rate assumption. Their simulations suggest moment matching works well when sources are homogeneous; minimizing KL divergence is a better choice when heterogeneity is present or uncertain. That’s a practical distinction when aggregating sparse equipment records—but the real-data application doesn’t establish predictive accuracy.\n\nTogether, this week’s papers keep returning to a useful question: before we optimize a design or pool more data, what assumptions—and nuisance structure—are quietly setting the limits of what we can learn?",
+  "papers": [
+    {
+      "id": "2611.08793v1",
+      "title": "Exact optimality of augmented order-of-addition designs",
+      "authors": "Stelios D. Georgiou|Haralambos Evangelaras|Stella Stylianou",
+      "submitted": "2026-11-05",
+      "track": "exp_design",
+      "link": "https://arxiv.org/pdf/2611.08793v1"
+    },
+    {
+      "id": "2611.06633v1",
+      "title": "TestBED: An Open-Source Toolkit for Bayesian Experimental Design",
+      "authors": "Gavin Kerrigan|Marcel Hedman|Sahel Iqbal|Tom Rainforth",
+      "submitted": "2026-11-04",
+      "track": "exp_design",
+      "link": "https://arxiv.org/pdf/2611.06633v1"
+    },
+    {
+      "id": "2611.04450v1",
+      "title": "A Bayesian-Geometric Reading of Classical Model-Based Optimal Design",
+      "authors": "Mohamed Tarek",
+      "submitted": "2026-11-03",
+      "track": "exp_design",
+      "link": "https://arxiv.org/pdf/2611.04450v1"
+    },
+    {
+      "id": "2611.05087v1",
+      "title": "Enabling risk and reliability analysis in next-generation computational tools via multifidelity methods",
+      "authors": "Anirban Chaudhuri|Karen Willcox",
+      "submitted": "2026-11-03",
+      "track": "reliability",
+      "link": "https://arxiv.org/pdf/2611.05087v1"
+    },
+    {
+      "id": "2611.04585v1",
+      "title": "A reliability data aggregation method for fusion-oriented research facilities",
+      "authors": "Helena Ortiz|Juan Eloy Ruiz-Castro|Christian Acal|Karol Kowal|Juan Chiachío|Ana María Aguilera",
+      "submitted": "2026-11-03",
+      "track": "reliability",
+      "link": "https://arxiv.org/pdf/2611.04585v1"
+    },
+    {
+      "id": "2611.04453v1",
+      "title": "Nuisance structure and the detection boundary for population size: how profiling can change a rate, not only a constant",
+      "authors": "Yakir Berchenko",
+      "submitted": "2026-11-03",
+      "track": "reliability",
+      "link": "https://arxiv.org/pdf/2611.04453v1"
+    },
+    {
+      "id": "2611.03042v1",
+      "title": "Bayesian Sequential Optimal Experimental Design for Single-Pixel Imaging using Reinforcement Learning",
+      "authors": "Marcos Antonio Obando|Tianyuan Wang|Tanja Tarvainen|Tristan van Leeuwen|Felix Lucka",
+      "submitted": "2026-11-02",
+      "track": "exp_design",
+      "link": "https://arxiv.org/pdf/2611.03042v1"
+    }
+  ],
+  "rss_item": "    <item>\n      <title>QE ArXiv Watch: Week of November 02 - November 09, 2026<\/title>\n      <link>https://huggingface.co/spaces/fmegahed/arxiv_control_charts<\/link>\n      <guid isPermaLink=\"false\">qe-weekly-2026-11-09<\/guid>\n      <pubDate>Mon, 09 Nov 2026 21:48:38 +0000<\/pubDate>\n      <description><![CDATA[\n<p># QE ArXiv Watch Weekly\n<strong>Week ending November 09, 2026<\/strong><\/p>\n\n<p>The most striking result this week is a reminder that nuisance parameters can change more than the fine print: they can change how much data you need. In software reliability, allowing an unknown trend in detection effort shifts the failure count needed to detect population depletion from roughly <code>N^{2/3}<\/code> to <code>N^{4/5}<\/code>. If your test plan assumes the trend away, you may think you have evidence of finite-population effects long before you really do.<\/p>\n\n<h3>Designs you can build—and designs you can adapt<\/h3>\n\n<p>For order-of-addition experiments, Georgiou et al. give a satisfying exact result: start with an orthogonal array, add one order, and the enlarged design is determinant-optimal among designs of that run size. For foldover designs, the corresponding optimal augmentation is a reversal pair. This is stronger than a good heuristic: the comparison allows replication and replacing original runs. It gives practitioners a principled way to add a small number of runs when a study grows, rather than rebuilding from scratch. One useful caveat: deleting a reversal pair need not produce a determinant-optimal smaller design, even when it meets a discrepancy bound.<\/p>\n\n<p>Kerrigan et al.’s open-source <strong>TESTBED<\/strong> tackles a different design challenge: comparing Bayesian experimental-design strategies across problems. Its modular setup lets you mix models, objectives, and optimization methods, including sequential designs. The benchmark’s practical lesson is that no strategy wins everywhere—and implementation details matter. On one location-finding task, giving an adaptive policy explicit time information made a large difference. That’s a good nudge to scrutinize what information your policy receives, not just which algorithm you choose.<\/p>\n\n<p>Two papers help connect these applied methods to broader ideas. Tarek et al. show how familiar criteria—D-, T-, A-, C-, and E-optimality—can be read through divergences and distances between prior and posterior beliefs. It’s a theoretical bridge, not a new performance benchmark, but it clarifies what different criteria are “trying” to optimize. Obando et al. put expected information gain to work in single-pixel imaging: an RL policy learns adaptive illumination patterns, recovering the optimal bisection strategy in a small, noiseless one-active-pixel setting. Promising as a proof of concept; not yet evidence for general images or hardware.<\/p>\n\n<h3>Reliability: use what you have, but model what you don’t<\/h3>\n\n<p>Chaudhuri et al. review multifidelity tools for rare-event and tail-risk estimation. The idea is familiar from production modeling: use cheaper, imperfect simulations to guide or correct expensive ones. Control variates, importance sampling, and active learning each exploit that relationship differently. The review reports no new benchmark, so treat “orders of magnitude” cost reductions as motivation, not a guarantee for your system. The payoff depends on whether low-fidelity models are informative about the risk quantity you care about.<\/p>\n\n<p>For reliability data scattered across sources, Ortiz et al. combine failure-rate distributions under a constant-rate assumption. Their simulations suggest moment matching works well when sources are homogeneous; minimizing KL divergence is a better choice when heterogeneity is present or uncertain. That’s a practical distinction when aggregating sparse equipment records—but the real-data application doesn’t establish predictive accuracy.<\/p>\n\n<p>Together, this week’s papers keep returning to a useful question: before we optimize a design or pool more data, what assumptions—and nuisance structure—are quietly setting the limits of what we can learn?<\/p><h4>Featured Papers This Week<\/h4><ul><li><strong>Georgiou et al.<\/strong>: <a href=\"https://arxiv.org/pdf/2611.08793v1\">Exact optimality of augmented order-of-addition designs<\/a> <em>(DOE)<\/em><\/li><li><strong>Kerrigan et al.<\/strong>: <a href=\"https://arxiv.org/pdf/2611.06633v1\">TestBED: An Open-Source Toolkit for Bayesian Experimental Design<\/a> <em>(DOE)<\/em><\/li><li><strong>Tarek et al.<\/strong>: <a href=\"https://arxiv.org/pdf/2611.04450v1\">A Bayesian-Geometric Reading of Classical Model-Based Optimal Design<\/a> <em>(DOE)<\/em><\/li><li><strong>Chaudhuri et al.<\/strong>: <a href=\"https://arxiv.org/pdf/2611.05087v1\">Enabling risk and reliability analysis in next-generation computational tools via multifidelity methods<\/a> <em>(Reliability)<\/em><\/li><li><strong>Ortiz et al.<\/strong>: <a href=\"https://arxiv.org/pdf/2611.04585v1\">A reliability data aggregation method for fusion-oriented research facilities<\/a> <em>(Reliability)<\/em><\/li><li><strong>Berchenko et al.<\/strong>: <a href=\"https://arxiv.org/pdf/2611.04453v1\">Nuisance structure and the detection boundary for population size: how profiling can change a rate, not only a constant<\/a> <em>(Reliability)<\/em><\/li><li><strong>Obando et al.<\/strong>: <a href=\"https://arxiv.org/pdf/2611.03042v1\">Bayesian Sequential Optimal Experimental Design for Single-Pixel Imaging using Reinforcement Learning<\/a> <em>(DOE)<\/em><\/li><\/ul><hr/><p><strong>Explore More:<\/strong> Visit the <a href=\"https://huggingface.co/spaces/fmegahed/arxiv_control_charts\">QE ArXiv Watch Dashboard<\/a> to browse all papers with AI summaries, interactive filtering, and paper chat.<\/p><p style=\"color: #666; font-size: 0.9em;\">This digest is automatically generated every Monday. Questions or feedback? Open an issue on our <a href=\"https://github.com/fmegahed/arxiv_control_charts\">GitHub repository<\/a>.<\/p>\n]]><\/description>\n    <\/item>"
+}
