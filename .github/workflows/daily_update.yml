@@ -22,15 +22,16 @@ concurrency:
 
 jobs:
   refresh:
-    # Pinned to 24.04, the OS of the rocker/shiny production image. On 26.04
-    # renv must build later 1.4.5 from source, which fails with GCC 15 and
-    # glibc 2.43 (r-lib/later#256). Move only after renv.lock has later >= 1.4.7.
-    runs-on: ubuntu-24.04
+    # An explicit image, never ubuntu-latest: when ubuntu-latest moved to
+    # 26.04 on 2026-11-13, the renv cache key changed and the restore broke
+    # for ten days. Try a new image on a branch first, where tests.yml (run
+    # on every push) does a cold renv restore on it.
+    runs-on: ubuntu-26.04
     timeout-minutes: 330
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
