@@ -100,6 +100,9 @@ No test calls a model service. A live regression test that encodes the author re
 - `weekly_synthesis.yml`: writes the weekly digest on Mondays.
 - `reextract.yml`: manual, for re-extracting every paper on a branch.
 - `tests.yml`: runs the unit tests on every push.
+- `deploy_space.yml`: deploys to the Space when a person pushes to `main`. The daily and weekly jobs deploy from their own last step.
+
+The R workflows name their runner image (`ubuntu-26.04`) rather than using `ubuntu-latest`, so the image changes only when we change it. To try a new image, change it on a branch first: `tests.yml` then does a cold `renv` restore on that image.
 
 ### Data versions
 
