@@ -7,7 +7,7 @@
     <language>en-us</language>
     <copyright>CC BY 4.0 - QE ArXiv Watch</copyright>
     <managingEditor>noreply@example.com (QE ArXiv Watch)</managingEditor>
-    <lastBuildDate>Mon, 23 Nov 2026 14:01:17 +0000</lastBuildDate>
+    <lastBuildDate>Mon, 23 Nov 2026 16:53:40 +0000</lastBuildDate>
     <ttl>10080</ttl>
     <image>
       <url>https://huggingface.co/spaces/fmegahed/arxiv_control_charts/resolve/main/www/favicon.svg</url>
@@ -67,6 +67,42 @@
 <p>The reliability paper moves from designing experiments to understanding system behavior. Torrado et al. derive a decomposition showing how dependence changes k-out-of-n reliability relative to an independent-components benchmark. Their illustration shows that higher-order dependence can matter even when pairwise dependence is held fixed. The reported structural weights are not measured reliability changes; they tell us how strongly the system architecture and threshold can amplify a specified dependence contribution.</p>
 
 <p>Across the week, a common thread is that good decisions depend on more than a single uncertainty score or model assumption. Whether we’re choosing the next alloy test, accounting for field patterns, or assessing component dependence, the structure of the problem matters. Where in your own process might a “small” modeling assumption be steering a costly decision?</p><h4>Featured Papers This Week</h4><ul><li><strong>Raihan et al.</strong>: <a href="https://arxiv.org/pdf/2611.18462v1">Sample-efficient prediction of high-entropy alloy strength through outcome-aware robust sequential learning</a> <em>(DOE)</em></li><li><strong>Wang et al.</strong>: <a href="https://arxiv.org/pdf/2611.17931v1">MineralExp: Benchmarking LLM Agents for Experimental Design in Real-World Mineral Exploration</a> <em>(DOE)</em></li><li><strong>Torrado et al.</strong>: <a href="https://arxiv.org/pdf/2611.18348v1">Quantifying Dependence Effects on $k$-out-of-$n$ Reliability Relative to the Independent Benchmark</a> <em>(Reliability)</em></li><li><strong>Lacasa et al.</strong>: <a href="https://arxiv.org/pdf/2611.14369v1">A Bayesian approach for checking and estimating block designs in agricultural experiments</a> <em>(DOE)</em></li><li><strong>Idais et al.</strong>: <a href="https://arxiv.org/pdf/2611.11785v1">On the robustness of locally D-optimal designs under parameter uncertainty in single-factor generalized linear models</a> <em>(DOE)</em></li></ul><hr/><p><strong>Explore More:</strong> Visit the <a href="https://huggingface.co/spaces/fmegahed/arxiv_control_charts">QE ArXiv Watch Dashboard</a> to browse all papers with AI summaries, interactive filtering, and paper chat.</p><p style="color: #666; font-size: 0.9em;">This digest is automatically generated every Monday. Questions or feedback? Open an issue on our <a href="https://github.com/fmegahed/arxiv_control_charts">GitHub repository</a>.</p>
+]]></description>
+    </item>
+    <item>
+      <title>QE ArXiv Watch: Week of October 12 - October 19, 2026</title>
+      <link>https://huggingface.co/spaces/fmegahed/arxiv_control_charts</link>
+      <guid isPermaLink="false">qe-weekly-2026-10-19</guid>
+      <pubDate>Mon, 23 Nov 2026 16:53:39 +0000</pubDate>
+      <description><![CDATA[
+<p># QE ArXiv Watch Weekly
+<strong>Week ending October 19, 2026</strong></p>
+
+<h3>The experiment is only as good as the decision it feeds</h3>
+
+<p>Here’s a useful twist on experimental design: the best experiment may not be the one that teaches us the most. If a downstream decision rule can’t use the information well—or uses it in a way that conflicts with our goals—more data can actually make outcomes worse.</p>
+
+<p>That’s the central idea in Iqbal et al.’s <em>Designing Experiments for External Decision Makers</em>. Their usage-aware designs account for the rule that will act on the results, whether it’s a familiar statistical test, a black box, or a cautious human decision-maker. In manufacturing inspection, the learned policy’s mean loss was 0.265, versus 0.414 for the best baseline. The practical prompt is simple: before optimizing what to measure, ask what someone will do with the measurement.</p>
+
+<p>A related lesson comes from <em>Rewarding Noise</em>, which looks at the incentives embedded in A/B-test scoring rules. When teams are rewarded for raw estimates, lucky noise can look like product impact. In Amazon data, a shift to posterior-mean-based evaluation coincided with fewer tests, lower standard errors, and tests aimed at ideas with more variable impacts. Estimated testing value rose, but the scoring change also came with a change in launch criteria—so don’t credit the scoring rule alone.</p>
+
+<h3>Better experiments need better operations</h3>
+
+<p>In trials of therapist-delivered interventions, Singh et al. show why a tidy factorial design can be awkward in the real world: therapists have limited capacity, availability changes, and people leave. Flexible allocation strategies often needed far fewer batches than restrictive approaches, while randomizing therapists to patients helped avoid badly biased estimates of therapist variability. There’s no one-size-fits-all winner; the design has to match the staffing and timing constraints.</p>
+
+<p>Kaji et al. tackle a different trial complication: people don’t always receive the treatment they’re assigned. Their proposed two-stage design uses participants’ stated favorite arm to help identify certain local treatment effects. It’s a clever theoretical route, but its assumptions about preferences and compliance matter, and the paper doesn’t yet test the design in a live experiment.</p>
+
+<p>For practitioners building sequential experiments, Kriz et al. train a reasoning LLM to choose informative questions. In a Twenty Questions setting, expected-reward training improved both information gain and solve rate over the comparison training approach. More provocatively, Liu et al.’s causal-discovery benchmark finds that agents’ main failure is often not interpreting evidence—it’s choosing experiments that produce useful evidence. Capping the size of each data request prompted more controlled experiments and improved exact recovery. That’s a reminder for human teams, too: disciplined data collection can beat simply buying more observations.</p>
+
+<p>One quieter result with practical value: Shan et al. establish when balanced six-factor experimental arrays exist. It’s a theoretical design-tool contribution, not a performance study, but it helps clarify when pairwise-balanced plans are feasible without extra runs.</p>
+
+<h3>Reliability: model what changes, not just what fails</h3>
+
+<p>For multivariate degradation, Niu et al. model both shared environmental damage and unit-to-unit differences. In a small epoxy-coating example, their age-based replacement policy cut the reported long-run cost rate by about 66% versus waiting for failure. Treat that application cautiously—just four specimens—but the modeling lesson is strong: shared degradation and heterogeneity can matter to maintenance timing.</p>
+
+<p>Janetzky et al. address another real production headache: new configurations arrive, while old ones may return. A progressive neural network trained on Bosch manufacturing data reduced maintenance costs relative to fine-tuning and per-configuration models, while retaining information across configurations. That’s promising when retraining from all historical data isn’t practical.</p>
+
+<p>Across this week’s papers, the common thread is a shift from “collect better data” to “design for the system that will use it.” Where in your own process are our experiments optimized for a statistic, rather than for the decision that statistic is supposed to support?</p><h4>Featured Papers This Week</h4><ul><li><strong>Singh et al.</strong>: <a href="https://arxiv.org/pdf/2610.26321v1">Incorporating therapist capacity, availability and turnover in trials of therapist-delivered interventions: Non-orthogonal factorial designs</a> <em>(DOE)</em></li><li><strong>Kaji et al.</strong>: <a href="https://arxiv.org/pdf/2610.25667v3">A LATE-Targeting Experimental Design for Multi-Arm RCTs</a> <em>(DOE)</em></li><li><strong>Shan et al.</strong>: <a href="https://arxiv.org/pdf/2610.22775v1">On the existence of mixed orthogonal arrays of strength two with six factors</a> <em>(DOE)</em></li><li><strong>Iqbal et al.</strong>: <a href="https://arxiv.org/pdf/2610.22032v1">Designing Experiments for External Decision Makers</a> <em>(DOE)</em></li><li><strong>Niu et al.</strong>: <a href="https://arxiv.org/pdf/2610.21079v1">Reliability and Preventive Maintenance for Multivariate Gamma Degradation with Shared Random Effects and Cumulative Environmental Shock Damage</a> <em>(Reliability)</em></li><li><strong>Kriz et al.</strong>: <a href="https://arxiv.org/pdf/2610.20832v1">Amortizing Sequential Experimental Design in Reasoning LLMs</a> <em>(DOE)</em></li><li><strong>Kessler et al.</strong>: <a href="https://arxiv.org/pdf/2610.19512v2">Rewarding Noise: Incentives in Decentralized A/B Testing</a> <em>(DOE)</em></li><li><strong>Liu et al.</strong>: <a href="https://arxiv.org/pdf/2611.09934v1">Causal Discovery Bench: Can LLMs Autonomously Conduct Effective Experiments?</a> <em>(DOE)</em></li></ul><hr/><p><strong>Explore More:</strong> Visit the <a href="https://huggingface.co/spaces/fmegahed/arxiv_control_charts">QE ArXiv Watch Dashboard</a> to browse all papers with AI summaries, interactive filtering, and paper chat.</p><p style="color: #666; font-size: 0.9em;">This digest is automatically generated every Monday. Questions or feedback? Open an issue on our <a href="https://github.com/fmegahed/arxiv_control_charts">GitHub repository</a>.</p>
 ]]></description>
     </item>
   </channel>
