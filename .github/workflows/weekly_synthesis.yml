@@ -16,7 +16,10 @@ concurrency:
 
 jobs:
   synthesis:
-    runs-on: ubuntu-latest
+    # Pinned to 24.04, the OS of the rocker/shiny production image. On 26.04
+    # renv must build later 1.4.5 from source, which fails with GCC 15 and
+    # glibc 2.43 (r-lib/later#256). Move only after renv.lock has later >= 1.4.7.
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout
