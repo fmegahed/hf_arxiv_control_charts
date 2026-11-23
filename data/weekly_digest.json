@@ -1,59 +1,59 @@
 {
   "metadata": {
-    "generated_at": "2026-11-23T13:59:09Z",
-    "week_start": "2026-11-09",
-    "week_end": "2026-11-16",
+    "generated_at": "2026-11-23T14:01:17Z",
+    "week_start": "2026-11-16",
+    "week_end": "2026-11-23",
     "version": "3.1.0"
   },
   "summary": {
     "total_papers": 5,
     "papers_by_track": {
-      "spc": 0,
+      "spc": 1,
       "exp_design": 4,
-      "reliability": 1
+      "reliability": 0
     }
   },
-  "synthesis": "# QE ArXiv Watch Weekly  \n**Week ending November 16, 2026 · 5 papers**\n\nWhat if we could get a useful materials-strength model with a third fewer tests? That’s the enticing result from this week’s standout: a sequential design method for high-entropy alloys that chooses experiments based on how much they could improve predictions—not just where the model is most uncertain.\n\nRaihan et al.’s ROSE-HEA was tested retrospectively on 501 alloy records. Starting with 25 observations and adding 100 strategically selected ones, it achieved a mean RMSE of 152.84 MPa across 30 runs. More striking for a lab watching its test budget: with 125 observations, it beat the strongest conventional regressor in the comparison trained on 185. That’s a promising signal for expensive experimental programs, though retrospective results are not the same as a prospective lab trial. The useful idea is broader: choose the next test for its impact on predictions across the region you care about, rather than chasing uncertainty in isolation.\n\nThere’s a nice companion question in the paper by Idais et al.: when do we need to redesign the experiment because our model parameters are uncertain? For single-factor Poisson, gamma, and logistic models, the answer depends on the model and how diffuse the prior uncertainty is. The gamma endpoint design stayed optimal across all priors they considered. For Poisson and logistic models, local designs held up under concentrated priors, but diffuse priors favored designs with three support points; the original designs then lost some efficiency. In practice, “use the textbook optimal design” may be fine when your prior knowledge is tight—but uncertainty in the model parameters can change where you should sample.\n\nTwo other DOE papers widen the lens from where to measure to what an experiment should include. Lacasa et al. offer a Bayesian way to detect spatial structure that the planned blocks in an agricultural field may have missed. In simulations, their treatment-effect intervals had close-to-nominal 95% coverage, and their wheat and corn examples revealed additional spatial patterns. That’s a useful reminder: a carefully randomized design can still sit on top of an imperfect map of field variability.\n\nMeanwhile, MineralExp puts LLM agents to a practical test: can they plan geochemical experiments for mineral exploration? The agents generally found many of the experiments called for, but often proposed too many. One setup reached 86% recall while precision was about 32%—in other words, it caught most of the target but generated a lot of extra work. More tokens didn’t reliably mean better plans, either. For engineers considering AI-assisted planning, the benchmark makes a valuable distinction between “suggests something relevant” and “produces a focused, usable plan.”\n\nThe reliability paper moves from designing experiments to understanding system behavior. Torrado et al. derive a decomposition showing how dependence changes k-out-of-n reliability relative to an independent-components benchmark. Their illustration shows that higher-order dependence can matter even when pairwise dependence is held fixed. The reported structural weights are not measured reliability changes; they tell us how strongly the system architecture and threshold can amplify a specified dependence contribution.\n\nAcross the week, a common thread is that good decisions depend on more than a single uncertainty score or model assumption. Whether we’re choosing the next alloy test, accounting for field patterns, or assessing component dependence, the structure of the problem matters. Where in your own process might a “small” modeling assumption be steering a costly decision?",
+  "synthesis": "# QE ArXiv Watch Weekly\n**Week ending November 23, 2026**\n\n## The clever move this week: measure what ordinary designs miss\n\nA control chart can miss a process change even when every sensor still looks normal on its own. Nascimento and colleagues’ \\(C_n\\)-chart looks instead at the *joint* density of the sensor readings—so an unusual relationship between otherwise familiar measurements can trigger an alarm. That’s a useful reminder running through this week’s papers: better decisions often come not from collecting more data, but from choosing observations that reveal the structure we care about.\n\nThe chart fits distributions to individual sensor measurements, joins them with a copula, then flags observations whose estimated joint density is unusually low. In a simulated dependence reversal, it detected the change in an average of 8.1 observations, versus 48 for a calibrated Hotelling \\(T^2\\) chart and 227 for separate marginal charts. The theoretical in-control average run length is exactly \\(1/\\alpha\\) when the baseline parameters are known and observations are independent. In practice, Phase I estimation matters: with a target run length of 200, some reported simulations fell short, especially with only 100 baseline observations. Still, the computation looks promising for sensor applications: fitting at 20 variables took under a minute in the reported tests, and scoring 10,000 new observations took at most 0.23 seconds.\n\n## Designing experiments around the information you need\n\nThree of the DOE papers tackle a familiar engineering problem from different angles: how to get more useful information from a limited experimental budget.\n\nFor online A/B testing, Gupta et al. optimize action-level sampling probabilities alongside a reward-prediction control variate. In simulations, their design reached the mean squared error of a balanced test using just 39–51% of its traffic, and delivered 1.5–2.1 times the power at 10,000 interactions. That’s especially relevant when tests are costly or traffic is scarce. The results are simulation-based, though; teams will want to validate the reward model and design on their own historical data before trusting the savings.\n\nFor computer experiments, Pronzato et al. focus on average distance from a random point in the domain to its nearest design point—a different goal from simply avoiding close pairs or covering the worst gap. Their high-dimensional designs use carefully selected hypercube vertices, with fractional-factorial subsets and greedy selection helping build strong intermediate designs. The practical wrinkle: good coverage of the full space can trade off against good low-dimensional projections. If downstream analysis depends on particular factors or slices, inspect those projections rather than relying on a single space-filling score.\n\nNetwork experiments have their own version of the coverage problem. Liu et al.’s FANCI sequentially chooses network-and-treatment combinations to learn how outcomes vary with neighborhood exposure. In simulations, after seven experiments it substantially outperformed random selection and a maximum-model-change benchmark at recovering overall and spillover effects. Their online-game study also found exposure-dependent effects that a model ignoring interference could not represent. For quality engineers working with connected systems—plants, suppliers, or users—this is a reminder that one unit’s treatment can change another’s outcome.\n\nFinally, Shamekh et al. ask which time-series observations make dynamical-model parameters identifiable. In Lorenz-96, adding measurements of the fast field to a short record of slow variables sharply improved recovery of fast-process parameters. The broader lesson travels well: before extending a measurement campaign, ask whether you’re observing the variables and time scales that distinguish the competing explanations.\n\nThis week’s common thread is thoughtful allocation: of sensor attention, test traffic, design points, networks, and measurement time. Where in your process are we collecting plenty of data—but not the data that can tell us what changed?",
   "papers": [
     {
-      "id": "2611.18462v1",
-      "title": "Sample-efficient prediction of high-entropy alloy strength through outcome-aware robust sequential learning",
-      "authors": "Ahmed Shoyeb Raihan|Md Habibor Rahman|Ashish Nimbarte|Imtiaz Ahmed",
-      "submitted": "2026-11-13",
-      "track": "exp_design",
-      "link": "https://arxiv.org/pdf/2611.18462v1"
+      "id": "2611.23820v1",
+      "title": "Sensor Monitoring Towards Industry 4.0: Bridging Concepts on the $C_n$ Multivariate Control Chart",
+      "authors": "Diego C. Nascimento|Ana C. S. Batista|Francisco Louzada|Paulo H. Ferreira",
+      "submitted": "2026-11-18",
+      "track": "spc",
+      "link": "https://arxiv.org/pdf/2611.23820v1"
     },
     {
-      "id": "2611.17931v1",
-      "title": "MineralExp: Benchmarking LLM Agents for Experimental Design in Real-World Mineral Exploration",
-      "authors": "Bing Wang|Mingyang Wang|Yuanhang Mi|Yue Xu|Kaibo Su|Li'ang Xiao|Chunguo Wu|Changchun Li|Ximing Li|Kun-Feng Qiu|Bo Yang",
-      "submitted": "2026-11-13",
+      "id": "2611.24757v3",
+      "title": "Variance-Optimal Counterfactual Policy Design for Sample-Efficient Online A/B Testing",
+      "authors": "Shashank Gupta|Subhadeep Maji",
+      "submitted": "2026-11-18",
       "track": "exp_design",
-      "link": "https://arxiv.org/pdf/2611.17931v1"
+      "link": "https://arxiv.org/pdf/2611.24757v3"
     },
     {
-      "id": "2611.18348v1",
-      "title": "Quantifying Dependence Effects on $k$-out-of-$n$ Reliability Relative to the Independent Benchmark",
-      "authors": "Nuria Torrado",
-      "submitted": "2026-11-13",
-      "track": "reliability",
-      "link": "https://arxiv.org/pdf/2611.18348v1"
+      "id": "2611.24507v1",
+      "title": "Sparse designs via quantization of the uniform measure on high-dimensional hypercubes",
+      "authors": "Luc Pronzato|Anatoly Zhigljavsky",
+      "submitted": "2026-11-18",
+      "track": "exp_design",
+      "link": "https://arxiv.org/pdf/2611.24507v1"
     },
     {
-      "id": "2611.14369v1",
-      "title": "A Bayesian approach for checking and estimating block designs in agricultural experiments",
-      "authors": "Josefina Lacasa|Ignacio A. Ciampitti|Trevor J. Hefley",
-      "submitted": "2026-11-10",
+      "id": "2611.24143v1",
+      "title": "Fill-Distance-Guided Active Learning for Causal Function Recovery under Network Interference",
+      "authors": "Peiyao Liu|Hongtao Zhu|Sizhe Zhang|Yang Su|Zhenyu Zhao|Nan Chen",
+      "submitted": "2026-11-18",
       "track": "exp_design",
-      "link": "https://arxiv.org/pdf/2611.14369v1"
+      "link": "https://arxiv.org/pdf/2611.24143v1"
     },
     {
-      "id": "2611.11785v1",
-      "title": "On the robustness of locally D-optimal designs under parameter uncertainty in single-factor generalized linear models",
-      "authors": "Osama Idais",
-      "submitted": "2026-11-09",
+      "id": "2611.23526v1",
+      "title": "Linking Dynamical Time Scales and Experimental Design to Parameter Identifiability from Time-Series Observations",
+      "authors": "Sara Shamekh|Viviana Acquaviva",
+      "submitted": "2026-11-17",
       "track": "exp_design",
-      "link": "https://arxiv.org/pdf/2611.11785v1"
+      "link": "https://arxiv.org/pdf/2611.23526v1"
     }
   ]
 }

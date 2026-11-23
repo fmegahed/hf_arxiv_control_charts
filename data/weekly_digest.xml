@@ -7,7 +7,7 @@
     <language>en-us</language>
     <copyright>CC BY 4.0 - QE ArXiv Watch</copyright>
     <managingEditor>noreply@example.com (QE ArXiv Watch)</managingEditor>
-    <lastBuildDate>Mon, 23 Nov 2026 13:59:09 +0000</lastBuildDate>
+    <lastBuildDate>Mon, 23 Nov 2026 14:01:17 +0000</lastBuildDate>
     <ttl>10080</ttl>
     <image>
       <url>https://huggingface.co/spaces/fmegahed/arxiv_control_charts/resolve/main/www/favicon.svg</url>
@@ -15,6 +15,36 @@
       <link>https://huggingface.co/spaces/fmegahed/arxiv_control_charts</link>
     </image>
     <atom:link href="https://huggingface.co/spaces/fmegahed/arxiv_control_charts/resolve/main/data/weekly_digest.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>QE ArXiv Watch: Week of November 16 - November 23, 2026</title>
+      <link>https://huggingface.co/spaces/fmegahed/arxiv_control_charts</link>
+      <guid isPermaLink="false">qe-weekly-2026-11-23</guid>
+      <pubDate>Mon, 23 Nov 2026 14:01:17 +0000</pubDate>
+      <description><![CDATA[
+<p># QE ArXiv Watch Weekly
+<strong>Week ending November 23, 2026</strong></p>
+
+<h3>The clever move this week: measure what ordinary designs miss</h3>
+
+<p>A control chart can miss a process change even when every sensor still looks normal on its own. Nascimento and colleagues’ <code>C_n</code>-chart looks instead at the <em>joint</em> density of the sensor readings—so an unusual relationship between otherwise familiar measurements can trigger an alarm. That’s a useful reminder running through this week’s papers: better decisions often come not from collecting more data, but from choosing observations that reveal the structure we care about.</p>
+
+<p>The chart fits distributions to individual sensor measurements, joins them with a copula, then flags observations whose estimated joint density is unusually low. In a simulated dependence reversal, it detected the change in an average of 8.1 observations, versus 48 for a calibrated Hotelling <code>T^2</code> chart and 227 for separate marginal charts. The theoretical in-control average run length is exactly <code>1/α</code> when the baseline parameters are known and observations are independent. In practice, Phase I estimation matters: with a target run length of 200, some reported simulations fell short, especially with only 100 baseline observations. Still, the computation looks promising for sensor applications: fitting at 20 variables took under a minute in the reported tests, and scoring 10,000 new observations took at most 0.23 seconds.</p>
+
+<h3>Designing experiments around the information you need</h3>
+
+<p>Three of the DOE papers tackle a familiar engineering problem from different angles: how to get more useful information from a limited experimental budget.</p>
+
+<p>For online A/B testing, Gupta et al. optimize action-level sampling probabilities alongside a reward-prediction control variate. In simulations, their design reached the mean squared error of a balanced test using just 39–51% of its traffic, and delivered 1.5–2.1 times the power at 10,000 interactions. That’s especially relevant when tests are costly or traffic is scarce. The results are simulation-based, though; teams will want to validate the reward model and design on their own historical data before trusting the savings.</p>
+
+<p>For computer experiments, Pronzato et al. focus on average distance from a random point in the domain to its nearest design point—a different goal from simply avoiding close pairs or covering the worst gap. Their high-dimensional designs use carefully selected hypercube vertices, with fractional-factorial subsets and greedy selection helping build strong intermediate designs. The practical wrinkle: good coverage of the full space can trade off against good low-dimensional projections. If downstream analysis depends on particular factors or slices, inspect those projections rather than relying on a single space-filling score.</p>
+
+<p>Network experiments have their own version of the coverage problem. Liu et al.’s FANCI sequentially chooses network-and-treatment combinations to learn how outcomes vary with neighborhood exposure. In simulations, after seven experiments it substantially outperformed random selection and a maximum-model-change benchmark at recovering overall and spillover effects. Their online-game study also found exposure-dependent effects that a model ignoring interference could not represent. For quality engineers working with connected systems—plants, suppliers, or users—this is a reminder that one unit’s treatment can change another’s outcome.</p>
+
+<p>Finally, Shamekh et al. ask which time-series observations make dynamical-model parameters identifiable. In Lorenz-96, adding measurements of the fast field to a short record of slow variables sharply improved recovery of fast-process parameters. The broader lesson travels well: before extending a measurement campaign, ask whether you’re observing the variables and time scales that distinguish the competing explanations.</p>
+
+<p>This week’s common thread is thoughtful allocation: of sensor attention, test traffic, design points, networks, and measurement time. Where in your process are we collecting plenty of data—but not the data that can tell us what changed?</p><h4>Featured Papers This Week</h4><ul><li><strong>Nascimento et al.</strong>: <a href="https://arxiv.org/pdf/2611.23820v1">Sensor Monitoring Towards Industry 4.0: Bridging Concepts on the $C_n$ Multivariate Control Chart</a> <em>(SPM)</em></li><li><strong>Gupta et al.</strong>: <a href="https://arxiv.org/pdf/2611.24757v3">Variance-Optimal Counterfactual Policy Design for Sample-Efficient Online A/B Testing</a> <em>(DOE)</em></li><li><strong>Pronzato et al.</strong>: <a href="https://arxiv.org/pdf/2611.24507v1">Sparse designs via quantization of the uniform measure on high-dimensional hypercubes</a> <em>(DOE)</em></li><li><strong>Liu et al.</strong>: <a href="https://arxiv.org/pdf/2611.24143v1">Fill-Distance-Guided Active Learning for Causal Function Recovery under Network Interference</a> <em>(DOE)</em></li><li><strong>Shamekh et al.</strong>: <a href="https://arxiv.org/pdf/2611.23526v1">Linking Dynamical Time Scales and Experimental Design to Parameter Identifiability from Time-Series Observations</a> <em>(DOE)</em></li></ul><hr/><p><strong>Explore More:</strong> Visit the <a href="https://huggingface.co/spaces/fmegahed/arxiv_control_charts">QE ArXiv Watch Dashboard</a> to browse all papers with AI summaries, interactive filtering, and paper chat.</p><p style="color: #666; font-size: 0.9em;">This digest is automatically generated every Monday. Questions or feedback? Open an issue on our <a href="https://github.com/fmegahed/arxiv_control_charts">GitHub repository</a>.</p>
+]]></description>
+    </item>
     <item>
       <title>QE ArXiv Watch: Week of November 09 - November 16, 2026</title>
       <link>https://huggingface.co/spaces/fmegahed/arxiv_control_charts</link>
