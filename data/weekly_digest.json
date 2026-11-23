@@ -1,75 +1,27 @@
 {
   "metadata": {
-    "generated_at": "2026-11-09T21:48:38Z",
-    "week_start": "2026-11-02",
-    "week_end": "2026-11-09",
+    "generated_at": "2026-11-23T12:08:07Z",
+    "week_start": "2026-11-16",
+    "week_end": "2026-11-23",
     "version": "3.1.0"
   },
   "summary": {
-    "total_papers": 7,
+    "total_papers": 1,
     "papers_by_track": {
-      "spc": 0,
-      "exp_design": 4,
-      "reliability": 3
+      "spc": 1,
+      "exp_design": 0,
+      "reliability": 0
     }
   },
-  "synthesis": "# QE ArXiv Watch Weekly\n**Week ending November 09, 2026**\n\nThe most striking result this week is a reminder that nuisance parameters can change more than the fine print: they can change how much data you need. In software reliability, allowing an unknown trend in detection effort shifts the failure count needed to detect population depletion from roughly \\(N^{2/3}\\) to \\(N^{4/5}\\). If your test plan assumes the trend away, you may think you have evidence of finite-population effects long before you really do.\n\n## Designs you can build—and designs you can adapt\n\nFor order-of-addition experiments, Georgiou et al. give a satisfying exact result: start with an orthogonal array, add one order, and the enlarged design is determinant-optimal among designs of that run size. For foldover designs, the corresponding optimal augmentation is a reversal pair. This is stronger than a good heuristic: the comparison allows replication and replacing original runs. It gives practitioners a principled way to add a small number of runs when a study grows, rather than rebuilding from scratch. One useful caveat: deleting a reversal pair need not produce a determinant-optimal smaller design, even when it meets a discrepancy bound.\n\nKerrigan et al.’s open-source **TESTBED** tackles a different design challenge: comparing Bayesian experimental-design strategies across problems. Its modular setup lets you mix models, objectives, and optimization methods, including sequential designs. The benchmark’s practical lesson is that no strategy wins everywhere—and implementation details matter. On one location-finding task, giving an adaptive policy explicit time information made a large difference. That’s a good nudge to scrutinize what information your policy receives, not just which algorithm you choose.\n\nTwo papers help connect these applied methods to broader ideas. Tarek et al. show how familiar criteria—D-, T-, A-, C-, and E-optimality—can be read through divergences and distances between prior and posterior beliefs. It’s a theoretical bridge, not a new performance benchmark, but it clarifies what different criteria are “trying” to optimize. Obando et al. put expected information gain to work in single-pixel imaging: an RL policy learns adaptive illumination patterns, recovering the optimal bisection strategy in a small, noiseless one-active-pixel setting. Promising as a proof of concept; not yet evidence for general images or hardware.\n\n## Reliability: use what you have, but model what you don’t\n\nChaudhuri et al. review multifidelity tools for rare-event and tail-risk estimation. The idea is familiar from production modeling: use cheaper, imperfect simulations to guide or correct expensive ones. Control variates, importance sampling, and active learning each exploit that relationship differently. The review reports no new benchmark, so treat “orders of magnitude” cost reductions as motivation, not a guarantee for your system. The payoff depends on whether low-fidelity models are informative about the risk quantity you care about.\n\nFor reliability data scattered across sources, Ortiz et al. combine failure-rate distributions under a constant-rate assumption. Their simulations suggest moment matching works well when sources are homogeneous; minimizing KL divergence is a better choice when heterogeneity is present or uncertain. That’s a practical distinction when aggregating sparse equipment records—but the real-data application doesn’t establish predictive accuracy.\n\nTogether, this week’s papers keep returning to a useful question: before we optimize a design or pool more data, what assumptions—and nuisance structure—are quietly setting the limits of what we can learn?",
+  "synthesis": "# QE ArXiv Watch Weekly  \n**Week ending November 23, 2026**\n\n## When the sensors look fine individually—but wrong together\n\nA process can go off track without any single sensor reading looking alarming. The clue may be in how the measurements move *together*. That’s the problem Nascimento et al. tackle with a multivariate control chart built around the joint probability density of sensor readings.\n\nTheir **\\(C_n\\)-chart** first fits a distribution to each sensor’s measurements, then uses a copula to model how those measurements depend on one another. For each new observation, the chart estimates its joint density. If that density is too low—below a threshold set for the desired in-control false-alarm rate—it signals.\n\nThink of it as asking not just “Is each gauge in a familiar range?” but “Is this particular combination of readings plausible?” That distinction matters when sensors are individually steady but their relationships shift.\n\n### A striking test of dependence change\n\nIn one simulation, the relationship between two variables reverses under a Clayton copula. At a target in-control average run length (ARL) of 200, the proposed chart’s out-of-control ARL was **8.1**. The comparison methods took longer: 48.0 for calibrated Hotelling \\(T^2\\), 28.5 for MEWMA, 57.7 for a maximum-copula-entropy chart, and 227 for separate marginal charts.\n\nThat last comparison is the practical punchline: monitoring each sensor separately can miss a change that becomes obvious when you consider the joint pattern. If your process depends on coordinated signals—temperature and pressure, for instance, or several quality measurements on a production line—this is a useful capability to have.\n\nThe chart also accommodates non-normal marginal distributions, rather than requiring every sensor to fit a multivariate normal model. The authors report simulations and two real-data demonstrations, and say computation remained feasible up to 20 variables: fitting took 16.7–43.3 seconds across tested Phase I sample sizes, while monitoring 10,000 observations took no more than 0.23 seconds.\n\n### The calibration caveat\n\nThere’s an elegant theoretical result here: when the in-control parameters are known and observations are independent, the in-control ARL is exactly \\(1/\\alpha\\), regardless of the copula, marginal distributions, or number of variables. In practice, those parameters have to be estimated from Phase I data. The reported simulations show why that distinction matters: with 100 Phase I observations and two variables, an ARL target of 200 yielded estimates of 146–164; increasing the Phase I sample to 250 brought the reported ARL to 236. So the clean guarantee is a useful benchmark, but practitioners should check calibration under their own Phase I conditions.\n\nThe takeaway for quality teams: this is a promising option when dependence itself is part of process health, especially if normality is a poor fit. Before putting it on the floor, we’d want to test how stable the fitted joint model and false-alarm rate are with the Phase I data actually available.\n\n**A question to take into the next monitoring review:** are we watching only whether each sensor stays in range—or whether the sensors still tell a believable story together?",
   "papers": [
     {
-      "id": "2611.08793v1",
-      "title": "Exact optimality of augmented order-of-addition designs",
-      "authors": "Stelios D. Georgiou|Haralambos Evangelaras|Stella Stylianou",
-      "submitted": "2026-11-05",
-      "track": "exp_design",
-      "link": "https://arxiv.org/pdf/2611.08793v1"
-    },
-    {
-      "id": "2611.06633v1",
-      "title": "TestBED: An Open-Source Toolkit for Bayesian Experimental Design",
-      "authors": "Gavin Kerrigan|Marcel Hedman|Sahel Iqbal|Tom Rainforth",
-      "submitted": "2026-11-04",
-      "track": "exp_design",
-      "link": "https://arxiv.org/pdf/2611.06633v1"
-    },
-    {
-      "id": "2611.04450v1",
-      "title": "A Bayesian-Geometric Reading of Classical Model-Based Optimal Design",
-      "authors": "Mohamed Tarek",
-      "submitted": "2026-11-03",
-      "track": "exp_design",
-      "link": "https://arxiv.org/pdf/2611.04450v1"
-    },
-    {
-      "id": "2611.05087v1",
-      "title": "Enabling risk and reliability analysis in next-generation computational tools via multifidelity methods",
-      "authors": "Anirban Chaudhuri|Karen Willcox",
-      "submitted": "2026-11-03",
-      "track": "reliability",
-      "link": "https://arxiv.org/pdf/2611.05087v1"
-    },
-    {
-      "id": "2611.04585v1",
-      "title": "A reliability data aggregation method for fusion-oriented research facilities",
-      "authors": "Helena Ortiz|Juan Eloy Ruiz-Castro|Christian Acal|Karol Kowal|Juan Chiachío|Ana María Aguilera",
-      "submitted": "2026-11-03",
-      "track": "reliability",
-      "link": "https://arxiv.org/pdf/2611.04585v1"
-    },
-    {
-      "id": "2611.04453v1",
-      "title": "Nuisance structure and the detection boundary for population size: how profiling can change a rate, not only a constant",
-      "authors": "Yakir Berchenko",
-      "submitted": "2026-11-03",
-      "track": "reliability",
-      "link": "https://arxiv.org/pdf/2611.04453v1"
-    },
-    {
-      "id": "2611.03042v1",
-      "title": "Bayesian Sequential Optimal Experimental Design for Single-Pixel Imaging using Reinforcement Learning",
-      "authors": "Marcos Antonio Obando|Tianyuan Wang|Tanja Tarvainen|Tristan van Leeuwen|Felix Lucka",
-      "submitted": "2026-11-02",
-      "track": "exp_design",
-      "link": "https://arxiv.org/pdf/2611.03042v1"
+      "id": "2611.23820v1",
+      "title": "Sensor Monitoring Towards Industry 4.0: Bridging Concepts on the $C_n$ Multivariate Control Chart",
+      "authors": "Diego C. Nascimento|Ana C. S. Batista|Francisco Louzada|Paulo H. Ferreira",
+      "submitted": "2026-11-18",
+      "track": "spc",
+      "link": "https://arxiv.org/pdf/2611.23820v1"
     }
   ]
 }
