@@ -7,7 +7,7 @@
     <language>en-us</language>
     <copyright>CC BY 4.0 - QE ArXiv Watch</copyright>
     <managingEditor>noreply@example.com (QE ArXiv Watch)</managingEditor>
-    <lastBuildDate>Mon, 23 Nov 2026 12:08:07 +0000</lastBuildDate>
+    <lastBuildDate>Mon, 23 Nov 2026 13:59:09 +0000</lastBuildDate>
     <ttl>10080</ttl>
     <image>
       <url>https://huggingface.co/spaces/fmegahed/arxiv_control_charts/resolve/main/www/favicon.svg</url>
@@ -16,37 +16,27 @@
     </image>
     <atom:link href="https://huggingface.co/spaces/fmegahed/arxiv_control_charts/resolve/main/data/weekly_digest.xml" rel="self" type="application/rss+xml"/>
     <item>
-      <title>QE ArXiv Watch: Week of November 16 - November 23, 2026</title>
+      <title>QE ArXiv Watch: Week of November 09 - November 16, 2026</title>
       <link>https://huggingface.co/spaces/fmegahed/arxiv_control_charts</link>
-      <guid isPermaLink="false">qe-weekly-2026-11-23</guid>
-      <pubDate>Mon, 23 Nov 2026 12:08:07 +0000</pubDate>
+      <guid isPermaLink="false">qe-weekly-2026-11-16</guid>
+      <pubDate>Mon, 23 Nov 2026 13:59:09 +0000</pubDate>
       <description><![CDATA[
 <p># QE ArXiv Watch Weekly  
-<strong>Week ending November 23, 2026</strong></p>
+<strong>Week ending November 16, 2026 · 5 papers</strong></p>
 
-<h3>When the sensors look fine individually—but wrong together</h3>
+<p>What if we could get a useful materials-strength model with a third fewer tests? That’s the enticing result from this week’s standout: a sequential design method for high-entropy alloys that chooses experiments based on how much they could improve predictions—not just where the model is most uncertain.</p>
 
-<p>A process can go off track without any single sensor reading looking alarming. The clue may be in how the measurements move <em>together</em>. That’s the problem Nascimento et al. tackle with a multivariate control chart built around the joint probability density of sensor readings.</p>
+<p>Raihan et al.’s ROSE-HEA was tested retrospectively on 501 alloy records. Starting with 25 observations and adding 100 strategically selected ones, it achieved a mean RMSE of 152.84 MPa across 30 runs. More striking for a lab watching its test budget: with 125 observations, it beat the strongest conventional regressor in the comparison trained on 185. That’s a promising signal for expensive experimental programs, though retrospective results are not the same as a prospective lab trial. The useful idea is broader: choose the next test for its impact on predictions across the region you care about, rather than chasing uncertainty in isolation.</p>
 
-<p>Their <strong><code>C_n</code>-chart</strong> first fits a distribution to each sensor’s measurements, then uses a copula to model how those measurements depend on one another. For each new observation, the chart estimates its joint density. If that density is too low—below a threshold set for the desired in-control false-alarm rate—it signals.</p>
+<p>There’s a nice companion question in the paper by Idais et al.: when do we need to redesign the experiment because our model parameters are uncertain? For single-factor Poisson, gamma, and logistic models, the answer depends on the model and how diffuse the prior uncertainty is. The gamma endpoint design stayed optimal across all priors they considered. For Poisson and logistic models, local designs held up under concentrated priors, but diffuse priors favored designs with three support points; the original designs then lost some efficiency. In practice, “use the textbook optimal design” may be fine when your prior knowledge is tight—but uncertainty in the model parameters can change where you should sample.</p>
 
-<p>Think of it as asking not just “Is each gauge in a familiar range?” but “Is this particular combination of readings plausible?” That distinction matters when sensors are individually steady but their relationships shift.</p>
+<p>Two other DOE papers widen the lens from where to measure to what an experiment should include. Lacasa et al. offer a Bayesian way to detect spatial structure that the planned blocks in an agricultural field may have missed. In simulations, their treatment-effect intervals had close-to-nominal 95% coverage, and their wheat and corn examples revealed additional spatial patterns. That’s a useful reminder: a carefully randomized design can still sit on top of an imperfect map of field variability.</p>
 
-<h4>A striking test of dependence change</h4>
+<p>Meanwhile, MineralExp puts LLM agents to a practical test: can they plan geochemical experiments for mineral exploration? The agents generally found many of the experiments called for, but often proposed too many. One setup reached 86% recall while precision was about 32%—in other words, it caught most of the target but generated a lot of extra work. More tokens didn’t reliably mean better plans, either. For engineers considering AI-assisted planning, the benchmark makes a valuable distinction between “suggests something relevant” and “produces a focused, usable plan.”</p>
 
-<p>In one simulation, the relationship between two variables reverses under a Clayton copula. At a target in-control average run length (ARL) of 200, the proposed chart’s out-of-control ARL was <strong>8.1</strong>. The comparison methods took longer: 48.0 for calibrated Hotelling <code>T^2</code>, 28.5 for MEWMA, 57.7 for a maximum-copula-entropy chart, and 227 for separate marginal charts.</p>
+<p>The reliability paper moves from designing experiments to understanding system behavior. Torrado et al. derive a decomposition showing how dependence changes k-out-of-n reliability relative to an independent-components benchmark. Their illustration shows that higher-order dependence can matter even when pairwise dependence is held fixed. The reported structural weights are not measured reliability changes; they tell us how strongly the system architecture and threshold can amplify a specified dependence contribution.</p>
 
-<p>That last comparison is the practical punchline: monitoring each sensor separately can miss a change that becomes obvious when you consider the joint pattern. If your process depends on coordinated signals—temperature and pressure, for instance, or several quality measurements on a production line—this is a useful capability to have.</p>
-
-<p>The chart also accommodates non-normal marginal distributions, rather than requiring every sensor to fit a multivariate normal model. The authors report simulations and two real-data demonstrations, and say computation remained feasible up to 20 variables: fitting took 16.7–43.3 seconds across tested Phase I sample sizes, while monitoring 10,000 observations took no more than 0.23 seconds.</p>
-
-<h4>The calibration caveat</h4>
-
-<p>There’s an elegant theoretical result here: when the in-control parameters are known and observations are independent, the in-control ARL is exactly <code>1/α</code>, regardless of the copula, marginal distributions, or number of variables. In practice, those parameters have to be estimated from Phase I data. The reported simulations show why that distinction matters: with 100 Phase I observations and two variables, an ARL target of 200 yielded estimates of 146–164; increasing the Phase I sample to 250 brought the reported ARL to 236. So the clean guarantee is a useful benchmark, but practitioners should check calibration under their own Phase I conditions.</p>
-
-<p>The takeaway for quality teams: this is a promising option when dependence itself is part of process health, especially if normality is a poor fit. Before putting it on the floor, we’d want to test how stable the fitted joint model and false-alarm rate are with the Phase I data actually available.</p>
-
-<p><strong>A question to take into the next monitoring review:</strong> are we watching only whether each sensor stays in range—or whether the sensors still tell a believable story together?</p><h4>Featured Papers This Week</h4><ul><li><strong>Nascimento et al.</strong>: <a href="https://arxiv.org/pdf/2611.23820v1">Sensor Monitoring Towards Industry 4.0: Bridging Concepts on the $C_n$ Multivariate Control Chart</a> <em>(SPM)</em></li></ul><hr/><p><strong>Explore More:</strong> Visit the <a href="https://huggingface.co/spaces/fmegahed/arxiv_control_charts">QE ArXiv Watch Dashboard</a> to browse all papers with AI summaries, interactive filtering, and paper chat.</p><p style="color: #666; font-size: 0.9em;">This digest is automatically generated every Monday. Questions or feedback? Open an issue on our <a href="https://github.com/fmegahed/arxiv_control_charts">GitHub repository</a>.</p>
+<p>Across the week, a common thread is that good decisions depend on more than a single uncertainty score or model assumption. Whether we’re choosing the next alloy test, accounting for field patterns, or assessing component dependence, the structure of the problem matters. Where in your own process might a “small” modeling assumption be steering a costly decision?</p><h4>Featured Papers This Week</h4><ul><li><strong>Raihan et al.</strong>: <a href="https://arxiv.org/pdf/2611.18462v1">Sample-efficient prediction of high-entropy alloy strength through outcome-aware robust sequential learning</a> <em>(DOE)</em></li><li><strong>Wang et al.</strong>: <a href="https://arxiv.org/pdf/2611.17931v1">MineralExp: Benchmarking LLM Agents for Experimental Design in Real-World Mineral Exploration</a> <em>(DOE)</em></li><li><strong>Torrado et al.</strong>: <a href="https://arxiv.org/pdf/2611.18348v1">Quantifying Dependence Effects on $k$-out-of-$n$ Reliability Relative to the Independent Benchmark</a> <em>(Reliability)</em></li><li><strong>Lacasa et al.</strong>: <a href="https://arxiv.org/pdf/2611.14369v1">A Bayesian approach for checking and estimating block designs in agricultural experiments</a> <em>(DOE)</em></li><li><strong>Idais et al.</strong>: <a href="https://arxiv.org/pdf/2611.11785v1">On the robustness of locally D-optimal designs under parameter uncertainty in single-factor generalized linear models</a> <em>(DOE)</em></li></ul><hr/><p><strong>Explore More:</strong> Visit the <a href="https://huggingface.co/spaces/fmegahed/arxiv_control_charts">QE ArXiv Watch Dashboard</a> to browse all papers with AI summaries, interactive filtering, and paper chat.</p><p style="color: #666; font-size: 0.9em;">This digest is automatically generated every Monday. Questions or feedback? Open an issue on our <a href="https://github.com/fmegahed/arxiv_control_charts">GitHub repository</a>.</p>
 ]]></description>
     </item>
   </channel>

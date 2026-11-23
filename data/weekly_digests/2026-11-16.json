@@ -1,0 +1,60 @@
+{
+  "metadata": {
+    "generated_at": "2026-11-23T13:59:09Z",
+    "week_start": "2026-11-09",
+    "week_end": "2026-11-16",
+    "version": "3.1.0"
+  },
+  "summary": {
+    "total_papers": 5,
+    "papers_by_track": {
+      "spc": 0,
+      "exp_design": 4,
+      "reliability": 1
+    }
+  },
+  "synthesis": "# QE ArXiv Watch Weekly  \n**Week ending November 16, 2026 · 5 papers**\n\nWhat if we could get a useful materials-strength model with a third fewer tests? That’s the enticing result from this week’s standout: a sequential design method for high-entropy alloys that chooses experiments based on how much they could improve predictions—not just where the model is most uncertain.\n\nRaihan et al.’s ROSE-HEA was tested retrospectively on 501 alloy records. Starting with 25 observations and adding 100 strategically selected ones, it achieved a mean RMSE of 152.84 MPa across 30 runs. More striking for a lab watching its test budget: with 125 observations, it beat the strongest conventional regressor in the comparison trained on 185. That’s a promising signal for expensive experimental programs, though retrospective results are not the same as a prospective lab trial. The useful idea is broader: choose the next test for its impact on predictions across the region you care about, rather than chasing uncertainty in isolation.\n\nThere’s a nice companion question in the paper by Idais et al.: when do we need to redesign the experiment because our model parameters are uncertain? For single-factor Poisson, gamma, and logistic models, the answer depends on the model and how diffuse the prior uncertainty is. The gamma endpoint design stayed optimal across all priors they considered. For Poisson and logistic models, local designs held up under concentrated priors, but diffuse priors favored designs with three support points; the original designs then lost some efficiency. In practice, “use the textbook optimal design” may be fine when your prior knowledge is tight—but uncertainty in the model parameters can change where you should sample.\n\nTwo other DOE papers widen the lens from where to measure to what an experiment should include. Lacasa et al. offer a Bayesian way to detect spatial structure that the planned blocks in an agricultural field may have missed. In simulations, their treatment-effect intervals had close-to-nominal 95% coverage, and their wheat and corn examples revealed additional spatial patterns. That’s a useful reminder: a carefully randomized design can still sit on top of an imperfect map of field variability.\n\nMeanwhile, MineralExp puts LLM agents to a practical test: can they plan geochemical experiments for mineral exploration? The agents generally found many of the experiments called for, but often proposed too many. One setup reached 86% recall while precision was about 32%—in other words, it caught most of the target but generated a lot of extra work. More tokens didn’t reliably mean better plans, either. For engineers considering AI-assisted planning, the benchmark makes a valuable distinction between “suggests something relevant” and “produces a focused, usable plan.”\n\nThe reliability paper moves from designing experiments to understanding system behavior. Torrado et al. derive a decomposition showing how dependence changes k-out-of-n reliability relative to an independent-components benchmark. Their illustration shows that higher-order dependence can matter even when pairwise dependence is held fixed. The reported structural weights are not measured reliability changes; they tell us how strongly the system architecture and threshold can amplify a specified dependence contribution.\n\nAcross the week, a common thread is that good decisions depend on more than a single uncertainty score or model assumption. Whether we’re choosing the next alloy test, accounting for field patterns, or assessing component dependence, the structure of the problem matters. Where in your own process might a “small” modeling assumption be steering a costly decision?",
+  "papers": [
+    {
+      "id": "2611.18462v1",
+      "title": "Sample-efficient prediction of high-entropy alloy strength through outcome-aware robust sequential learning",
+      "authors": "Ahmed Shoyeb Raihan|Md Habibor Rahman|Ashish Nimbarte|Imtiaz Ahmed",
+      "submitted": "2026-11-13",
+      "track": "exp_design",
+      "link": "https://arxiv.org/pdf/2611.18462v1"
+    },
+    {
+      "id": "2611.17931v1",
+      "title": "MineralExp: Benchmarking LLM Agents for Experimental Design in Real-World Mineral Exploration",
+      "authors": "Bing Wang|Mingyang Wang|Yuanhang Mi|Yue Xu|Kaibo Su|Li'ang Xiao|Chunguo Wu|Changchun Li|Ximing Li|Kun-Feng Qiu|Bo Yang",
+      "submitted": "2026-11-13",
+      "track": "exp_design",
+      "link": "https://arxiv.org/pdf/2611.17931v1"
+    },
+    {
+      "id": "2611.18348v1",
+      "title": "Quantifying Dependence Effects on $k$-out-of-$n$ Reliability Relative to the Independent Benchmark",
+      "authors": "Nuria Torrado",
+      "submitted": "2026-11-13",
+      "track": "reliability",
+      "link": "https://arxiv.org/pdf/2611.18348v1"
+    },
+    {
+      "id": "2611.14369v1",
+      "title": "A Bayesian approach for checking and estimating block designs in agricultural experiments",
+      "authors": "Josefina Lacasa|Ignacio A. Ciampitti|Trevor J. Hefley",
+      "submitted": "2026-11-10",
+      "track": "exp_design",
+      "link": "https://arxiv.org/pdf/2611.14369v1"
+    },
+    {
+      "id": "2611.11785v1",
+      "title": "On the robustness of locally D-optimal designs under parameter uncertainty in single-factor generalized linear models",
+      "authors": "Osama Idais",
+      "submitted": "2026-11-09",
+      "track": "exp_design",
+      "link": "https://arxiv.org/pdf/2611.11785v1"
+    }
+  ],
+  "rss_item": "    <item>\n      <title>QE ArXiv Watch: Week of November 09 - November 16, 2026<\/title>\n      <link>https://huggingface.co/spaces/fmegahed/arxiv_control_charts<\/link>\n      <guid isPermaLink=\"false\">qe-weekly-2026-11-16<\/guid>\n      <pubDate>Mon, 23 Nov 2026 13:59:09 +0000<\/pubDate>\n      <description><![CDATA[\n<p># QE ArXiv Watch Weekly  \n<strong>Week ending November 16, 2026 · 5 papers<\/strong><\/p>\n\n<p>What if we could get a useful materials-strength model with a third fewer tests? That’s the enticing result from this week’s standout: a sequential design method for high-entropy alloys that chooses experiments based on how much they could improve predictions—not just where the model is most uncertain.<\/p>\n\n<p>Raihan et al.’s ROSE-HEA was tested retrospectively on 501 alloy records. Starting with 25 observations and adding 100 strategically selected ones, it achieved a mean RMSE of 152.84 MPa across 30 runs. More striking for a lab watching its test budget: with 125 observations, it beat the strongest conventional regressor in the comparison trained on 185. That’s a promising signal for expensive experimental programs, though retrospective results are not the same as a prospective lab trial. The useful idea is broader: choose the next test for its impact on predictions across the region you care about, rather than chasing uncertainty in isolation.<\/p>\n\n<p>There’s a nice companion question in the paper by Idais et al.: when do we need to redesign the experiment because our model parameters are uncertain? For single-factor Poisson, gamma, and logistic models, the answer depends on the model and how diffuse the prior uncertainty is. The gamma endpoint design stayed optimal across all priors they considered. For Poisson and logistic models, local designs held up under concentrated priors, but diffuse priors favored designs with three support points; the original designs then lost some efficiency. In practice, “use the textbook optimal design” may be fine when your prior knowledge is tight—but uncertainty in the model parameters can change where you should sample.<\/p>\n\n<p>Two other DOE papers widen the lens from where to measure to what an experiment should include. Lacasa et al. offer a Bayesian way to detect spatial structure that the planned blocks in an agricultural field may have missed. In simulations, their treatment-effect intervals had close-to-nominal 95% coverage, and their wheat and corn examples revealed additional spatial patterns. That’s a useful reminder: a carefully randomized design can still sit on top of an imperfect map of field variability.<\/p>\n\n<p>Meanwhile, MineralExp puts LLM agents to a practical test: can they plan geochemical experiments for mineral exploration? The agents generally found many of the experiments called for, but often proposed too many. One setup reached 86% recall while precision was about 32%—in other words, it caught most of the target but generated a lot of extra work. More tokens didn’t reliably mean better plans, either. For engineers considering AI-assisted planning, the benchmark makes a valuable distinction between “suggests something relevant” and “produces a focused, usable plan.”<\/p>\n\n<p>The reliability paper moves from designing experiments to understanding system behavior. Torrado et al. derive a decomposition showing how dependence changes k-out-of-n reliability relative to an independent-components benchmark. Their illustration shows that higher-order dependence can matter even when pairwise dependence is held fixed. The reported structural weights are not measured reliability changes; they tell us how strongly the system architecture and threshold can amplify a specified dependence contribution.<\/p>\n\n<p>Across the week, a common thread is that good decisions depend on more than a single uncertainty score or model assumption. Whether we’re choosing the next alloy test, accounting for field patterns, or assessing component dependence, the structure of the problem matters. Where in your own process might a “small” modeling assumption be steering a costly decision?<\/p><h4>Featured Papers This Week<\/h4><ul><li><strong>Raihan et al.<\/strong>: <a href=\"https://arxiv.org/pdf/2611.18462v1\">Sample-efficient prediction of high-entropy alloy strength through outcome-aware robust sequential learning<\/a> <em>(DOE)<\/em><\/li><li><strong>Wang et al.<\/strong>: <a href=\"https://arxiv.org/pdf/2611.17931v1\">MineralExp: Benchmarking LLM Agents for Experimental Design in Real-World Mineral Exploration<\/a> <em>(DOE)<\/em><\/li><li><strong>Torrado et al.<\/strong>: <a href=\"https://arxiv.org/pdf/2611.18348v1\">Quantifying Dependence Effects on $k$-out-of-$n$ Reliability Relative to the Independent Benchmark<\/a> <em>(Reliability)<\/em><\/li><li><strong>Lacasa et al.<\/strong>: <a href=\"https://arxiv.org/pdf/2611.14369v1\">A Bayesian approach for checking and estimating block designs in agricultural experiments<\/a> <em>(DOE)<\/em><\/li><li><strong>Idais et al.<\/strong>: <a href=\"https://arxiv.org/pdf/2611.11785v1\">On the robustness of locally D-optimal designs under parameter uncertainty in single-factor generalized linear models<\/a> <em>(DOE)<\/em><\/li><\/ul><hr/><p><strong>Explore More:<\/strong> Visit the <a href=\"https://huggingface.co/spaces/fmegahed/arxiv_control_charts\">QE ArXiv Watch Dashboard<\/a> to browse all papers with AI summaries, interactive filtering, and paper chat.<\/p><p style=\"color: #666; font-size: 0.9em;\">This digest is automatically generated every Monday. Questions or feedback? Open an issue on our <a href=\"https://github.com/fmegahed/arxiv_control_charts\">GitHub repository<\/a>.<\/p>\n]]><\/description>\n    <\/item>"
+}
