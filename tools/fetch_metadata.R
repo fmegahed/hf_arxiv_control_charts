@@ -16,20 +16,13 @@ dir.create(args$out_dir, recursive = TRUE, showWarnings = FALSE)
 
 for (track in tracks) {
   info <- spec_track(spec, track)
-  expected <- tryCatch(aRxiv::arxiv_count(info$query), error = function(e) NA_integer_)
-  metadata <- NULL
-  for (attempt in 1:4) {
-    metadata <- tryCatch(aRxiv::arxiv_search(query = info$query, limit = 10000L), error = function(e) {
-      message(sprintf("[%s] attempt %d failed: %s", track, attempt, conditionMessage(e)))
-      NULL
-    })
-    if (!is.null(metadata) && nrow(metadata) > 0L && (is.na(expected) || nrow(metadata) >= expected)) break
-    Sys.sleep(60 * attempt)
-  }
+  # Pages are retried and checked against arXiv's total (see R/arxiv_fetch.R).
+  metadata <- fetch_arxiv_metadata(info$query, log = function(m) message(sprintf("[%s] %s", track, m)))
   if (is.null(metadata) || nrow(metadata) == 0L) {
     cat(sprintf("%-12s FAILED, nothing written\n", track))
     next
   }
+  expected <- attr(metadata, "total_results")
   metadata <- tibble::as_tibble(metadata) |>
     dplyr::mutate(pdf_url = paste0("https://arxiv.org/pdf/", id)) |>
     dplyr::arrange(dplyr::desc(submitted))

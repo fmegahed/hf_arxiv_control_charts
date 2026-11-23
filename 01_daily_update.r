@@ -21,9 +21,11 @@ budget <- as.numeric(Sys.getenv("DAILY_MAX_SPEND_USD", "5"))
 time_budget <- as.numeric(Sys.getenv("DAILY_TIME_BUDGET_MIN", "240"))
 started <- Sys.time()
 
-search_arxiv <- function(query, limit = 10000L) {
-  aRxiv::arxiv_search(query = query, limit = limit) |>
-    tibble::as_tibble() |>
+# NULL unless arXiv returned every paper for the query (see R/arxiv_fetch.R).
+search_arxiv <- function(query, track) {
+  metadata <- fetch_arxiv_metadata(query, log = function(m) message(sprintf("[%s] %s", track, m)))
+  if (is.null(metadata)) return(NULL)
+  tibble::as_tibble(metadata) |>
     dplyr::mutate(pdf_url = paste0("https://arxiv.org/pdf/", id)) |>
     dplyr::arrange(dplyr::desc(submitted))
 }
@@ -36,13 +38,13 @@ for (track in TRACK_IDS) {
   metadata_path <- file.path(data_dir, info$metadata_csv)
   factsheet_path <- file.path(data_dir, info$factsheet_csv)
 
-  metadata <- tryCatch(search_arxiv(info$query), error = function(e) {
+  metadata <- tryCatch(search_arxiv(info$query, track), error = function(e) {
     warning(sprintf("[%s] arXiv search failed: %s", track, conditionMessage(e)))
     NULL
   })
-  # An empty or failed search must never wipe the stored metadata.
+  # An empty, partial or failed search must never overwrite the stored metadata.
   if (is.null(metadata) || nrow(metadata) == 0L) {
-    message(sprintf("[%s] No search results; keeping existing metadata.", track))
+    message(sprintf("[%s] arXiv search incomplete; keeping existing metadata.", track))
     next
   }
   readr::write_csv(metadata, metadata_path)
