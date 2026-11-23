@@ -5,6 +5,12 @@ on:
     # Every Monday at 12:00 UTC
     - cron: "0 12 * * 1"
   workflow_dispatch:
+    inputs:
+      week_end:
+        description: "Last day of the week, YYYY-MM-DD, to write a missed week (empty: today)"
+        type: string
+        required: false
+        default: ""
 
 permissions:
   contents: write
@@ -48,22 +54,26 @@ jobs:
       - name: Run weekly synthesis
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          # Passed through the environment, never pasted into the script.
+          WEEK_END: ${{ inputs.week_end }}
         run: |
-          Rscript 02_weekly_synthesis.r
+          Rscript 02_weekly_synthesis.r ${WEEK_END:+--week-end "$WEEK_END"}
 
       - name: Commit digest files to GitHub
         id: commit
+        env:
+          WEEK_END: ${{ inputs.week_end }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          git add data/weekly_digest.xml data/weekly_digest.json
+          git add data/weekly_digest.xml data/weekly_digest.json data/weekly_digests
 
           if git diff --cached --quiet; then
             echo "No changes to commit."
             echo "changed=false" >> "$GITHUB_OUTPUT"
           else
-            git commit -m "Weekly synthesis: $(date +%Y-%m-%d)"
+            git commit -m "Weekly synthesis: week ending ${WEEK_END:-$(date +%Y-%m-%d)}"
             git push
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi

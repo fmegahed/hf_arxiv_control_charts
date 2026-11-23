@@ -9,9 +9,14 @@
 # Schedule:
 #   Runs every Monday at 12:00 UTC via GitHub Actions
 #
+# Usage (from the app directory):
+#   Rscript 02_weekly_synthesis.r                        # the week ending today
+#   Rscript 02_weekly_synthesis.r --week-end 2026-11-16  # a week that was missed
+#
 # Output:
-#   - data/weekly_digest.xml: RSS feed with curated weekly summary
-#   - data/weekly_digest.json: Structured digest data
+#   - data/weekly_digests/<week end>.json: each week's digest and RSS item
+#   - data/weekly_digest.xml: RSS feed of the newest weeks in that archive
+#   - data/weekly_digest.json: the newest week's digest
 #
 # Target Audience:
 #   - Quality engineering researchers and academics
@@ -33,10 +38,18 @@ get_openai_api_key <- function() { return(OPENAI_API_KEY) }
 
 # Tracks, their names and the model come from the factsheet specification
 # (config/factsheet_spec.json), the same source the app uses.
-for (helper in c("spec.R", "serialize.R", "ids.R")) source(file.path("R", helper))
+for (helper in c("spec.R", "serialize.R", "ids.R", "pipeline.R", "weekly_digest.R")) {
+  source(file.path("R", helper))
+}
 spec <- spec_load()
 DATA_DIR <- Sys.getenv("QEW_DATA_DIR", "data")
 SYNTHESIS_MODEL <- if (is.null(spec$models$synthesis)) spec$models$chat else spec$models$synthesis
+
+# The week this digest covers (see R/weekly_digest.R).
+args <- parse_cli_args(commandArgs(trailingOnly = TRUE))
+WINDOW <- digest_window(parse_week_end(args$week_end))
+ARCHIVE_DIR <- file.path(DATA_DIR, "weekly_digests")
+FEED_ITEMS <- 10L
 
 tracks <- lapply(stats::setNames(names(spec$tracks), names(spec$tracks)), function(track_id) {
   track <- spec$tracks[[track_id]]
@@ -115,12 +128,12 @@ Remember: Nobody *has* to read this. Make it worth their time.
 # Helper Functions
 # =============================================================================
 
-#' Collect papers from past week across all tracks
+#' Collect the week's papers across all tracks
 #'
 #' @param tracks List of track configurations
-#' @param days_back Number of days to look back (default 7)
-#' @return Data frame of papers from the past week
-collect_weekly_papers <- function(tracks, days_back = 7) {
+#' @param window The week, from digest_window()
+#' @return Data frame of papers submitted during the week
+collect_weekly_papers <- function(tracks, window) {
 
   all_papers <- list()
 
@@ -161,13 +174,10 @@ collect_weekly_papers <- function(tracks, days_back = 7) {
 
   # Parse dates and filter
   papers$submitted_date <- as.Date(lubridate::ymd_hms(papers$submitted))
-  cutoff_date <- Sys.Date() - days_back
-
-  recent <- papers |>
-    dplyr::filter(submitted_date >= cutoff_date) |>
+  recent <- papers_in_window(papers, window) |>
     dplyr::arrange(desc(submitted_date))
 
-  message(sprintf("  Found %d papers from the past %d days", nrow(recent), days_back))
+  message(sprintf("  Found %d papers submitted %s to %s", nrow(recent), window$start, window$end))
   recent
 }
 
@@ -227,7 +237,7 @@ format_papers_for_llm <- function(papers) {
 
   paste0(
     "# Papers Submitted This Week\n",
-    "Week ending: ", format(Sys.Date(), "%B %d, %Y"), "\n",
+    "Week ending: ", format(WINDOW$end, "%B %d, %Y"), "\n",
     "Total papers: ", nrow(papers), "\n\n",
     paste(tracks_summary, collapse = "\n")
   )
@@ -421,20 +431,19 @@ markdown_to_html <- function(markdown) {
   html
 }
 
-#' Generate weekly digest RSS feed
+#' Render one week's RSS item
 #'
 #' @param papers Data frame of papers
 #' @param synthesis AI-generated synthesis text
-#' @param output_file Path to output XML file
-generate_weekly_rss <- function(papers, synthesis, output_file = "data/weekly_digest.xml") {
+#' @param window The week, from digest_window()
+#' @return The <item> element, as a string
+render_digest_item <- function(papers, synthesis, window) {
 
-  build_date <- format(Sys.time(), "%a, %d %b %Y %H:%M:%S +0000", tz = "UTC")
-  week_start <- Sys.Date() - 7
-  week_end <- Sys.Date()
+  pub_date <- format(Sys.time(), "%a, %d %b %Y %H:%M:%S +0000", tz = "UTC")
 
   # Create week title
   week_title <- sprintf("Week of %s - %s",
-    format(week_start, "%B %d"), format(week_end, "%B %d, %Y"))
+    format(window$start, "%B %d"), format(window$end, "%B %d, %Y"))
 
   # Convert synthesis to HTML
   synthesis_html <- markdown_to_html(synthesis)
@@ -485,13 +494,24 @@ generate_weekly_rss <- function(papers, synthesis, output_file = "data/weekly_di
     "    <item>\n",
     "      <title>QE ArXiv Watch: ", escape_xml(week_title), "</title>\n",
     "      <link>https://huggingface.co/spaces/fmegahed/arxiv_control_charts</link>\n",
-    "      <guid isPermaLink=\"false\">qe-weekly-", format(Sys.Date(), "%Y-%m-%d"), "</guid>\n",
-    "      <pubDate>", build_date, "</pubDate>\n",
+    "      <guid isPermaLink=\"false\">qe-weekly-", format(window$end, "%Y-%m-%d"), "</guid>\n",
+    "      <pubDate>", pub_date, "</pubDate>\n",
     "      <description><![CDATA[\n",
     description_content,
     "\n]]></description>\n",
     "    </item>"
   )
+
+  digest_item
+}
+
+#' Write the RSS feed
+#'
+#' @param items RSS <item> elements, newest week first
+#' @param output_file Path to output XML file
+write_weekly_rss <- function(items, output_file) {
+
+  build_date <- format(Sys.time(), "%a, %d %b %Y %H:%M:%S +0000", tz = "UTC")
 
   # Assemble RSS document
   rss_content <- paste0(
@@ -512,7 +532,7 @@ generate_weekly_rss <- function(papers, synthesis, output_file = "data/weekly_di
     '      <link>https://huggingface.co/spaces/fmegahed/arxiv_control_charts</link>\n',
     '    </image>\n',
     '    <atom:link href="https://huggingface.co/spaces/fmegahed/arxiv_control_charts/resolve/main/data/weekly_digest.xml" rel="self" type="application/rss+xml"/>\n',
-    digest_item,
+    paste(items, collapse = "\n"),
     '\n  </channel>\n',
     '</rss>\n'
   )
@@ -523,12 +543,13 @@ generate_weekly_rss <- function(papers, synthesis, output_file = "data/weekly_di
   invisible(output_file)
 }
 
-#' Save digest data as JSON
+#' Build the week's digest data
 #'
 #' @param papers Data frame of papers
 #' @param synthesis AI-generated synthesis
-#' @param output_file Path to output JSON file
-save_digest_json <- function(papers, synthesis, output_file = "data/weekly_digest.json") {
+#' @param window The week, from digest_window()
+#' @return The digest, as written to data/weekly_digest.json
+build_digest <- function(papers, synthesis, window) {
 
   # Get paper counts by track
   track_counts <- lapply(tracks, function(track) sum(papers$track_id == track$id))
@@ -536,8 +557,8 @@ save_digest_json <- function(papers, synthesis, output_file = "data/weekly_diges
   digest <- list(
     metadata = list(
       generated_at = format(Sys.time(), "%Y-%m-%dT%H:%M:%SZ", tz = "UTC"),
-      week_start = format(Sys.Date() - 7, "%Y-%m-%d"),
-      week_end = format(Sys.Date(), "%Y-%m-%d"),
+      week_start = format(window$start, "%Y-%m-%d"),
+      week_end = format(window$end, "%Y-%m-%d"),
       version = "3.1.0"
     ),
     summary = list(
@@ -558,10 +579,7 @@ save_digest_json <- function(papers, synthesis, output_file = "data/weekly_diges
     })
   )
 
-  jsonlite::write_json(digest, output_file, pretty = TRUE, auto_unbox = TRUE)
-  message(sprintf("  Weekly digest JSON saved to: %s", output_file))
-
-  invisible(output_file)
+  digest
 }
 
 # =============================================================================
@@ -572,11 +590,12 @@ message("=======================================================================
 message("QE ArXiv Watch - Weekly Research Digest")
 message("=============================================================================")
 message(sprintf("Run date: %s", format(Sys.Date(), "%B %d, %Y (%A)")))
+message(sprintf("Week: %s to %s", WINDOW$start, WINDOW$end))
 message("")
 
-# Step 1: Collect papers from the past week
-message("Step 1: Collecting papers from the past 7 days...")
-papers <- collect_weekly_papers(tracks, days_back = 7)
+# Step 1: Collect the week's papers
+message("Step 1: Collecting papers submitted during the week...")
+papers <- collect_weekly_papers(tracks, WINDOW)
 
 message("")
 message(sprintf("Papers by track:"))
@@ -592,8 +611,14 @@ synthesis <- generate_synthesis(papers)
 # Step 3: Generate outputs
 message("")
 message("Step 3: Generating output files...")
-generate_weekly_rss(papers, synthesis)
-save_digest_json(papers, synthesis)
+save_digest_archive(build_digest(papers, synthesis, WINDOW),
+                    render_digest_item(papers, synthesis, WINDOW), ARCHIVE_DIR)
+digests <- latest_digests(ARCHIVE_DIR, n = FEED_ITEMS)
+write_weekly_rss(vapply(digests, function(d) d$rss_item, character(1)),
+                 file.path(DATA_DIR, "weekly_digest.xml"))
+write_latest_digest(digests, file.path(DATA_DIR, "weekly_digest.json"))
+message(sprintf("  Feed lists %d weeks, newest ending %s", length(digests),
+                digests[[1]]$metadata$week_end))
 
 message("")
 message("=============================================================================")

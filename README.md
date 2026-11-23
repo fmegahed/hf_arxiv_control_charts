@@ -97,7 +97,7 @@ No test calls a model service. A live regression test that encodes the author re
 ### Automation
 
 - `daily_update.yml`: searches arXiv and extracts new papers every day at 10:00 UTC.
-- `weekly_synthesis.yml`: writes the weekly digest on Mondays.
+- `weekly_synthesis.yml`: writes the weekly digest on Mondays. Each week is kept in `data/weekly_digests/`, and the RSS feed lists the newest 10. To write a week that was missed, run it by hand with `week_end` set to the Monday it should have run.
 - `reextract.yml`: manual, for re-extracting every paper on a branch.
 - `tests.yml`: runs the unit tests on every push.
 - `deploy_space.yml`: deploys to the Space when a person pushes to `main`. The daily and weekly jobs deploy from their own last step.
