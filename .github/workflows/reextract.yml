@@ -95,5 +95,7 @@ jobs:
             echo "No changes to commit."
           else
             git commit -m "Re-extraction chunk: $(date +%Y-%m-%dT%H:%MZ)"
-            git push
+            # Retried, rebasing first, if someone pushed meanwhile or GitHub
+            # fails for a moment (see the script).
+            bash tools/push_with_retry.sh
           fi

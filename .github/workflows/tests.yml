@@ -49,3 +49,8 @@ jobs:
       - name: Run tests
         run: |
           Rscript tests/testthat.R
+
+      # The data workflows push with this script.
+      - name: Test the push retry script
+        run: |
+          bash tests/push_with_retry_test.sh

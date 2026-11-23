@@ -82,6 +82,7 @@ Without `OPENAI_API_KEY` the app still browses and filters; a question is treate
 
 ```bash
 Rscript tests/testthat.R
+bash tests/push_with_retry_test.sh   # the data workflows' push, against local repositories
 ```
 
 No test calls a model service. A live regression test that encodes the author reviewers' corrections runs only when `RUN_LIVE_LLM=1` is set.
@@ -101,6 +102,8 @@ No test calls a model service. A live regression test that encodes the author re
 - `reextract.yml`: manual, for re-extracting every paper on a branch.
 - `tests.yml`: runs the unit tests on every push.
 - `deploy_space.yml`: deploys to the Space when a person pushes to `main`. The daily and weekly jobs deploy from their own last step.
+
+The data workflows push with `tools/push_with_retry.sh`. If the push is refused, because someone pushed first or GitHub failed for a moment, it rebases onto `main` and tries again, up to 3 times. A commit that conflicts with what was pushed meanwhile is not pushed.
 
 The R workflows name their runner image (`ubuntu-26.04`) rather than using `ubuntu-latest`, so the image changes only when we change it. To try a new image, change it on a branch first: `tests.yml` then does a cold `renv` restore on that image.
 

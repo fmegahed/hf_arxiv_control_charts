@@ -74,7 +74,9 @@ jobs:
             echo "changed=false" >> "$GITHUB_OUTPUT"
           else
             git commit -m "Weekly synthesis: week ending ${WEEK_END:-$(date +%Y-%m-%d)}"
-            git push
+            # Retried, rebasing first, if someone pushed meanwhile or GitHub
+            # fails for a moment (see the script).
+            bash tools/push_with_retry.sh
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
 
